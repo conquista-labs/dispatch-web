@@ -1,6 +1,6 @@
 import { type FormEvent, useState } from 'react'
 
-import { Button } from '@/shared/ui/Button'
+import { Button } from '@/shared/ui/button'
 
 import { useLogin } from '../model/use-login'
 
@@ -15,40 +15,37 @@ export const LoginForm = () => {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex w-full max-w-sm flex-col gap-4">
-      <div className="flex flex-col gap-1">
-        <label htmlFor="email" className="text-sm font-medium text-zinc-700">
-          E-mail
-        </label>
-        <input
-          id="email"
-          type="email"
-          required
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-          className="rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-zinc-500"
-        />
-      </div>
+    <form onSubmit={handleSubmit}>
+      <label htmlFor="email" className="block text-[12.5px] font-medium text-text-4">
+        E-mail
+      </label>
+      <input
+        id="email"
+        type="email"
+        required
+        value={email}
+        onChange={(event) => setEmail(event.target.value)}
+        className="mt-1.5 w-full rounded-[7px] border border-border bg-card px-2.5 py-2 text-[13.5px] text-foreground outline-none focus:border-primary"
+      />
 
-      <div className="flex flex-col gap-1">
-        <label htmlFor="senha" className="text-sm font-medium text-zinc-700">
-          Senha
-        </label>
-        <input
-          id="senha"
-          type="password"
-          required
-          value={senha}
-          onChange={(event) => setSenha(event.target.value)}
-          className="rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-zinc-500"
-        />
-      </div>
+      <label htmlFor="senha" className="mt-3.5 block text-[12.5px] font-medium text-text-4">
+        Senha
+      </label>
+      <input
+        id="senha"
+        type="password"
+        required
+        value={senha}
+        onChange={(event) => setSenha(event.target.value)}
+        className="mt-1.5 w-full rounded-[7px] border border-border bg-card px-2.5 py-2 text-[13.5px] text-foreground outline-none focus:border-primary"
+      />
 
-      {isError && <p className="text-sm text-red-600">E-mail ou senha incorretos.</p>}
+      {isError && <p className="mt-2 text-[12.5px] text-bad-fg">E-mail ou senha incorretos.</p>}
 
-      <Button type="submit" disabled={isPending}>
+      <Button type="submit" disabled={isPending} className="mt-[22px] h-auto w-full rounded-[7px] py-2.5 text-sm">
         {isPending ? 'Entrando…' : 'Entrar'}
       </Button>
+      <p className="mt-3.5 text-center text-xs text-muted-foreground">O papel vem do cadastro do usuário.</p>
     </form>
   )
 }

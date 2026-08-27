@@ -1,5 +1,196 @@
 @import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
+@import '@fontsource-variable/instrument-sans';
+@import '@fontsource-variable/jetbrains-mono';
+
+@custom-variant dark (&:is(.dark *));
 
 body {
   margin: 0;
+}
+
+/*
+ * Paleta e tokens copiados 1:1 do protótipo aprovado (../dispatch-prototype/Dispatch.dc.html)
+ * — não são uma reinterpretação. Nomes de token seguem a convenção do shadcn (background,
+ * card, primary, border, muted-foreground...) pra os componentes de src/shared/ui
+ * funcionarem sem alteração; os tons intermediários de cinza (text-2..5) e as quatro faixas
+ * do semáforo (RF-14/seção 5) não existem no shadcn padrão, então entram como tokens extras.
+ */
+@theme inline {
+  --font-sans: 'Instrument Sans Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, monospace;
+
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+
+  /* Gradações finas de cinza — o protótipo usa 5, o shadcn só prevê 1 (muted-foreground). */
+  --color-text-2: var(--text-2);
+  --color-text-3: var(--text-3);
+  --color-text-4: var(--text-4);
+  --color-text-5: var(--text-5);
+
+  /* Semáforo de prazo (seção 5/RF-14) — 4 faixas: ok, atenção, crítico, vencido. */
+  --color-ok-bg: var(--ok-bg);
+  --color-ok-bg-2: var(--ok-bg2);
+  --color-ok-border: var(--ok-bd);
+  --color-ok-border-2: var(--ok-bd2);
+  --color-ok-bar: var(--ok-bar);
+  --color-ok-fg: var(--ok-fg);
+  --color-warn-bg: var(--warn-bg);
+  --color-warn-bg-2: var(--warn-bg2);
+  --color-warn-border: var(--warn-bd);
+  --color-warn-border-2: var(--warn-bd2);
+  --color-warn-bar: var(--warn-bar);
+  --color-warn-fg: var(--warn-fg);
+  --color-warn-fg-2: var(--warn-fg2);
+  --color-crit-bg: var(--crit-bg);
+  --color-crit-bg-2: var(--crit-bg2);
+  --color-crit-border: var(--crit-bd);
+  --color-crit-bar: var(--crit-bar);
+  --color-crit-fg: var(--crit-fg);
+  --color-bad-bg: var(--bad-bg);
+  --color-bad-bg-2: var(--bad-bg2);
+  --color-bad-border: var(--bad-bd);
+  --color-bad-border-2: var(--bad-bd2);
+  --color-bad-bar: var(--bad-bar);
+  --color-bad-fg: var(--bad-fg);
+}
+
+:root {
+  --background: #fafafa;
+  --foreground: #09090b;
+  --card: #ffffff;
+  --card-foreground: #09090b;
+  --popover: #ffffff;
+  --popover-foreground: #09090b;
+  --primary: #18181b;
+  --primary-foreground: #fafafa;
+  --secondary: #f4f4f5;
+  --secondary-foreground: #09090b;
+  --muted: #f4f4f5;
+  --muted-foreground: #71717a;
+  --accent: #f4f4f5;
+  --accent-foreground: #09090b;
+  --destructive: #b91c1c;
+  --border: #e4e4e7;
+  --input: #e4e4e7;
+  --ring: #18181b;
+  --radius: 0.625rem;
+
+  --text-2: #71717a;
+  --text-3: #52525b;
+  --text-4: #3f3f46;
+  --text-5: #27272a;
+
+  --ok-bg: #f0fdf4;
+  --ok-bg2: #f0fdf4;
+  --ok-bd: #bbf7d0;
+  --ok-bd2: #86efac;
+  --ok-bar: #22c55e;
+  --ok-fg: #15803d;
+  --warn-bg: #fefce8;
+  --warn-bg2: #fef9c3;
+  --warn-bd: #fde68a;
+  --warn-bd2: #fde047;
+  --warn-bar: #eab308;
+  --warn-fg: #a16207;
+  --warn-fg2: #713f12;
+  --crit-bg: #fff7ed;
+  --crit-bg2: #ffedd5;
+  --crit-bd: #fdba74;
+  --crit-bar: #fb923c;
+  --crit-fg: #c2410c;
+  --bad-bg: #fef2f2;
+  --bad-bg2: #fee2e2;
+  --bad-bd: #fecaca;
+  --bad-bd2: #fca5a5;
+  --bad-bar: #f87171;
+  --bad-fg: #b91c1c;
+}
+
+.dark {
+  --background: #0b0b0d;
+  --foreground: #f7f7f8;
+  --card: #16161a;
+  --card-foreground: #f7f7f8;
+  --popover: #16161a;
+  --popover-foreground: #f7f7f8;
+  --primary: #f2f2f4;
+  --primary-foreground: #0b0b0d;
+  --secondary: #232329;
+  --secondary-foreground: #f7f7f8;
+  --muted: #232329;
+  --muted-foreground: #93939d;
+  --accent: #232329;
+  --accent-foreground: #f7f7f8;
+  --destructive: #f87171;
+  --border: #2b2b32;
+  --input: #2b2b32;
+  --ring: #f2f2f4;
+
+  --text-2: #93939d;
+  --text-3: #b6b6bf;
+  --text-4: #cfcfd6;
+  --text-5: #e2e2e7;
+
+  --ok-bg: #10251a;
+  --ok-bg2: #13301f;
+  --ok-bd: #1f5133;
+  --ok-bd2: #2c7048;
+  --ok-bar: #22c55e;
+  --ok-fg: #4ade80;
+  --warn-bg: #2a2410;
+  --warn-bg2: #332b13;
+  --warn-bd: #5a4a14;
+  --warn-bd2: #7a6318;
+  --warn-bar: #eab308;
+  --warn-fg: #e3b341;
+  --warn-fg2: #f0d48a;
+  --crit-bg: #2c1c0e;
+  --crit-bg2: #372110;
+  --crit-bd: #6b3d12;
+  --crit-bar: #fb923c;
+  --crit-fg: #fb923c;
+  --bad-bg: #2c1416;
+  --bad-bg2: #37181a;
+  --bad-bd: #6b2124;
+  --bad-bd2: #8a2a2e;
+  --bad-bar: #f87171;
+  --bad-fg: #f87171;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
 }

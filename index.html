@@ -5,6 +5,15 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>dispatch-web</title>
+    <script>
+      // Aplica o tema persistido antes do primeiro paint (RF-04) — evita o "flash" de tema
+      // errado que aconteceria se isso esperasse o React montar e o Zustand reidratar.
+      try {
+        var tema = JSON.parse(localStorage.getItem('dispatch-tema') || 'null')?.state?.tema
+        if (!tema) tema = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+        document.documentElement.classList.toggle('dark', tema === 'dark')
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>
