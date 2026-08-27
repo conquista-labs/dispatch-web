@@ -128,6 +128,35 @@ renomear `Button.tsx` pra `button.tsx` (só a caixa) via `mv` direto confunde o 
 sem aviso se um `rm` dos dois nomes rodar em sequência. Renomeio de caixa precisa passar por um
 nome intermediário (`git mv x.tsx x-tmp.tsx && git mv x-tmp.tsx X.tsx`).
 
+## Tailwind: evitando className gigante
+
+Preocupação real do dono (já vivida no `financas-front` também): Tailwind puro em componente
+grande vira uma parede de classe ilegível. Três respostas concretas, aplicadas a partir da
+tela Minha fila:
+
+1. **`class-variance-authority` (`cva`, já instalado — é o que o `Button` do shadcn usa) pra
+   qualquer componente com variante.** Em vez de objeto de classe + template literal na mão
+   (`ACAO_CLASSES[variante]`), a tabela variante→classe fica declarada num lugar só, com nome
+   (`shared/ui/chip.tsx`, `shared/ui/surface-card.tsx`) — mesmo padrão que o shadcn já
+   estabeleceu, não é convenção nova.
+2. **Primitivos pequenos em `shared/ui` pra combinação de classe que se repete entre telas.**
+   `Chip` (pílula de prazo/status — RF-14/RF-19/RF-24) e `SurfaceCard` (o "card" específico do
+   protótipo: radius 10px, borda, sombra leve — não é o `Card` do shadcn, que é mais pesado/
+   opinativo e brigaria com o visual do protótipo em vez de simplificar) nasceram porque a
+   mesma pilha de classes aparecia em 3 componentes diferentes de Minha fila. Regra prática: se
+   uma combinação de classe repete numa terceira vez, vira componente em `shared/ui`, não mais
+   uma cópia colada.
+3. **Reaproveitar o `Button` do shadcn em vez de `<button>` cru com classe na mão** sempre que o
+   visual bater com uma variante existente (`default`/`outline`/`destructive`/`ghost`) — o
+   token `--destructive` já é `--bad-fg` do protótipo (ver seção de cores acima), então
+   `variant="destructive"` já sai com a cor certa sem precisar escrever nada a mais.
+
+O que isso não resolve sozinho: valores de px "quebrados" do protótipo (`13.5px`, `11.5px`...)
+continuam como valor arbitrário (`text-[13.5px]`) — não corresponde a nenhum degrau do
+`text-*` padrão do Tailwind nem vale a pena criar um token novo pra cada um. Aceito como custo
+de fidelidade pixel-perfect ao protótipo; se começar a incomodar, o próximo passo seria
+`prettier-plugin-tailwindcss` (ordena a classe, não reduz a lista) — ainda não configurado.
+
 ## CORS
 
 A API precisou ganhar `AddCors`/`UseCors` (só em Development, origem `http://localhost:5173`)
@@ -158,26 +187,37 @@ npm run e2e:ui   # idem, com a UI do Playwright pra debugar interativamente
 
 ## Estado atual
 
-Scaffold feito: FSD completo (`app/pages/widgets/features/entities/shared`), autenticação
-ponta a ponta (login, `/auth/me` no boot, guarda de rota por papel, logout), shadcn/ui
-inicializado com os aliases certos, tema (cores, tipografia, logo, claro/escuro) copiado do
-protótipo aprovado. Duas telas com o chrome fiel ao protótipo: **Login** (split-screen: painel
-de marca sempre escuro + formulário) e a **sidebar** (`widgets/app-shell`, nav por papel,
-sessão + tema + sair). `Distribuição` e `Minha fila` em si continuam placeholder — só o
-cabeçalho no padrão certo, conteúdo real (os boards/kanbans) ainda não construído.
+Scaffold completo: FSD (`app/pages/widgets/features/entities/shared`), autenticação ponta a
+ponta (login, `/auth/me` no boot, guarda de rota por papel, logout), shadcn/ui com os aliases
+certos, tema (cores, tipografia, logo, claro/escuro) copiado do protótipo aprovado.
 
-Verificado: `tsc --noEmit` limpo, `npm run build` limpo (fontes e CSS gerados corretamente,
-classes utilitárias customizadas — `text-text-2`, `bg-ok-bg` etc. — conferidas no CSS final),
-contrato de auth (CORS + login + `/auth/me`) testado ponta a ponta contra a API local. **E,
-pela primeira vez, verificado visualmente de verdade**: `@playwright/test` instalado
-(`e2e/`, ver skill `verify-visual`), rodado contra a API local com login real (não mock) —
-login (claro e escuro) e a sidebar autenticada renderizando fiéis ao protótipo, screenshots
-lidos e conferidos. RF-04 (tema) e a persistência de sessão no F5 (via `/auth/me`) confirmados
-funcionando de ponta a ponta num browser real, não só por `curl`.
+**Minha fila (RF-19 a RF-24) é a primeira tela de verdade, construída de ponta a ponta**:
+- `entities/protocolo` — tipos espelhando `ProtocoloResumo`/`ProtocoloConcluidoResumo` do back,
+  `useMinhaFila`/`useConcluidosHoje` (GET).
+- `features/minha-fila/{pegar-protocolo,iniciar-conferencia,concluir-conferencia}` +
+  `features/protocolo/definir-observacao` — um verbo por slice, cada um invalidando a query
+  certa depois de mutar (RF-20/21/22, RF-15/23).
+- `widgets/minha-fila-board` — as 3 colunas + concluídos hoje, cronômetro ao vivo (RF-21,
+  precisou de `IniciadoEm` novo no `ProtocoloResumo` do back — gap achado construindo isso,
+  fechado na hora), chip de prazo pelas 4 faixas do semáforo.
+- Novos primitivos em `shared/ui` (`Chip`, `SurfaceCard`) e `shared/lib` (`format.ts` pra
+  duração/cronômetro, `use-now.ts` pro tick ao vivo) — ver seção "Tailwind: evitando className
+  gigante" acima pro porquê.
+
+**Distribuição** continua placeholder — só o cabeçalho no padrão certo.
+
+Verificado: `tsc --noEmit` limpo, `npm run build` limpo, e — pela primeira vez com uma tela de
+conteúdo real — **`verify-visual` completo**: dados de teste reais criados via API (conferente
++ protocolos em cada uma das 3 colunas + 2 concluídos hoje), login de verdade, screenshots nos
+dois temas lidos e conferidos (fidelidade boa: cards, chip de prazo, cronômetro, observação,
+botões Aprovar/Não aprovar todos batendo com o protótipo), e a ação "Pegar este" clicada de
+verdade num browser confirmando que move do pool pra "Atribuídas a você". Dados de teste
+limpos depois.
 
 Ainda não existem testes de unidade (vitest) nem lint rodado a sério (eslint/oxlint já vem do
-scaffold do shadcn, mas ainda não foi ligado ao fluxo) — ficou fora deste corte pra focar em
-arquitetura + auth + design system + verificação visual. Próximo passo natural é a primeira
-tela de verdade com conteúdo real (RF-19 a RF-24, Minha fila — mais simples que Distribuição,
-bom candidato pra validar o padrão de slice + os componentes de card/prazo antes da tela
-maior), usando as skills `new-entity`/`new-feature`/`new-page` e fechando com `verify-visual`.
+scaffold do shadcn, mas ainda não foi ligado ao fluxo). O teste de interação em
+`e2e/minha-fila.spec.ts` foi removido depois de validar manualmente — dependia de estado
+pré-semeado à mão, não era idempotente; TODO no arquivo explica como fazer certo (criar a
+própria fixture via API dentro do teste). Próximo passo natural é a tela de Distribuição
+(RF-13 a RF-18, mais complexa — 3 visões do mesmo dado), usando as skills
+`new-entity`/`new-feature`/`new-page` e fechando com `verify-visual`.
