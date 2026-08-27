@@ -1,5 +1,6 @@
 import { useSessionStore } from '@/entities/usuario'
 import { configureHttpClient } from '@/shared/api/http-client'
+import { queryClient } from '@/shared/lib/query-client'
 
 import { AppProviders } from './providers/app-providers'
 import { Router } from './routing/router'
@@ -10,7 +11,13 @@ import { Router } from './routing/router'
 // dois se conectam. Mesma ideia do AuthProvider/adapter do financas-front, sem a interface.
 configureHttpClient({
   getToken: () => useSessionStore.getState().token,
-  onUnauthorized: () => useSessionStore.getState().clearSession(),
+  onUnauthorized: () => {
+    // queryClient.clear() aqui também — um 401 no meio da sessão (token expirou) não pode
+    // deixar cache de "quem era" sobrevivendo pro próximo login, mesmo problema que o
+    // LogoutButton/useLogin já cobrem pros dois caminhos normais.
+    useSessionStore.getState().clearSession()
+    queryClient.clear()
+  },
 })
 
 export const App = () => (
