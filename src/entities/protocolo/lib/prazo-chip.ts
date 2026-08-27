@@ -1,6 +1,7 @@
-import type { FaixaSemaforo } from '@/entities/protocolo'
 import { formatDuracaoCurta } from '@/shared/lib/format'
 import type { Chip } from '@/shared/ui/chip'
+
+import type { FaixaSemaforo } from '../model/types'
 
 type TomChip = NonNullable<React.ComponentProps<typeof Chip>['tom']>
 

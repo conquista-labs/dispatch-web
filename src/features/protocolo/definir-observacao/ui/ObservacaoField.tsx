@@ -1,7 +1,8 @@
 import { useState } from 'react'
 
-import { useDefinirObservacao } from '@/features/protocolo/definir-observacao'
 import { Button } from '@/shared/ui/button'
+
+import { useDefinirObservacao } from '../model/use-definir-observacao'
 
 type ObservacaoFieldProps = {
   protocoloId: string

@@ -26,6 +26,22 @@ export type ProtocoloResumo = {
   iniciadoEm: string | null
 }
 
+// GrupoPorConferenteResponse (Api) — VisaoDistribuicaoResponse (RF-13). Não carrega nome do
+// conferente (só o id); resolver via entities/conferente.
+export type GrupoPorConferente = {
+  conferenteId: string
+  protocolos: ProtocoloResumo[]
+}
+
+export type VisaoDistribuicao = {
+  pool: ProtocoloResumo[]
+  atribuidos: ProtocoloResumo[]
+  emConferencia: ProtocoloResumo[]
+  concluidos: ProtocoloResumo[]
+  excecoes: ProtocoloResumo[]
+  porConferente: GrupoPorConferente[]
+}
+
 export type ProtocoloConcluidoResumo = {
   id: string
   numero: string

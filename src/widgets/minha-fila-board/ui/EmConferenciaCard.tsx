@@ -1,11 +1,9 @@
-import type { ProtocoloResumo } from '@/entities/protocolo'
+import { prazoChip, type ProtocoloResumo } from '@/entities/protocolo'
+import { ObservacaoField } from '@/features/protocolo/definir-observacao'
 import { formatCronometro } from '@/shared/lib/format'
 import { Button } from '@/shared/ui/button'
 import { Chip } from '@/shared/ui/chip'
 import { SurfaceCard } from '@/shared/ui/surface-card'
-
-import { prazoChip } from '../lib/prazo-chip'
-import { ObservacaoField } from './ObservacaoField'
 
 const ETAPA_LABEL: Record<ProtocoloResumo['etapa'], string> = {
   PreConferencia: 'Pré-conferência',

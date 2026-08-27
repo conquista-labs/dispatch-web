@@ -1,10 +1,8 @@
-import type { ProtocoloResumo } from '@/entities/protocolo'
+import { prazoChip, type ProtocoloResumo } from '@/entities/protocolo'
+import { ObservacaoField } from '@/features/protocolo/definir-observacao'
 import { Button } from '@/shared/ui/button'
 import { Chip } from '@/shared/ui/chip'
 import { SurfaceCard } from '@/shared/ui/surface-card'
-
-import { prazoChip } from '../lib/prazo-chip'
-import { ObservacaoField } from './ObservacaoField'
 
 const ETAPA_LABEL: Record<ProtocoloResumo['etapa'], string> = {
   PreConferencia: 'Pré-conferência',
@@ -27,7 +25,7 @@ export const ProtocoloCard = ({ protocolo, now, acaoLabel, onAcao, acaoDesabilit
   const chip = prazoChip(protocolo.semaforo, protocolo.vencimentoEm, now)
 
   return (
-    <SurfaceCard>
+    <SurfaceCard tom={chip.tom}>
       <div className="flex items-center justify-between gap-1.5">
         <span className="font-mono text-[12.5px] font-medium">{protocolo.numero}</span>
         <Chip tom={chip.tom}>{chip.label}</Chip>
