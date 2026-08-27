@@ -193,4 +193,12 @@ body {
   html {
     @apply font-sans;
   }
+  /* Cursor de "mão" em qualquer coisa clicável — desliguei sem querer na inicialização do
+     shadcn (--no-pointer). Regra global em vez de classe por componente: cobre o Button do
+     shadcn, os <button> nativos (sidebar, logout) e qualquer coisa nova, sem precisar lembrar
+     de repetir cursor-pointer toda vez. */
+  button:not(:disabled),
+  [role='button']:not([aria-disabled='true']) {
+    cursor: pointer;
+  }
 }
