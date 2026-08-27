@@ -135,11 +135,25 @@ pra aceitar chamada do navegador — nenhum teste anterior contra a API tinha es
 porque `curl`/Postman não fazem preflight, só o browser faz. Documentado também no
 `CLAUDE.md` do `dispatch-api`.
 
+## Skills do projeto
+
+Em `.claude/skills/`, pra fluxos recorrentes deste repositório:
+
+- **`new-entity`** — nova slice em `entities/` (substantivo do domínio: leitura + tipo).
+- **`new-feature`** — nova slice em `features/` (verbo: ação de escrita contra a API).
+- **`new-page`** — nova tela (página + widgets + wiring de rota/guarda de papel/nav).
+- **`add-shadcn-component`** — instalar um componente shadcn/ui no lugar certo do FSD.
+- **`verify-visual`** — validar visualmente uma tela com Playwright, nos dois temas, com login
+  de verdade contra a API local. Obrigatória depois de qualquer mudança de tela — ver a skill
+  pra entender por quê (nenhuma sessão até agora teve ferramenta de browser interativa).
+
 ## Comandos
 
 ```
 npm run dev      # sobe o Vite dev server (porta 5173)
 npm run build    # tsc -b && vite build
+npm run e2e      # roda os testes Playwright (ver skill verify-visual)
+npm run e2e:ui   # idem, com a UI do Playwright pra debugar interativamente
 ```
 
 ## Estado atual
@@ -154,17 +168,16 @@ cabeçalho no padrão certo, conteúdo real (os boards/kanbans) ainda não const
 
 Verificado: `tsc --noEmit` limpo, `npm run build` limpo (fontes e CSS gerados corretamente,
 classes utilitárias customizadas — `text-text-2`, `bg-ok-bg` etc. — conferidas no CSS final),
-Vite dev server servindo tudo sem erro, contrato de auth (CORS + login + `/auth/me`) testado
-ponta a ponta contra a API local. **Não testado visualmente num navegador de verdade** — sem
-ferramenta de automação de browser disponível nas sessões que construíram isso até aqui. Vale
-um `npm run dev` manual (com a API rodando em `:5245`) antes de considerar o layout 100%
-fiel — a tradução dos valores do protótipo (px exatos, cores, espaçamento) pra Tailwind foi
-feita por leitura do HTML/CSS do protótipo, não por comparação visual lado a lado.
+contrato de auth (CORS + login + `/auth/me`) testado ponta a ponta contra a API local. **E,
+pela primeira vez, verificado visualmente de verdade**: `@playwright/test` instalado
+(`e2e/`, ver skill `verify-visual`), rodado contra a API local com login real (não mock) —
+login (claro e escuro) e a sidebar autenticada renderizando fiéis ao protótipo, screenshots
+lidos e conferidos. RF-04 (tema) e a persistência de sessão no F5 (via `/auth/me`) confirmados
+funcionando de ponta a ponta num browser real, não só por `curl`.
 
-Ainda não existem testes (vitest) nem lint (eslint) configurados — ficou fora deste corte pra
-focar em arquitetura + auth + design system. Próximo passo natural é a primeira tela de
-verdade com conteúdo real (RF-19 a RF-24, Minha fila — mais simples que Distribuição, bom
-candidato pra validar o padrão de slice + os componentes de card/prazo antes da tela maior). O
-markup de referência de cada tela (cores, espaçamento, texto exato) está em
-`../dispatch-prototype/Dispatch.dc.html` — sempre ler a seção correspondente antes de montar
-uma tela nova, não improvisar layout.
+Ainda não existem testes de unidade (vitest) nem lint rodado a sério (eslint/oxlint já vem do
+scaffold do shadcn, mas ainda não foi ligado ao fluxo) — ficou fora deste corte pra focar em
+arquitetura + auth + design system + verificação visual. Próximo passo natural é a primeira
+tela de verdade com conteúdo real (RF-19 a RF-24, Minha fila — mais simples que Distribuição,
+bom candidato pra validar o padrão de slice + os componentes de card/prazo antes da tela
+maior), usando as skills `new-entity`/`new-feature`/`new-page` e fechando com `verify-visual`.
