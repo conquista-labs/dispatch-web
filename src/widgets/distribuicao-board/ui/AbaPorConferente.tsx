@@ -16,12 +16,18 @@ type AbaPorConferenteProps = {
   now: number
 }
 
-// RF-13/RF-14 — "Sem dono" + uma coluna por conferente. `porConferente` só traz quem já tem
+// RF-13/RF-14 — "Pool aberto" + uma coluna por conferente. `porConferente` só traz quem já tem
 // algo atribuído; conferentes sem nada aparecem do mesmo jeito (coluna vazia), então a lista
 // de colunas vem de entities/conferente, não de porConferente.
+//
+// Simplificação consciente: sem "· N feitos hoje" no subtítulo (protótipo mostra isso ao lado
+// do nível). `ProtocoloResumo` não tem `ConcluidoEm` — só dá pra contar "concluídos" de todo o
+// histórico do conferente, não "hoje", e mostrar esse número com o rótulo errado seria pior que
+// não mostrar. Fica pra quando o back expuser isso (mesmo padrão do gap que fechamos pra
+// `IniciadoEm`/cronômetro em Minha fila).
 export const AbaPorConferente = ({ pool, porConferente, conferentes, now }: AbaPorConferenteProps) => (
   <div className="flex items-start gap-3 overflow-x-auto">
-    <ProtocoloColuna nome="Sem dono" sub="exige decisão" protocolos={pool} now={now} mensagemVazia="pool vazio" />
+    <ProtocoloColuna nome="Pool aberto" sub="sem dono — quem tem alçada para o ato pega" protocolos={pool} now={now} mensagemVazia="pool vazio" variant="conferente" />
 
     {conferentes.map((conferente) => {
       const grupo = porConferente.find((g) => g.conferenteId === conferente.id)
@@ -33,6 +39,7 @@ export const AbaPorConferente = ({ pool, porConferente, conferentes, now }: AbaP
           protocolos={grupo?.protocolos ?? []}
           now={now}
           mensagemVazia={conferente.naEscala ? 'fila vazia' : 'ausente'}
+          variant="conferente"
         />
       )
     })}

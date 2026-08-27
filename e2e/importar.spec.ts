@@ -28,7 +28,8 @@ test('importar um relatório de verdade — dados, prévia e confirmação', asy
   await page.getByPlaceholder(/protocolo,tipoAto/).fill(CSV)
   await page.screenshot({ path: 'e2e/.screenshots/importar-dados-claro.png', fullPage: true })
 
-  await page.getByRole('button', { name: 'Pré-visualizar' }).click()
+  await expect(page.getByText('6 linhas coladas')).toBeVisible()
+  await page.getByRole('button', { name: 'Ler 6 linhas' }).click()
   await expect(page.getByText('Protocolo')).toBeVisible()
   await expect(page.getByText('262414')).toBeVisible()
   await expect(page.getByText('tipo novo')).toBeVisible()
@@ -36,7 +37,7 @@ test('importar um relatório de verdade — dados, prévia e confirmação', asy
 
   await page.getByRole('button', { name: 'Ver distribuição' }).click()
   await expect(page.getByText('Como o lote ficaria')).toBeVisible()
-  await expect(page.getByText('Tipos de ato desconhecidos')).toBeVisible()
+  await expect(page.getByText('Tipos de ato que o sistema não conhece')).toBeVisible()
   await page.screenshot({ path: 'e2e/.screenshots/importar-previa-claro.png', fullPage: true })
 
   await page.getByRole('button', { name: 'Confirmar e distribuir' }).click()
@@ -45,5 +46,7 @@ test('importar um relatório de verdade — dados, prévia e confirmação', asy
 
   await page.getByRole('button', { name: 'Ver distribuição' }).click()
   await expect(page).toHaveURL(/\/distribuicao/)
-  await expect(page.getByText('262414')).toBeVisible()
+  // A coluna do pool trunca em 3 cards (RF-13/fidelidade) — não dá pra garantir qual dos 5
+  // protocolos importados fica visível, só que pelo menos um dos conhecidos aparece.
+  await expect(page.getByText(/262414|262681|230765|262920|262495/).first()).toBeVisible()
 })

@@ -7,11 +7,17 @@ import { useDefinirObservacao } from '../model/use-definir-observacao'
 type ObservacaoFieldProps = {
   protocoloId: string
   observacao: string | null
+  /**
+   * Distribuição mostra a observação mas não deixa editar dali — no protótipo aprovado, o botão
+   * "+ Observação"/"Editar observação" só existe no card de Minha fila (quem confere é quem
+   * escreve a nota); a Distribuição só lê. Sem isso, nada renderiza quando `observacao` é nulo.
+   */
+  somenteLeitura?: boolean
 }
 
 // RF-15/RF-23: observação livre, editável em qualquer estado do protocolo. Três estados:
 // mostrando o valor salvo, editando (textarea), ou vazio (só o botão "+ Observação").
-export const ObservacaoField = ({ protocoloId, observacao }: ObservacaoFieldProps) => {
+export const ObservacaoField = ({ protocoloId, observacao, somenteLeitura }: ObservacaoFieldProps) => {
   const [editando, setEditando] = useState(false)
   const [valor, setValor] = useState(observacao ?? '')
   const { mutate, isPending } = useDefinirObservacao()
@@ -35,7 +41,7 @@ export const ObservacaoField = ({ protocoloId, observacao }: ObservacaoFieldProp
         </div>
       )}
 
-      {editando && (
+      {!somenteLeitura && editando && (
         <textarea
           value={valor}
           onChange={(event) => setValor(event.target.value)}
@@ -44,9 +50,11 @@ export const ObservacaoField = ({ protocoloId, observacao }: ObservacaoFieldProp
         />
       )}
 
-      <Button variant="ghost" onClick={handleClicar} disabled={isPending} className="mt-1.5 h-auto w-full justify-start px-1.5 py-1 text-[11.5px] font-medium">
-        {editando ? 'Salvar observação' : observacao ? 'Editar observação' : '+ Observação'}
-      </Button>
+      {!somenteLeitura && (
+        <Button variant="ghost" onClick={handleClicar} disabled={isPending} className="mt-1.5 h-auto w-full justify-start px-1.5 py-1 text-[11.5px] font-medium">
+          {editando ? 'Salvar observação' : observacao ? 'Editar observação' : '+ Observação'}
+        </Button>
+      )}
     </>
   )
 }

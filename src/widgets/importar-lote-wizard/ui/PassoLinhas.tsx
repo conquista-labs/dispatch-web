@@ -51,11 +51,11 @@ export const PassoLinhas = ({ resumo, etapa, linhaDeCorte, onVoltar, onContinuar
 
       <div className="overflow-hidden rounded-[10px] border border-border bg-card shadow-sm">
         <div className="flex items-center gap-2 border-b border-border px-3.5 py-2 text-[11.5px] font-medium text-text-2">
-          <span className="w-[84px]">Protocolo</span>
-          <span className="flex-1">Tipo de ato</span>
-          <span className="w-[132px]">Escrevente</span>
-          <span className="w-[132px]">Prazo</span>
-          <span className="w-[110px] text-right">Leitura</span>
+          <span className="w-20 flex-none">Protocolo</span>
+          <span className="min-w-24 flex-1">Tipo de ato</span>
+          <span className="w-[126px] flex-none">Escrevente</span>
+          <span className="w-[182px] flex-none">Prazo e regra aplicada</span>
+          <span className="w-[98px] flex-none text-right">Leitura</span>
         </div>
 
         {visiveis.map((linha, indice) => {
@@ -75,9 +75,9 @@ export const PassoLinhas = ({ resumo, etapa, linhaDeCorte, onVoltar, onContinuar
                 !linha.jaExiste && !linha.tipoConhecido && 'bg-warn-bg',
               )}
             >
-              <span className="w-[84px] font-mono text-[12.5px] font-medium">{linha.protocolo}</span>
-              <span className="flex-1 truncate text-text-5">{linha.tipoAto}</span>
-              <span className="w-[132px] overflow-hidden">
+              <span className="w-20 flex-none font-mono text-[12.5px] font-medium">{linha.protocolo}</span>
+              <span className="min-w-24 flex-1 truncate pr-2 text-text-5">{linha.tipoAto}</span>
+              <span className="w-[126px] flex-none overflow-hidden">
                 <span className="block truncate text-text-2">{linha.escrevente}</span>
                 {!linha.jaExiste && (
                   <span className={cn('mt-0.5 block truncate font-mono text-[10.5px]', linha.equipe ? 'text-muted-foreground' : 'text-bad-fg')}>
@@ -85,13 +85,13 @@ export const PassoLinhas = ({ resumo, etapa, linhaDeCorte, onVoltar, onContinuar
                   </span>
                 )}
               </span>
-              <span className="w-[132px]">
+              <span className="w-[182px] flex-none pr-2">
                 {chip && linha.prazo ? <Chip tom={chip.tom}>{TIPO_PRAZO_LABEL[linha.prazo]}</Chip> : <span className="text-muted-foreground">—</span>}
-                {regraPrazo && <span className="mt-0.5 block truncate text-[10.5px] text-muted-foreground">{regraPrazo}</span>}
+                {regraPrazo && <span className="mt-0.5 block text-[10.5px] leading-snug text-muted-foreground">{regraPrazo}</span>}
               </span>
               <span
                 className={cn(
-                  'w-[110px] text-right text-[12px] font-medium',
+                  'w-[98px] flex-none text-right text-[12px] font-medium',
                   linha.jaExiste ? 'text-muted-foreground' : linha.tipoConhecido ? 'text-text-2' : 'text-bad-fg',
                 )}
               >

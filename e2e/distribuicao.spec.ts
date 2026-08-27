@@ -16,17 +16,17 @@ test('Distribuição — as 3 abas renderizam com dados reais', async ({ page })
   await expect(page.getByRole('heading', { name: 'Distribuição' })).toBeVisible()
 
   // Por conferente (aba padrão).
-  await expect(page.getByText('Sem dono')).toBeVisible()
+  await expect(page.getByText('Pool aberto')).toBeVisible()
   await page.screenshot({ path: 'e2e/.screenshots/distribuicao-conferente-claro.png', fullPage: true })
 
   // Por status.
   await page.getByRole('button', { name: 'Por status' }).click()
-  await expect(page.getByText('Em conferência')).toBeVisible()
+  await expect(page.getByText('Em conferência', { exact: true })).toBeVisible()
   await page.screenshot({ path: 'e2e/.screenshots/distribuicao-status-claro.png', fullPage: true })
 
   // Exceções.
   await page.getByRole('button', { name: /Exceções/ }).click()
-  await expect(page.getByText('exceção')).toBeVisible()
+  await expect(page.getByText(/tipo novo|sem alçada/)).toBeVisible()
   await expect(page.getByRole('button', { name: 'Resolver' })).toBeVisible()
   await page.screenshot({ path: 'e2e/.screenshots/distribuicao-excecoes-claro.png', fullPage: true })
 

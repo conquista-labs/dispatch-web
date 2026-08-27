@@ -21,7 +21,14 @@ export const prazoChip = (semaforo: FaixaSemaforo | null, vencimentoEm: string |
   }
 
   const restanteMs = new Date(vencimentoEm).getTime() - now
-  const label = restanteMs < 0 ? `estourou há ${formatDuracaoCurta(-restanteMs)}` : `vence em ${formatDuracaoCurta(restanteMs)}`
+  // Só os 3 estados de risco (amarelo/laranja/vermelho) levam o prefixo "vence em"/"estourou
+  // há" no protótipo aprovado — "no prazo" (verde) mostra só a duração pura (prazoInfo, Dispatch.dc.html).
+  const label =
+    semaforo === 'Verde'
+      ? formatDuracaoCurta(restanteMs)
+      : restanteMs < 0
+        ? `estourou há ${formatDuracaoCurta(-restanteMs)}`
+        : `vence em ${formatDuracaoCurta(restanteMs)}`
 
   return { label, tom: TOM_POR_FAIXA[semaforo] }
 }

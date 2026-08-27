@@ -265,6 +265,69 @@ design; o back ganhou RF-08 pra sustentar o passo do meio, ver `../dispatch-api/
 - **Simplificação consciente**: sem `.csv`/`.xlsx` de verdade — só colar linhas (RF-05 já permite
   isso explicitamente). Evita depender de uma lib de parsing de planilha por enquanto.
 
+**Descoberta importante sobre o protótipo: o `.dc.html` pode estar desatualizado em relação à
+ferramenta de design ao vivo.** O dono flagrou isso comparando um print da ferramenta contra o
+que eu tinha lido do arquivo — o arquivo em disco realmente não tinha o conteúdo que a ferramenta
+mostrava (mudanças ainda não exportadas). Depois que ele reexportou, sim bateu. **Lição: não
+confiar cegamente numa leitura anterior do `.dc.html` nesta sessão — reler antes de qualquer
+trabalho de fidelidade, e desconfiar se o dono disser que "está diferente".**
+
+Descoberta técnica boa que resolve isso de vez: **o `.dc.html` roda sozinho num navegador de
+verdade** (é um `<x-dc>` com `support.js`, interativo, com login/nav/estado). Dá pra abrir com
+Playwright via `file://<caminho absoluto>` e navegar nele igual um app de verdade (clicar no
+atalho "Distribuidora" pra entrar, clicar nas abas, abrir dropdown) — muito mais confiável que
+interpretar o markup/CSS-in-JS na mão. **Esse é o método padrão daqui pra frente pra qualquer
+verificação de fidelidade**: abrir os dois (protótipo real via `file://` e o app local) lado a
+lado, printar os mesmos estados, comparar. Interpretar só o markup é o último recurso, não o
+primeiro passo.
+
+**Ajustes de fidelidade feitos numa segunda rodada, depois de navegar o protótipo de verdade**
+(pedido do dono — Select/DateTimePicker "continuavam diferentes", e depois "confira Distribuição
+também"):
+- **Seletor de Etapa**: o `Select` do shadcn não tem como mostrar duas linhas dentro do próprio
+  campo (rótulo + explicação, ex. "Pós-conferência" / "depois da lavratura"). Trocado por um
+  `Popover` customizado (`SeletorEtapa`, dentro de `PassoDados.tsx`) com trigger de duas linhas e
+  menu com rádio customizado — só pra esse campo, não virou componente genérico (só tem esse uso).
+- **`DateTimePicker`**: trigger reescrito pra bater com o protótipo (ícone de calendário + "data
+  · hora", sem o texto "às"); hora/minuto trocados de `<input type="time">` nativo pra steppers
+  −/+ (`Stepper`, dentro do próprio arquivo); `Calendar` ganhou `locale={ptBR}` (`date-fns/locale`)
+  pros dias da semana saírem em português.
+- **Indicador de passo do wizard**: era pill/chip (`1 · dados`); virou círculo numerado + linha
+  conectando, igual ao protótipo (`IndicadorDePassos`, `ImportarLoteWizard.tsx`).
+- **`PassoDados`**: rodapé do textarea agora segue o protótipo — contador "N linhas coladas" e
+  botão "Ler N linhas" com a contagem embutida, em vez de um "Pré-visualizar" genérico e sempre
+  visível.
+- **Distribuição**: legenda de prazo antes só aparecia nas abas "Por conferente"/"Por status" —
+  agora aparece nas 3 (protótipo mostra em todas, inclusive Exceções); texto/cor dos 4 níveis
+  corrigidos pra bater com as faixas reais (4h/60min) e a cor "bar" (mais saturada) que o
+  protótipo usa nos swatches. `ProtocoloColuna`/`DistribuicaoProtocoloCard` ganharam um prop
+  `variant` (`'conferente' | 'status'`) porque o protótipo estiliza a mesma informação diferente
+  em cada aba: coluna com largura fixa (206px) + cabeçalho em card com badge de total (aba
+  conferente) vs. coluna elástica + cabeçalho plano (aba status); valor de prazo em chip/pill
+  (conferente) vs. texto simples colorido sem fundo (status). As duas abas também truncam em "+N
+  protocolos" depois de 3 (conferente) ou 4 (status) cards — não existia truncamento antes.
+  Cabeçalho da página ganhou os 4 segmentos do resumo (ativos/pool/em conferência/prazo
+  estourado, "nenhum" por extenso quando zero — confirmado no código-fonte do protótipo, não é
+  erro) e o botão "Importar relatório" (a rota já existe desde que Importar foi construída).
+  `ObservacaoField` ganhou `somenteLeitura` — Distribuição só lê a observação (sem botão de
+  editar); só Minha fila edita, que é onde o protótipo de fato tem esse botão.
+  `ExcecaoCard` perdeu o `<select>` nativo (virou o `Select` do shadcn) e a tag fixa "exceção"
+  virou dinâmica (`tagDaExcecao`, deriva de `motivoExcecao`: "tipo desconhecido" → "tipo novo",
+  resto → "sem alçada" — o back não distingue "escala vazia" de "barrado por regra" como o
+  protótipo simula, então não dá pra replicar os dois rótulos sem inventar dado).
+- **Bug real achado no caminho, não só fidelidade**: `prazoChip` (`entities/protocolo/lib/prazo-chip.ts`,
+  usado por Minha fila **e** Distribuição) prefixava "vence em"/"estourou há" em qualquer faixa —
+  o protótipo só usa esse prefixo nos 3 estados de risco (amarelo/laranja/vermelho); o estado
+  verde ("no prazo") mostra só a duração pura. Corrigido no helper compartilhado, então já vale
+  pras duas telas.
+- **Gaps que ficaram documentados nos componentes, não corrigidos** (faltaria campo novo no
+  back): sem "N feitos hoje" no subtítulo do card de conferente (precisaria de `ConcluidoEm` em
+  `ProtocoloResumo`, que não existe — mostrar um número "de todo o histórico" com o rótulo "hoje"
+  seria pior que não mostrar); canto do card "Concluídos" mostra aprovado/não aprovado em vez do
+  tempo de conferência (mesma causa); sem linha de "tipo de ato" em nenhuma das duas abas
+  (`ProtocoloResumo` só tem `tipoAtoId`, sem nome — precisaria de um `entities/tipoAto` que ainda
+  não existe).
+
 **Bug crítico achado em uso real e corrigido**: deslogar de um papel e logar com outro
 mostrava a sessão anterior primeiro — o cache do TanStack Query não era limpo no logout
 (`queryKey` de `useCurrentUser`/`useMinhaFila`/etc. não tem escopo por usuário). Corrigido com

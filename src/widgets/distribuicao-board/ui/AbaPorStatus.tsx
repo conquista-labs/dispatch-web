@@ -17,10 +17,17 @@ export const AbaPorStatus = ({ visao, conferentes, now }: AbaPorStatusProps) => 
 
   return (
     <div className="flex items-start gap-3">
-      <ProtocoloColuna nome="Pool" protocolos={visao.pool} now={now} mensagemVazia="nada no pool" />
-      <ProtocoloColuna nome="Atribuídos" protocolos={visao.atribuidos} now={now} mensagemVazia="nada atribuído" resolverDonoNome={resolverDono} />
-      <ProtocoloColuna nome="Em conferência" protocolos={visao.emConferencia} now={now} mensagemVazia="ninguém conferindo agora" resolverDonoNome={resolverDono} />
-      <ProtocoloColuna nome="Concluídos" protocolos={visao.concluidos} now={now} mensagemVazia="nada concluído" resolverDonoNome={resolverDono} />
+      <ProtocoloColuna nome="Pool" protocolos={visao.pool} now={now} mensagemVazia="nada no pool" resolverDonoNome={resolverDono} variant="status" />
+      <ProtocoloColuna nome="Atribuídos" protocolos={visao.atribuidos} now={now} mensagemVazia="nada atribuído" resolverDonoNome={resolverDono} variant="status" />
+      <ProtocoloColuna
+        nome="Em conferência"
+        protocolos={visao.emConferencia}
+        now={now}
+        mensagemVazia="ninguém conferindo agora"
+        resolverDonoNome={resolverDono}
+        variant="status"
+      />
+      <ProtocoloColuna nome="Concluídos" protocolos={visao.concluidos} now={now} mensagemVazia="nada concluído" resolverDonoNome={resolverDono} variant="status" />
     </div>
   )
 }

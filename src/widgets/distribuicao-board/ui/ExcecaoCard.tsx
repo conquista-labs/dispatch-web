@@ -6,12 +6,20 @@ import { useAtribuirManualmente } from '@/features/protocolo/atribuir-manualment
 import { useDescartarExcecao } from '@/features/protocolo/descartar-excecao'
 import { Button } from '@/shared/ui/button'
 import { Chip } from '@/shared/ui/chip'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { SurfaceCard } from '@/shared/ui/surface-card'
 
 const ETAPA_LABEL: Record<ProtocoloResumo['etapa'], string> = {
   PreConferencia: 'Pré-conferência',
   PosConferencia: 'Pós-conferência',
 }
+
+// RF-17: motivo vem como texto livre (MotorDistribuicao.Motivo — "tipo desconhecido" ou "ninguém
+// com alçada", ver dispatch-api/CLAUDE.md), sem uma tag separada como o protótipo simula. "tipo
+// novo" dá pra derivar direto; o protótipo também distingue "escala vazia" de "barrado por
+// regra" dentro do segundo caso, mas o back não guarda essa diferença — "sem alçada" cobre os
+// dois sem inventar um dado que não existe.
+const tagDaExcecao = (motivo: string | null) => (motivo === 'tipo desconhecido' ? 'tipo novo' : 'sem alçada')
 
 type ExcecaoCardProps = {
   protocolo: ProtocoloResumo
@@ -39,7 +47,7 @@ export const ExcecaoCard = ({ protocolo, conferentes }: ExcecaoCardProps) => {
           <div className="flex flex-wrap items-center gap-2">
             <span className="font-mono text-[12.5px] font-medium">{protocolo.numero}</span>
             <span className="text-[13px] text-text-5">{ETAPA_LABEL[protocolo.etapa]}</span>
-            <Chip tom="atencao">exceção</Chip>
+            <Chip tom="atencao">{tagDaExcecao(protocolo.motivoExcecao)}</Chip>
           </div>
           <div className="mt-1 text-[12.5px] leading-snug text-text-2">{protocolo.motivoExcecao}</div>
         </div>
@@ -56,18 +64,18 @@ export const ExcecaoCard = ({ protocolo, conferentes }: ExcecaoCardProps) => {
 
       {resolvendo && (
         <div className="mt-3 flex items-center gap-1.5">
-          <select
-            value={conferenteId}
-            onChange={(event) => setConferenteId(event.target.value)}
-            className="h-8 flex-1 rounded-md border border-border bg-card px-2 text-[12.5px] text-foreground outline-none"
-          >
-            <option value="">Escolher conferente…</option>
-            {conferentes.map((conferente) => (
-              <option key={conferente.id} value={conferente.id}>
-                {conferente.nome}
-              </option>
-            ))}
-          </select>
+          <Select value={conferenteId} onValueChange={setConferenteId}>
+            <SelectTrigger className="h-8 flex-1">
+              <SelectValue placeholder="Escolher conferente…" />
+            </SelectTrigger>
+            <SelectContent>
+              {conferentes.map((conferente) => (
+                <SelectItem key={conferente.id} value={conferente.id}>
+                  {conferente.nome}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Button variant="outline" onClick={() => setResolvendo(false)}>
             Cancelar
           </Button>
