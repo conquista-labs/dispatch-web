@@ -181,7 +181,7 @@ Em `.claude/skills/`, pra fluxos recorrentes deste repositório:
 1. **Regressão permanente** (`cursor`, `login`, `auth`, `session-isolation`) — só usa contas
    seed fixas (`distribuidora@cartorio.com`, `conferente-rf27@cartorio.com`), sempre passa,
    sempre roda. É o que `npm run e2e` deveria rodar no dia a dia.
-2. **Verificação visual pontual** (`minha-fila`, `distribuicao`) — precisa de dado criado à mão
+2. **Verificação visual pontual** (`minha-fila`, `distribuicao`, `importar`) — precisa de dado criado à mão
    pra popular cada coluna/estado (ver skill `verify-visual`); depois de rodada uma vez e os
    screenshots conferidos, o dado de teste é apagado — então rodar de novo sem re-semear **vai
    falhar**, e isso é esperado, não regressão quebrada. Cada arquivo documenta no topo o que
@@ -238,6 +238,33 @@ certos, tema (cores, tipografia, logo, claro/escuro) copiado do protótipo aprov
   protótipo pra ela ficou de fora do header por enquanto (não faz sentido linkar rota que não
   existe).
 
+**Importar relatório (RF-05 a RF-12) construída de ponta a ponta, os 3 passos do protótipo aprovado**
+(dados → revisão → distribuição — o protótipo mudou de 2 pra 3 passos depois de ajuste do time de
+design; o back ganhou RF-08 pra sustentar o passo do meio, ver `../dispatch-api/CLAUDE.md`):
+- `features/protocolo/importar-lote` — `usePreVisualizarLote`/`useConfirmarLote`, tipos espelhando
+  `ImportarLoteRequest`/`ResumoImportacao` (agora com `linhas: LinhaPreviaImportacao[] | null`,
+  RF-08 — nulo na confirmação).
+- `entities/protocolo` ganha `TipoPrazo` (tipo) e `lib/rotulos.ts` (`ETAPA_LABEL`/`TIPO_PRAZO_LABEL`)
+  — o back manda `Etapa`/`TipoPrazo` crus (mesmo padrão de `FaixaSemaforo`), o front formata o
+  texto. "5º andar · pós-conferência" do protótipo é montado no front (`${equipe} · ${etapaLabel}`),
+  não uma string pronta vinda do back.
+- `widgets/importar-lote-wizard` — `PassoDados` (etapa + linha de corte + textarea) →
+  `PassoLinhas` (RF-08: tabela linha a linha com prazo, regra e "leitura" — `N com alçada`/
+  `tipo novo`/`já existe`, reaproveita `prazoChip` de `entities/protocolo` pro tom do chip) →
+  `PassoPrevia` (prévia agregada + avisos + confirmar, RF-10/RF-11).
+- **Controles nativos trocados por shadcn** (`select`/`popover`/`calendar` + `shared/ui/datetime-picker.tsx`
+  próprio, que combina `Calendar` com um `<input type="time">` simples) — o `<select>` e o
+  `<input type="datetime-local">` nativos do primeiro corte não tinham como estilizar (chrome do
+  SO), destoavam do resto da tela. Trocado a pedido do dono depois de ver o resultado ao vivo.
+  `date-fns`/`react-day-picker` entraram como dependência automática do `calendar.tsx` do shadcn.
+- **Gotcha do `shadcn add`, nº 3**: `components.json` tinha um campo `"pointer": true` (herdado,
+  por engano, de um flag de *init* da CLI que eu tratei como campo persistível ao corrigir o bug
+  de cursor) — isso quebra qualquer `npx shadcn add <x>` com "Invalid configuration found in
+  components.json". Removido; o cursor-pointer já era coberto pela regra `@layer base` global,
+  então não perdeu nada.
+- **Simplificação consciente**: sem `.csv`/`.xlsx` de verdade — só colar linhas (RF-05 já permite
+  isso explicitamente). Evita depender de uma lib de parsing de planilha por enquanto.
+
 **Bug crítico achado em uso real e corrigido**: deslogar de um papel e logar com outro
 mostrava a sessão anterior primeiro — o cache do TanStack Query não era limpo no logout
 (`queryKey` de `useCurrentUser`/`useMinhaFila`/etc. não tem escopo por usuário). Corrigido com
@@ -250,8 +277,13 @@ login de verdade, screenshots nos dois temas lidos e conferidos — fidelidade b
 (cards, chips, cronômetro, abas, exceção com "Resolver"/"Descartar"). "Pegar este" e o fluxo de
 troca de sessão testados clicando de verdade, não só olhando. Dados de teste limpos depois.
 
-Ainda não existem testes de unidade (vitest) nem lint rodado a sério (eslint/oxlint já vem do
-scaffold do shadcn, mas ainda não foi ligado ao fluxo). Próximo passo natural: Importar
-relatório (RF-05 a RF-12) fecha o fluxo principal de entrada de dado, ou Central de regras
-(RF-31 a RF-38) se preferir seguir pela gestão — usando as skills
+Verificado também: Importar relatório, os 3 passos ponta a ponta contra a API local com CSV real
+(6 linhas, tipo conhecido e desconhecido misturados), `e2e/importar.spec.ts` (regressão) mais um
+teste avulso de tema escuro — fidelidade boa nos dois temas. Dado de teste (protocolos,
+escreventes, lote) limpo depois.
+
+Com isso o fluxo principal de entrada de dado está fechado (Importar → Distribuição → Minha
+fila). Ainda não existem testes de unidade (vitest) nem lint rodado a sério (eslint/oxlint já
+vem do scaffold do shadcn, mas ainda não foi ligado ao fluxo). Próximo passo natural: Central de
+regras (RF-31 a RF-38) ou Conferentes (RF-25 a RF-30) — usando as skills
 `new-entity`/`new-feature`/`new-page` e fechando com `verify-visual`.

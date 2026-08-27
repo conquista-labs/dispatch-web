@@ -1,0 +1,114 @@
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+
+import type { Etapa } from '@/entities/protocolo'
+import { useConfirmarLote, usePreVisualizarLote, type ResumoImportacao } from '@/features/protocolo/importar-lote'
+import { dataHoraParaIso, parseCsv } from '@/shared/lib/parse-csv'
+import { ROUTES } from '@/shared/config/routes'
+import { Button } from '@/shared/ui/button'
+import { cn } from '@/shared/lib/utils'
+
+import { PassoDados } from './PassoDados'
+import { PassoLinhas } from './PassoLinhas'
+import { PassoPrevia } from './PassoPrevia'
+
+type Passo = 'dados' | 'revisao' | 'distribuicao' | 'concluido'
+
+const PASSOS: { valor: Passo; label: string }[] = [
+  { valor: 'dados', label: '1 · dados' },
+  { valor: 'revisao', label: '2 · revisão' },
+  { valor: 'distribuicao', label: '3 · distribuição' },
+]
+
+// RF-05 a RF-12 — fluxo de importação, os 3 passos do protótipo aprovado: dados → revisão linha
+// a linha (RF-08, regra que gerou cada prazo) → prévia agregada + confirmação (RF-10/RF-11).
+export const ImportarLoteWizard = () => {
+  const [passo, setPasso] = useState<Passo>('dados')
+  const [pedido, setPedido] = useState<{ etapa: Etapa; linhaDeCorte: string; linhas: ReturnType<typeof parseCsv> } | null>(null)
+  const [resumo, setResumo] = useState<ResumoImportacao | null>(null)
+  const navigate = useNavigate()
+
+  const preVisualizar = usePreVisualizarLote()
+  const confirmar = useConfirmarLote()
+
+  const handleContinuar = ({ etapa, linhaDeCorte, texto }: { etapa: Etapa; linhaDeCorte: string; texto: string }) => {
+    const linhasCsv = parseCsv(texto)
+    const linhas = linhasCsv.map((linha) => ({
+      protocolo: linha.protocolo ?? '',
+      tipoAto: linha.tipoAto ?? '',
+      escrevente: linha.escrevente ?? '',
+      dataHoraAndamento: dataHoraParaIso(linha.dataHoraAndamento ?? ''),
+    }))
+
+    preVisualizar.mutate(
+      { etapa, linhaDeCorte, linhas },
+      {
+        onSuccess: (dados) => {
+          setPedido({ etapa, linhaDeCorte, linhas: linhasCsv })
+          setResumo(dados)
+          setPasso('revisao')
+        },
+      },
+    )
+  }
+
+  const handleConfirmar = () => {
+    if (!pedido) return
+    const linhas = pedido.linhas.map((linha) => ({
+      protocolo: linha.protocolo ?? '',
+      tipoAto: linha.tipoAto ?? '',
+      escrevente: linha.escrevente ?? '',
+      dataHoraAndamento: dataHoraParaIso(linha.dataHoraAndamento ?? ''),
+    }))
+
+    confirmar.mutate(
+      { etapa: pedido.etapa, linhaDeCorte: pedido.linhaDeCorte, linhas },
+      { onSuccess: () => setPasso('concluido') },
+    )
+  }
+
+  return (
+    <div className="max-w-[880px]">
+      <div className="mb-5 flex items-center gap-2.5">
+        {PASSOS.map((item) => (
+          <span
+            key={item.valor}
+            className={cn(
+              'rounded-full border px-2.5 py-1 font-mono text-[11px] font-medium',
+              passo === item.valor ? 'border-primary bg-primary text-primary-foreground' : 'border-border text-muted-foreground',
+            )}
+          >
+            {item.label}
+          </span>
+        ))}
+      </div>
+
+      {passo === 'dados' && (
+        <PassoDados onContinuar={handleContinuar} carregando={preVisualizar.isPending} erro={preVisualizar.isError ? 'Não foi possível ler o relatório. Confira o formato das linhas.' : null} />
+      )}
+
+      {passo === 'revisao' && resumo && pedido && (
+        <PassoLinhas
+          resumo={resumo}
+          etapa={pedido.etapa}
+          linhaDeCorte={pedido.linhaDeCorte}
+          onVoltar={() => setPasso('dados')}
+          onContinuar={() => setPasso('distribuicao')}
+        />
+      )}
+
+      {passo === 'distribuicao' && resumo && (
+        <PassoPrevia resumo={resumo} onVoltar={() => setPasso('revisao')} onConfirmar={handleConfirmar} confirmando={confirmar.isPending} />
+      )}
+
+      {passo === 'concluido' && resumo && (
+        <div className="rounded-xl border border-ok-border bg-ok-bg p-8 text-center">
+          <div className="text-[15px] font-semibold text-ok-fg">Lote importado — {resumo.processadas} protocolos distribuídos.</div>
+          <Button className="mt-4" onClick={() => navigate(ROUTES.distribuicao)}>
+            Ver distribuição
+          </Button>
+        </div>
+      )}
+    </div>
+  )
+}

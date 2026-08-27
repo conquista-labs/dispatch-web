@@ -1,6 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 
 import { DistribuicaoPage } from '@/pages/distribuicao'
+import { ImportarPage } from '@/pages/importar'
 import { LoginPage } from '@/pages/login'
 import { MinhaFilaPage } from '@/pages/minha-fila'
 import { ROUTES } from '@/shared/config/routes'
@@ -21,6 +22,14 @@ export const Router = () => (
             element={
               <RequireRole roles={['Distribuidora']}>
                 <DistribuicaoPage />
+              </RequireRole>
+            }
+          />
+          <Route
+            path={ROUTES.importar}
+            element={
+              <RequireRole roles={['Distribuidora']}>
+                <ImportarPage />
               </RequireRole>
             }
           />

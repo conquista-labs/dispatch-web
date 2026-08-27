@@ -8,6 +8,9 @@ export type StatusProtocolo = 'Pool' | 'Atribuido' | 'Conferindo' | 'Aprovado' |
 // RF-14/seção 5: as 4 faixas do semáforo de prazo.
 export type FaixaSemaforo = 'Verde' | 'Amarelo' | 'Laranja' | 'Vermelho'
 
+// TipoPrazo (Dispatch.Domain) — prazo bruto de uma Equipe, antes de virar vencimento.
+export type TipoPrazo = 'UmaHora' | 'D0' | 'D1' | 'D2'
+
 // ProtocoloResumo (Api) — DateTimeOffset do C# chega como string ISO 8601 (axios não faz
 // parse automático pra Date), TimeSpan chega como string "hh:mm:ss[.fffffff]".
 export type ProtocoloResumo = {

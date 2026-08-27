@@ -9,7 +9,10 @@ import { Logo } from '@/shared/ui/logo'
 // RF-25 a RF-46 vão crescer essa lista por papel — Distribuidora ganha mais itens conforme
 // as telas de gestão nascem (Conferentes, Central de regras, Dashboard...).
 const NAV_POR_PAPEL: Record<Papel, { label: string; to: string }[]> = {
-  Distribuidora: [{ label: 'Distribuição', to: ROUTES.distribuicao }],
+  Distribuidora: [
+    { label: 'Distribuição', to: ROUTES.distribuicao },
+    { label: 'Importar', to: ROUTES.importar },
+  ],
   Conferente: [{ label: 'Minha fila', to: ROUTES.minhaFila }],
 }
 

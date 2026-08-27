@@ -1,0 +1,118 @@
+import { ETAPA_LABEL, TIPO_PRAZO_LABEL, prazoChip, type Etapa } from '@/entities/protocolo'
+import type { ResumoImportacao } from '@/features/protocolo/importar-lote'
+import { useNow } from '@/shared/lib/use-now'
+import { cn } from '@/shared/lib/utils'
+import { Button } from '@/shared/ui/button'
+import { Chip } from '@/shared/ui/chip'
+
+type PassoLinhasProps = {
+  resumo: ResumoImportacao
+  etapa: Etapa
+  linhaDeCorte: string
+  onVoltar: () => void
+  onContinuar: () => void
+}
+
+const MAX_LINHAS_VISIVEIS = 9
+
+// RF-08: pra cada linha, a regra que gerou o prazo ("5º andar · pós-conferência") — o back
+// manda o fato cru (equipe + prazo), quem monta o texto é o front (ver CLAUDE.md do
+// dispatch-api, seção "RF-08"). RF-07: linha antes da linha de corte ("já existe") não teve
+// nada resolvido de verdade, então some o chip de prazo e a linha de regra, só mostra a leitura.
+export const PassoLinhas = ({ resumo, etapa, linhaDeCorte, onVoltar, onContinuar }: PassoLinhasProps) => {
+  const now = useNow()
+  const linhas = resumo.linhas ?? []
+  const visiveis = linhas.slice(0, MAX_LINHAS_VISIVEIS)
+  const restantes = Math.max(0, linhas.length - MAX_LINHAS_VISIVEIS)
+  const semEquipe = linhas.filter((l) => !l.jaExiste && !l.equipe).length
+
+  const badgesTodas: { label: string; tom: React.ComponentProps<typeof Chip>['tom'] }[] = [
+    { label: `${resumo.totalNoArquivo} linhas lidas`, tom: 'neutro' },
+    { label: `${resumo.processadas} novos`, tom: 'neutro' },
+    { label: `${resumo.ignoradasPelaLinhaDeCorte} já existem`, tom: 'atencao' },
+    { label: `${resumo.excecoes} exigem decisão`, tom: 'vencido' },
+    { label: `${semEquipe} sem equipe (prazo padrão)`, tom: 'neutro' },
+  ]
+  const badges = badgesTodas.filter((b) => !b.label.startsWith('0 '))
+
+  return (
+    <div>
+      <p className="font-mono text-xs font-medium text-muted-foreground">
+        {linhas.length} linhas · {ETAPA_LABEL[etapa]} · a partir de {formatarDataHora(linhaDeCorte)}
+      </p>
+
+      <div className="mt-2.5 mb-3 flex flex-wrap gap-1.5">
+        {badges.map((b) => (
+          <Chip key={b.label} tom={b.tom}>
+            {b.label}
+          </Chip>
+        ))}
+      </div>
+
+      <div className="overflow-hidden rounded-[10px] border border-border bg-card shadow-sm">
+        <div className="flex items-center gap-2 border-b border-border px-3.5 py-2 text-[11.5px] font-medium text-text-2">
+          <span className="w-[84px]">Protocolo</span>
+          <span className="flex-1">Tipo de ato</span>
+          <span className="w-[132px]">Escrevente</span>
+          <span className="w-[132px]">Prazo</span>
+          <span className="w-[110px] text-right">Leitura</span>
+        </div>
+
+        {visiveis.map((linha, indice) => {
+          const chip = linha.jaExiste ? null : prazoChip(linha.semaforo, linha.vencimentoEm, now)
+          const regraPrazo = linha.jaExiste
+            ? null
+            : linha.equipe
+              ? `${linha.equipe} · ${ETAPA_LABEL[etapa]}`
+              : 'padrão da casa · escrevente sem equipe'
+          const leitura = linha.jaExiste ? 'já existe' : linha.tipoConhecido ? `${linha.comAlcada} com alçada` : 'tipo novo'
+
+          return (
+            <div
+              key={`${linha.protocolo}-${indice}`}
+              className={cn(
+                'flex items-center gap-2 border-b border-border/60 px-3.5 py-2 text-[13px] last:border-b-0',
+                !linha.jaExiste && !linha.tipoConhecido && 'bg-warn-bg',
+              )}
+            >
+              <span className="w-[84px] font-mono text-[12.5px] font-medium">{linha.protocolo}</span>
+              <span className="flex-1 truncate text-text-5">{linha.tipoAto}</span>
+              <span className="w-[132px] overflow-hidden">
+                <span className="block truncate text-text-2">{linha.escrevente}</span>
+                {!linha.jaExiste && (
+                  <span className={cn('mt-0.5 block truncate font-mono text-[10.5px]', linha.equipe ? 'text-muted-foreground' : 'text-bad-fg')}>
+                    {linha.equipe ?? 'sem equipe'}
+                  </span>
+                )}
+              </span>
+              <span className="w-[132px]">
+                {chip && linha.prazo ? <Chip tom={chip.tom}>{TIPO_PRAZO_LABEL[linha.prazo]}</Chip> : <span className="text-muted-foreground">—</span>}
+                {regraPrazo && <span className="mt-0.5 block truncate text-[10.5px] text-muted-foreground">{regraPrazo}</span>}
+              </span>
+              <span
+                className={cn(
+                  'w-[110px] text-right text-[12px] font-medium',
+                  linha.jaExiste ? 'text-muted-foreground' : linha.tipoConhecido ? 'text-text-2' : 'text-bad-fg',
+                )}
+              >
+                {leitura}
+              </span>
+            </div>
+          )
+        })}
+
+        {restantes > 0 && <div className="px-3.5 py-2 text-[12.5px] text-muted-foreground">+ {restantes} linhas</div>}
+      </div>
+
+      <div className="mt-4 flex justify-between">
+        <Button variant="outline" onClick={onVoltar}>
+          Voltar
+        </Button>
+        <Button onClick={onContinuar}>Ver distribuição</Button>
+      </div>
+    </div>
+  )
+}
+
+const formatarDataHora = (iso: string) =>
+  new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })

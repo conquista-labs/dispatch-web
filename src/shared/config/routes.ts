@@ -3,5 +3,6 @@
 export const ROUTES = {
   login: '/login',
   distribuicao: '/distribuicao',
+  importar: '/importar',
   minhaFila: '/minha-fila',
 } as const
