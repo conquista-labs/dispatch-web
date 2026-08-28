@@ -351,6 +351,31 @@ também"):
     de "dia atual" do react-day-picker, sem ring de foco competindo com o dia selecionado.
   - Confirmado por medição (`getBoundingClientRect`), não só por print: 266px de popover, 261px
     de calendário, 2.5px de folga simétrica nas duas laterais.
+- **`DateTimePicker`, quinta rodada — bug real de dado, não só de fidelidade** (dono reportou:
+  "não é possível editar data e hora digitando" e "linha de corte não filtra", usando um lote
+  real de 12 linhas e corte "10:57"). As duas queixas eram a mesma causa:
+  - O seletor (igual o protótipo, que também não tem digitação — só clique) só dava pra ajustar
+    data via calendário e hora/minuto via stepper −/+ um em um. Pra chegar em "10:57" a partir de
+    qualquer outro valor, seriam dezenas de cliques — na prática o usuário mexe só no
+    hora/minuto e esquece de clicar no dia certo no calendário, deixando a *data* errada sem
+    perceber (o campo mostra "30/08/2016 · 12:57" ou parecido, fácil de não notar o ano errado
+    num texto pequeno).
+  - Isso expôs um segundo problema, esse sim uma regressão real em relação ao protótipo: o
+    default daqui era `Date.now() - 10 anos` (comentário antigo: "pra não descartar nada na
+    primeira importação"), enquanto o protótipo aprovado (`impCorte`, `Dispatch.dc.html`) usa
+    **hoje às 00:00**. Com o default errado E sem digitação, qualquer lote do dia (sempre depois
+    de qualquer horário de 10 anos atrás) passava no filtro `DataHoraAndamento > linhaDeCorte`
+    inteiro — a linha de corte nunca filtrava nada de verdade, só parecia filtrar quando o
+    usuário por acaso acertava ano/mês/dia certos via calendário.
+  - **Correção, além da fidelidade**: campo de data (`dd/mm/aaaa`) e os dois campos de hora/minuto
+    viraram `<input>` digitável de verdade (mantendo clique no calendário e os botões −/+ como
+    alternativa, não removendo nada) — diverge do protótipo de propósito aqui, porque a
+    precisão que RF-07 pede ("processar só o que aconteceu depois disso") não é alcançável só
+    de clique quando o corte precisa ser um minuto exato do dia. Default voltou a bater com o
+    protótipo (hoje 00:00).
+  - Confirmado via Playwright digitando "10" e "57" direto nos campos (sem tocar em nenhum
+    stepper) contra o CSV de 12 linhas do dono e corte 10:57: prévia leu `8 ignoradas / 4
+    processadas` — bate exatamente com as 4 linhas cujo horário é ≥ 10:57.
 - **Bug real achado no caminho, não só fidelidade**: `prazoChip` (`entities/protocolo/lib/prazo-chip.ts`,
   usado por Minha fila **e** Distribuição) prefixava "vence em"/"estourou há" em qualquer faixa —
   o protótipo só usa esse prefixo nos 3 estados de risco (amarelo/laranja/vermelho); o estado

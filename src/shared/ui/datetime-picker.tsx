@@ -1,6 +1,6 @@
 import { ptBR } from 'date-fns/locale'
 import { CalendarIcon, ChevronDownIcon, MinusIcon, PlusIcon } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import { Button } from '@/shared/ui/button'
 import { Calendar } from '@/shared/ui/calendar'
@@ -12,6 +12,19 @@ const formatarData = (data: Date) => data.toLocaleDateString('pt-BR')
 const formatarHora = (data: Date) => data.toTimeString().slice(0, 5)
 const doisDigitos = (n: number) => String(n).padStart(2, '0')
 
+// "28/08/2026" → Date, mantendo hora/minuto do valor atual. `null` se não bater o formato ou a
+// data não existir (ex.: 31/02).
+const parseData = (texto: string, referencia: Date): Date | null => {
+  const m = texto.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)
+  if (!m) return null
+  const dia = Number(m[1])
+  const mes = Number(m[2])
+  const ano = Number(m[3])
+  const data = new Date(referencia)
+  data.setFullYear(ano, mes - 1, dia)
+  return data.getDate() === dia && data.getMonth() === mes - 1 && data.getFullYear() === ano ? data : null
+}
+
 // Uma letra maiúscula (D S T Q Q S S), igual o protótipo — o `date-fns/locale` sozinho dá 3
 // letras minúsculas ("dom", "seg"...).
 const LETRA_DIA_SEMANA = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S']
@@ -19,9 +32,16 @@ const LETRA_DIA_SEMANA = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S']
 // Substitui o <input type="datetime-local"> nativo (chrome do sistema operacional, não dá pra
 // estilizar de verdade). Gatilho e o painel de hora seguem o protótipo aprovado (Dispatch.dc.html,
 // passo "Linha de corte"): botão com ícone + data · hora, calendário com steppers −/+ pra hora e
-// minuto em vez de um segundo input nativo.
+// minuto. **Divergência deliberada do protótipo**: lá nem o campo de data nem hora/minuto aceitam
+// digitação, só clique — na prática (RF-07, "linha de corte" precisa de precisão tipo "10:57")
+// isso obriga dezenas de cliques no stepper pra chegar num minuto exato, e é fácil deixar a
+// *data* errada (só ajustar hora/minuto sem tocar no calendário) sem perceber. Campo de data e os
+// dois campos de hora/minuto agora aceitam digitar direto, além de continuar clicáveis.
 export const DateTimePicker = ({ value, onChange }: DateTimePickerProps) => {
   const [aberto, setAberto] = useState(false)
+  const [textoData, setTextoData] = useState(formatarData(value))
+
+  useEffect(() => setTextoData(formatarData(value)), [value])
 
   const handleSelecionarData = (data: Date | undefined) => {
     if (!data) return
@@ -30,10 +50,23 @@ export const DateTimePicker = ({ value, onChange }: DateTimePickerProps) => {
     onChange(novaData)
   }
 
+  const commitTextoData = () => {
+    const parsed = parseData(textoData, value)
+    if (parsed) onChange(parsed)
+    else setTextoData(formatarData(value))
+  }
+
   const mexerHora = (campo: 'horas' | 'minutos', delta: number) => {
     const novaData = new Date(value)
     if (campo === 'horas') novaData.setHours(novaData.getHours() + delta)
     else novaData.setMinutes(novaData.getMinutes() + delta)
+    onChange(novaData)
+  }
+
+  const definirHora = (campo: 'horas' | 'minutos', valor: number) => {
+    const novaData = new Date(value)
+    if (campo === 'horas') novaData.setHours(valor)
+    else novaData.setMinutes(valor)
     onChange(novaData)
   }
 
@@ -69,7 +102,25 @@ export const DateTimePicker = ({ value, onChange }: DateTimePickerProps) => {
             painel equivalente no protótipo aprovado. `[--cell-size:35px]` deixa a grade de dias
             ocupar quase toda essa largura (só ~5px de sobra, contra os ~28px de antes); o
             `flex justify-center` absorve essa sobra igual dos dois lados. */}
-        <div className="flex justify-center">
+        <div className="flex items-center gap-1.5 border-b border-border p-2.5">
+          <span className="flex-1 text-[11.5px] text-text-2">Data</span>
+          <input
+            value={textoData}
+            onChange={(event) => setTextoData(event.target.value)}
+            onBlur={commitTextoData}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') {
+                commitTextoData()
+                event.currentTarget.blur()
+              }
+            }}
+            onFocus={(event) => event.target.select()}
+            placeholder="dd/mm/aaaa"
+            inputMode="numeric"
+            className="w-[92px] rounded-md border border-border bg-background px-1.5 py-0.5 text-right font-mono text-[12.5px] font-medium outline-none focus:border-foreground"
+          />
+        </div>
+        <div className="flex justify-center pt-2.5">
           <Calendar
             mode="single"
             selected={value}
@@ -89,9 +140,23 @@ export const DateTimePicker = ({ value, onChange }: DateTimePickerProps) => {
         </div>
         <div className="flex items-center gap-2 border-t border-border p-2.5">
           <span className="flex-1 text-[11.5px] text-text-2">Hora</span>
-          <Stepper valor={doisDigitos(value.getHours())} onDecrementar={() => mexerHora('horas', -1)} onIncrementar={() => mexerHora('horas', 1)} />
+          <Stepper
+            valor={doisDigitos(value.getHours())}
+            min={0}
+            max={23}
+            onAlterar={(valor) => definirHora('horas', valor)}
+            onDecrementar={() => mexerHora('horas', -1)}
+            onIncrementar={() => mexerHora('horas', 1)}
+          />
           <span className="font-mono text-[12.5px] font-medium text-muted-foreground">:</span>
-          <Stepper valor={doisDigitos(value.getMinutes())} onDecrementar={() => mexerHora('minutos', -1)} onIncrementar={() => mexerHora('minutos', 1)} />
+          <Stepper
+            valor={doisDigitos(value.getMinutes())}
+            min={0}
+            max={59}
+            onAlterar={(valor) => definirHora('minutos', valor)}
+            onDecrementar={() => mexerHora('minutos', -1)}
+            onIncrementar={() => mexerHora('minutos', 1)}
+          />
         </div>
         <div className="flex gap-1.5 border-t border-border p-2.5">
           <Button variant="outline" size="sm" className="flex-1 text-[11.5px]" onClick={irParaInicioDoDia}>
@@ -109,14 +174,50 @@ export const DateTimePicker = ({ value, onChange }: DateTimePickerProps) => {
   )
 }
 
-const Stepper = ({ valor, onDecrementar, onIncrementar }: { valor: string; onDecrementar: () => void; onIncrementar: () => void }) => (
-  <div className="flex items-center gap-px rounded-md border border-border bg-background p-0.5">
-    <button type="button" onClick={onDecrementar} className="flex size-5 items-center justify-center rounded text-text-2 hover:bg-secondary">
-      <MinusIcon className="size-3" />
-    </button>
-    <span className="min-w-[22px] text-center font-mono text-[12.5px] font-medium">{valor}</span>
-    <button type="button" onClick={onIncrementar} className="flex size-5 items-center justify-center rounded text-text-2 hover:bg-secondary">
-      <PlusIcon className="size-3" />
-    </button>
-  </div>
-)
+type StepperProps = {
+  valor: string
+  min: number
+  max: number
+  onAlterar: (valor: number) => void
+  onDecrementar: () => void
+  onIncrementar: () => void
+}
+
+// O número do meio era só um <span> (não editável) — trocado por um <input> pra dar pra digitar
+// direto em vez de clicar em −/+ um por um (ver comentário do DateTimePicker acima).
+const Stepper = ({ valor, min, max, onAlterar, onDecrementar, onIncrementar }: StepperProps) => {
+  const [texto, setTexto] = useState(valor)
+
+  useEffect(() => setTexto(valor), [valor])
+
+  const commit = () => {
+    const numero = Number(texto)
+    if (texto.trim() !== '' && Number.isInteger(numero) && numero >= min && numero <= max) onAlterar(numero)
+    else setTexto(valor)
+  }
+
+  return (
+    <div className="flex items-center gap-px rounded-md border border-border bg-background p-0.5">
+      <button type="button" onClick={onDecrementar} className="flex size-5 items-center justify-center rounded text-text-2 hover:bg-secondary">
+        <MinusIcon className="size-3" />
+      </button>
+      <input
+        value={texto}
+        onChange={(event) => setTexto(event.target.value.replace(/\D/g, '').slice(0, 2))}
+        onBlur={commit}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter') {
+            commit()
+            event.currentTarget.blur()
+          }
+        }}
+        onFocus={(event) => event.target.select()}
+        inputMode="numeric"
+        className="min-w-[22px] border-none bg-transparent text-center font-mono text-[12.5px] font-medium outline-none"
+      />
+      <button type="button" onClick={onIncrementar} className="flex size-5 items-center justify-center rounded text-text-2 hover:bg-secondary">
+        <PlusIcon className="size-3" />
+      </button>
+    </div>
+  )
+}

@@ -9,7 +9,16 @@ import { DateTimePicker } from '@/shared/ui/datetime-picker'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
 import { SurfaceCard } from '@/shared/ui/surface-card'
 
-const DEZ_ANOS_ATRAS = new Date(Date.now() - 10 * 365 * 24 * 60 * 60 * 1000)
+// Mesmo default do protótipo aprovado (`impCorte`, Dispatch.dc.html): hoje às 00:00, não "bem
+// no passado". Um default muito antigo (o que este componente tinha antes) somado à falta de
+// digitação no seletor (ver DateTimePicker) fazia a linha de corte nunca filtrar nada de fato:
+// o usuário mexia só na hora/minuto via stepper e a *data* ficava esquecida anos atrás, então
+// toda linha do relatório (sempre "hoje") passava no filtro `> linhaDeCorte` de qualquer jeito.
+const inicioDeHoje = () => {
+  const data = new Date()
+  data.setHours(0, 0, 0, 0)
+  return data
+}
 
 const OPCOES_ETAPA: { valor: Etapa; label: string; sub: string }[] = [
   { valor: 'PreConferencia', label: 'Pré-conferência', sub: 'antes da lavratura — leitura da minuta' },
@@ -74,14 +83,14 @@ type PassoDadosProps = {
 
 // RF-05/RF-06: arquivo de verdade (.csv/.xlsx) fica pra depois — colar linhas já cobre o RF,
 // e é como o dono testou a importação a sessão inteira. RF-07: a "linha de corte" evita
-// reimportar o que já foi processado (ver CLAUDE.md do dispatch-api) — pré-preenchida bem no
-// passado pra não descartar nada na primeira importação de alguém. Sem o botão "Usar relatório
+// reimportar o que já foi processado (ver CLAUDE.md do dispatch-api) — pré-preenchida em
+// "hoje 00:00" (mesmo default do protótipo aprovado). Sem o botão "Usar relatório
 // de exemplo" do protótipo — lá ele gera dado fake local (ferramenta de design); aqui não tem
 // sentido, o CSV vem de verdade do cartório. O resto do rodapé segue o protótipo: contador
 // "N linhas coladas" e o botão de avançar leva a contagem no texto.
 export const PassoDados = ({ onContinuar, carregando, erro }: PassoDadosProps) => {
   const [etapa, setEtapa] = useState<Etapa>('PreConferencia')
-  const [linhaDeCorte, setLinhaDeCorte] = useState(DEZ_ANOS_ATRAS)
+  const [linhaDeCorte, setLinhaDeCorte] = useState(inicioDeHoje)
   const [texto, setTexto] = useState('')
   const qtdColadas = texto.trim() ? parseCsv(texto).length : 0
 
