@@ -550,6 +550,15 @@ em `NovoConferenteDialog`). Nome sai normalizado pelo back de qualquer jeito, fr
 tratar isso. Confirmado via Playwright: cadastro novo (201) e duplicata com caixa diferente (409,
 mensagem "já existe um tipo de ato com esse nome").
 
+**Badge de pílula no menu lateral** (RF-13/RF-39, `widgets/app-shell/ui/AppShell.tsx`) — igual
+ao protótipo: "Distribuição" mostra `N exc` (tom de aviso) se tiver exceção aberta, senão o
+tamanho do pool (tom neutro), senão nada; "Central de regras" mostra a fila de aprendizado
+pendente. `useVisaoDistribuicao`/`useSugestoesPendentes` ganharam um `{ enabled }` opcional pra
+essas duas queries do menu não disparar pra quem é Conferente (só Distribuidora tem permissão
+nesses dois endpoints). `NavBadge` é local ao AppShell, não reaproveita o `Chip` de `shared/ui`
+— o protótipo usa `var(--text-3)` no badge do menu, um tom mais escuro que o
+`text-muted-foreground` que o Chip usa em todo canto.
+
 Ainda não existem testes de unidade (vitest) nem lint rodado a sério (eslint/oxlint já vem do
 scaffold do shadcn, mas ainda não foi ligado ao fluxo). Próximo passo natural: Dashboard
 (RF-42 a RF-46).

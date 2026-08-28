@@ -1,9 +1,12 @@
 import { NavLink, Outlet } from 'react-router-dom'
 
+import { useVisaoDistribuicao } from '@/entities/protocolo'
+import { useSugestoesPendentes } from '@/entities/sugestao'
 import { type Papel, useSessionStore } from '@/entities/usuario'
 import { LogoutButton } from '@/features/auth/logout'
 import { ROUTES } from '@/shared/config/routes'
 import { useThemeStore } from '@/shared/lib/theme-store'
+import { cn } from '@/shared/lib/utils'
 import { Logo } from '@/shared/ui/logo'
 
 // RF-25 a RF-46 vão crescer essa lista por papel — Distribuidora ganha mais itens conforme
@@ -22,6 +25,21 @@ const NAV_POR_PAPEL: Record<Papel, { label: string; to: string }[]> = {
   Conferente: [{ label: 'Minha fila', to: ROUTES.minhaFila }],
 }
 
+// Badge de pílula do menu (RF-13/RF-39) — mesma medida do protótipo (Dispatch.dc.html, `n.badge`):
+// JetBrains Mono 11px, padding 1px/6px, borda 1px, cantos totalmente arredondados. Cores próprias
+// (não reaproveita o Chip de shared/ui) porque o protótipo usa `var(--text-3)` aqui, um tom mais
+// escuro que o `text-muted-foreground` que o Chip usa nos outros lugares da tela.
+const NavBadge = ({ texto, tom }: { texto: string; tom: 'neutro' | 'atencao' }) => (
+  <span
+    className={cn(
+      'flex-none rounded-full border px-1.5 py-px font-mono text-[11px] font-medium',
+      tom === 'atencao' ? 'border-warn-border bg-warn-bg-2 text-warn-fg' : 'border-border bg-secondary text-text-3',
+    )}
+  >
+    {texto}
+  </span>
+)
+
 // Layout fiel ao protótipo aprovado (../dispatch-prototype/Dispatch.dc.html) — sidebar de
 // 224px, marca no topo, navegação por papel, sessão fixada embaixo.
 export const AppShell = () => {
@@ -29,7 +47,25 @@ export const AppShell = () => {
   const tema = useThemeStore((state) => state.tema)
   const toggleTema = useThemeStore((state) => state.toggleTema)
 
+  const ehDistribuidora = usuario?.papel === 'Distribuidora'
+  const { data: visao } = useVisaoDistribuicao({ enabled: ehDistribuidora })
+  const { data: sugestoesPendentes } = useSugestoesPendentes({ enabled: ehDistribuidora })
+
   const itensNav = usuario ? NAV_POR_PAPEL[usuario.papel] : []
+
+  // Mesma regra do protótipo: Distribuição mostra "N exc" (aviso) se tiver alguma exceção
+  // aberta, senão o tamanho do pool (neutro), senão nada. Central de regras mostra a fila de
+  // aprendizado pendente (RF-39), senão nada.
+  const badgeDoItem = (to: string): { texto: string; tom: 'neutro' | 'atencao' } | null => {
+    if (to === ROUTES.distribuicao && visao) {
+      if (visao.excecoes.length > 0) return { texto: `${visao.excecoes.length} exc`, tom: 'atencao' }
+      if (visao.pool.length > 0) return { texto: String(visao.pool.length), tom: 'neutro' }
+    }
+    if (to === ROUTES.centralDeRegras && sugestoesPendentes && sugestoesPendentes.length > 0) {
+      return { texto: String(sugestoesPendentes.length), tom: 'neutro' }
+    }
+    return null
+  }
 
   return (
     <div className="flex min-h-screen items-stretch">
@@ -41,19 +77,24 @@ export const AppShell = () => {
 
         <div className="px-4 pb-1.5 text-[11px] font-medium tracking-[0.02em] text-muted-foreground">Operação</div>
         <nav className="flex flex-col gap-px px-2">
-          {itensNav.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              className={({ isActive }) =>
-                `rounded-md px-2.5 py-1.5 text-left text-[13.5px] transition-colors hover:bg-secondary hover:text-foreground ${
-                  isActive ? 'bg-secondary font-semibold text-foreground' : 'font-normal text-text-3'
-                }`
-              }
-            >
-              {item.label}
-            </NavLink>
-          ))}
+          {itensNav.map((item) => {
+            const badge = badgeDoItem(item.to)
+            return (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                className={({ isActive }) =>
+                  cn(
+                    'flex items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-[13.5px] transition-colors hover:bg-secondary hover:text-foreground',
+                    isActive ? 'bg-secondary font-semibold text-foreground' : 'font-normal text-text-3',
+                  )
+                }
+              >
+                <span className="flex-1">{item.label}</span>
+                {badge && <NavBadge texto={badge.texto} tom={badge.tom} />}
+              </NavLink>
+            )
+          })}
         </nav>
 
         <div className="mt-auto border-t border-border px-4 pt-3">
