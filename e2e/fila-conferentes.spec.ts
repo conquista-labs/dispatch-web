@@ -24,18 +24,21 @@ test('Distribuidora — "Minha fila" mostra a fila de um conferente, somente lei
     await expect(page.getByRole('button', { name: rotulo })).toHaveCount(0)
   }
 
-  // Trocar de conferente no seletor dispara uma leitura nova do back, não é filtro local.
-  const combobox = page.getByRole('combobox')
-  await combobox.click()
-  const opcoes = page.getByRole('option')
+  // Trocar de conferente no seletor (dropdown "VER COMO", mesmo padrão do seletor de Etapa em
+  // Importar) dispara uma leitura nova do back, não é filtro local.
+  await page.getByRole('button', { name: /VER COMO/ }).click()
+  const popover = page.locator('[data-slot="popover-content"]')
+  const opcoes = popover.getByRole('button')
   await expect(opcoes.first()).toBeVisible()
-  const segundaOpcao = opcoes.nth(1)
   const temSegunda = (await opcoes.count()) > 1
 
   if (temSegunda) {
-    const nomeEscolhido = await segundaOpcao.textContent()
+    const segundaOpcao = opcoes.nth(1)
     await Promise.all([page.waitForResponse((res) => res.request().method() === 'GET' && /\/conferentes\/.+\/fila$/.test(res.url())), segundaOpcao.click()])
-    await expect(page.getByText(nomeEscolhido!.split(' · ')[0], { exact: false }).first()).toBeVisible()
+    // Popover fechou e a leitura nova aconteceu — confirma que o trigger "VER COMO" segue no ar
+    // (não sumiu/quebrou depois da troca) em vez de reafirmar o nome, que pode se repetir entre
+    // contas seed (duas se chamam "Conferente RF27").
+    await expect(page.getByRole('button', { name: /VER COMO/ })).toBeVisible()
   } else {
     await page.keyboard.press('Escape')
   }

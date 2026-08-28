@@ -444,10 +444,17 @@ pra a explicação completa de como o filtro do `nav` do protótipo libera todos
 gestão). Rota separada (`ROUTES.filaConferentes`, `/fila-conferentes`) da `Minha fila` do
 Conferente — mesmo rótulo no menu, conteúdo bem diferente:
 
-- `pages/fila-conferentes` — seletor de conferente (shadcn `Select`, populado por
-  `useConferentes()`) + `widgets/fila-do-conferente-board`. **Diferença de UX de propósito em
-  relação ao protótipo**: lá é um botão "Ver como outro conferente" que cicla um de cada vez;
-  aqui é um seletor de verdade — mais direto com mais de dois ou três conferentes cadastrados.
+- `pages/fila-conferentes` — seletor de conferente ("VER COMO", `SeletorConferente` interno ao
+  arquivo, populado por `useConferentes()`) + `widgets/fila-do-conferente-board`. Primeira
+  versão usava o `Select` genérico do shadcn — trocado depois que o dono atualizou o protótipo
+  com um dropdown customizado de verdade (mesmo padrão do `SeletorEtapa` de Importar: `Popover`
+  + trigger de duas linhas + lista com indicador de seleção), substituindo o antigo botão "Ver
+  como outro conferente" que só ciclava um por vez. Cada item da lista mostra nível + carga
+  atual (`cargaAtual`) à direita; conferente ausente vem com opacidade reduzida, mas ainda
+  selecionável (a Distribuidora pode querer ver a fila de alguém de folga). **Detalhe batido
+  contra o protótipo e que quase passou batido**: o item ativo/selecionado precisa de um fundo
+  diferenciado (`bg-secondary`) cobrindo a linha inteira, não só o indicador de seleção — faltava
+  isso tanto aqui quanto no `SeletorEtapa` (o mesmo gap nos dois, corrigido nos dois juntos).
   Seleciona o primeiro conferente na escala por padrão (`naEscala`), ou o primeiro da lista se
   ninguém estiver.
 - `widgets/fila-do-conferente-board` — mesmo board de 3 colunas de `minha-fila-board`, sempre

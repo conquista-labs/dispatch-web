@@ -45,7 +45,7 @@ const SeletorEtapa = ({ value, onChange }: { value: Etapa; onChange: (valor: Eta
               onChange(opcao.valor)
               setAberto(false)
             }}
-            className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left hover:bg-secondary"
+            className={cn('flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left hover:bg-secondary', opcao.valor === value && 'bg-secondary')}
           >
             <span
               className={cn(
