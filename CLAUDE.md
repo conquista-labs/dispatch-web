@@ -589,10 +589,51 @@ protocolo, em qualquer aba de Distribuição (`Por conferente`/`Por status`/`Exc
   clicados de verdade contra a API local, resposta de rede conferida (204/409), e o card por
   trás do painel atualiza sozinho (volta pro pool na tela, sem precisar de refresh).
 
+**Central de Regras ganhou duas abas novas do "v2" do protótipo: "Regras em vigor" (agora a
+aba padrão) e "Tipos de ato" completo** — as duas frentes que tinham ficado de fora do plano do
+painel de detalhe.
+
+- **`AbaRegrasEmVigor.tsx`** — leitura agregada, sem endpoint novo: reaproveita
+  `useRegrasAlcada`/`useEquipes`/`useEscreventes`/`useTiposAto` (o que as outras abas já
+  carregam) e monta frases por família (Alçada, Prazo, Catálogo de atos, Operação), cada grupo
+  com um botão "Editar X" que troca de aba. "Operação" mostra só o que está implementado de
+  verdade hoje (modo Híbrido, limite de 1 ato simultâneo, faixas do semáforo) — o protótipo tem
+  um 4º item ("correção de resultado, 15 min") que fica de fora por enquanto, RF-24a ainda não
+  foi construído.
+- **`AbaTiposDeAto.tsx`** (RF-34a-b,d-f) — `entities/tipoAto` ganhou `useTiposAtoComUso`
+  (`GET /tipos-ato/com-uso`, leitura agregada com volume e cobertura de alçada por tipo) e
+  quatro slices novos em `features/tipoAto/` (`renomear`, `alterar-status`, `definir-peso`,
+  `remover`) — um verbo por slice, como sempre. `TipoAtoRow.tsx` é a linha: nome edita inline
+  (commit no blur, mesmo padrão de `EquipeCard`), peso via stepper ± (mesmo padrão do stepper
+  de jornada em `ConferenteCard`), pill ativo/inativo e remover — o 409 "em uso" do back
+  aparece como texto inline (`text-bad-fg`) embaixo da linha, mesma convenção usada nos
+  diálogos de criar/editar (`isAxiosError` + checar `response?.status`).
+  **RF-34c (mesclar dois tipos) fica de fora desta rodada** — precisaria migrar referências de
+  `Protocolo`/`RegraAlcada` de um Id pro outro, maior que as ações já construídas.
+- A lista de tipos de ato usada pelo construtor de regra (`AbaAlcada.tsx`) continua como chips
+  de leitura simples — não foi consolidada com a tabela editável da nova aba; são propósitos
+  diferentes (escolher alvo de uma regra vs. administrar o catálogo).
+- **Bug real achado testando de verdade, não só aparência**: o primeiro teste de
+  comportamento (renomear → peso → desativar → reativar → remover, tudo no mesmo tipo recém-criado)
+  renomeou/removeu a linha **errada** duas vezes seguidas — sintoma de reusar um
+  `Locator` posicional (`page.locator('input').nth(i)`, "ache o input cujo valor é X") capturado
+  antes de um refetch que reordena a lista (`ListarTiposAtoComUso` ordena por nome). A correção
+  foi reachar a linha do zero, pelo nome, imediatamente antes de cada ação, e esperar
+  `networkidle` entre uma mutação e a próxima busca — o mesmo tipo de armadilha de "estado
+  desconectado depois de um refetch" que já apareceu no back (`RegraAlcada`/`Sugestao`, ver
+  CLAUDE.md do `dispatch-api`), só que do lado do teste em vez do change tracker do EF.
+- `e2e/central-de-regras.spec.ts` ganhou as duas abas nos screenshots (claro e escuro) mais um
+  teste de comportamento dedicado pra Tipos de ato (criar, renomear, peso, desativar/reativar,
+  remover — cada passo confirmado pela resposta de rede). Precisou de um escrevente sem equipe
+  seedado (`Escrevente Orfao E2e`, criado via `/protocolos/importar/confirmar` com um protocolo
+  avulso) pra aba Prazos por equipe não falhar mais por falta de dado — documentado no topo do
+  arquivo de teste.
+
 Ainda não existem testes de unidade (vitest) nem lint rodado a sério (eslint/oxlint já vem do
 scaffold do shadcn, mas ainda não foi ligado ao fluxo). Próximo passo natural: as frentes que
-ficaram de fora do plano do painel de detalhe (Regras em vigor, Tipos de ato completo,
-correção/reabertura, Dashboard).
+ficaram de fora (correção de resultado + pedido de reabertura, Dashboard, e os ajustes
+cirúrgicos documentados no plano — carga acumulada na rodada de importação, RNF-10, índice de
+confiança da sugestão).
 
 ## Deploy — no ar
 
