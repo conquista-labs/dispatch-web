@@ -1,0 +1,11 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# SPA com react-router (BrowserRouter) — sem isso, recarregar a página numa rota tipo
+# /distribuicao dá 404 (o Netlify tenta achar um arquivo físico "distribuicao", que não
+# existe; toda rota precisa cair de volta no index.html pro router do lado do cliente assumir).
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

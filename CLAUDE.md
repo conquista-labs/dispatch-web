@@ -478,3 +478,25 @@ Ainda não existem testes de unidade (vitest) nem lint rodado a sério (eslint/o
 scaffold do shadcn, mas ainda não foi ligado ao fluxo). Próximo passo natural: Central de
 regras (RF-31 a RF-38) — usando as skills `new-entity`/`new-feature`/`new-page` e fechando com
 `verify-visual`.
+
+## Deploy — no ar
+
+Site: **`lab-dispatch-web`** no Netlify (prefixo `lab-` pelo mesmo motivo do back — nome curto
+sem sufixo tipo `-cartorio` — ver `../dispatch-api/CLAUDE.md`, seção "Deploy — no ar").
+
+- **URL**: `https://lab-dispatch-web.netlify.app`.
+- **Build**: `netlify.toml` na raiz — `npm run build` publicando `dist/`, mais um `[[redirects]]`
+  `/* → /index.html` (status 200) obrigatório porque a app é SPA com `BrowserRouter`: sem isso,
+  recarregar a página numa rota tipo `/distribuicao` dá 404 (o Netlify tenta achar um arquivo
+  físico `distribuicao`, que não existe).
+- **`VITE_API_URL`** é variável de build (`netlify env:set`, não vai pro repo) apontando pra
+  `https://lab-dispatch-api.fly.dev`. **Gotcha real**: `vite build` local roda em modo
+  `production` por padrão e **não** lê `.env.development` — um `npm run build` local sem essa
+  env var configurada localmente geraria um bundle com `VITE_API_URL` `undefined`. Por isso o
+  deploy é sempre `netlify deploy --prod --build` (o build roda do lado do Netlify, com a env
+  var certa), nunca upload de um `dist/` gerado na máquina local.
+- **Se o site for renomeado de novo** (nome do Netlify muda a URL de produção, que é a origem
+  CORS): precisa atualizar o secret `Cors__AllowedOrigin` no `lab-dispatch-api` também (`fly
+  secrets set`) — os dois lados guardam o nome um do outro, não tem descoberta automática.
+- Sem CI/CD ligado a git push ainda — deploy é manual via `netlify deploy --prod --build`,
+  disparado quando o dono decide subir.
