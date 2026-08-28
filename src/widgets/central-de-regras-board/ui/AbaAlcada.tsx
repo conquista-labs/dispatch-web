@@ -121,6 +121,19 @@ export const AbaAlcada = () => {
         se ninguém sobrar o ato vai para exceções com o motivo.
       </p>
 
+      <div className="mb-4 flex flex-wrap items-center gap-1.5">
+        <span className="mr-0.5 text-[11.5px] font-medium text-text-2">Catálogo de tipos de ato ({tiposAto.length})</span>
+        {tiposAto.map((t) => (
+          <span
+            key={t.id}
+            className={cn('rounded-full border border-border bg-secondary px-2 py-0.5 text-[11.5px] text-text-3', !t.ativo && 'opacity-50')}
+          >
+            {t.nome}
+          </span>
+        ))}
+        {tiposAto.length === 0 && <span className="text-[12.5px] text-muted-foreground">nenhum tipo cadastrado ainda</span>}
+      </div>
+
       {builderAberto && (
         <SurfaceCard className="mb-2 border-foreground p-4">
           <div className="text-[14.5px] font-semibold tracking-[-0.01em]">
