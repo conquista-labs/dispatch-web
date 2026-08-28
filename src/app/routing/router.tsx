@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 
+import { CentralDeRegrasPage } from '@/pages/central-de-regras'
 import { ConferentesPage } from '@/pages/conferentes'
 import { DistribuicaoPage } from '@/pages/distribuicao'
 import { FilaConferentesPage } from '@/pages/fila-conferentes'
@@ -56,6 +57,14 @@ export const Router = () => (
             element={
               <RequireRole roles={['Distribuidora']}>
                 <FilaConferentesPage />
+              </RequireRole>
+            }
+          />
+          <Route
+            path={ROUTES.centralDeRegras}
+            element={
+              <RequireRole roles={['Distribuidora']}>
+                <CentralDeRegrasPage />
               </RequireRole>
             }
           />

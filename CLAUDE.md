@@ -474,10 +474,52 @@ Conferente — mesmo rótulo no menu, conteúdo bem diferente:
   conferente no seletor dispara uma leitura nova do back (`GET /conferentes/{id}/fila`), não é
   filtro local.
 
+**Central de regras (RF-31 a RF-41) construída de ponta a ponta, as 3 abas juntas** (Aprendizado,
+Alçada, Prazos por equipe — mesma tela no protótipo, `abasRegras`). O back já estava pronto pras
+três desde antes desta sessão (commit "Adiciona a Central de Regras"); só faltava `GET
+/tipos-ato` (catálogo não tinha endpoint de leitura, só usado internamente por
+`ImportarLote`/`DistribuirProtocolo`), adicionado junto.
+
+- `entities/tipoAto`, `entities/regraAlcada`, `entities/equipe`, `entities/escrevente`,
+  `entities/sugestao` — cinco entidades novas. `NIVEL_LABEL` (antes duplicado em
+  `ConferenteCard`/`NovoConferenteDialog`) subiu pra `entities/conferente/lib/rotulos.ts` na
+  terceira repetição.
+- **`fraseDaRegra`** (`entities/regraAlcada/lib/frase.ts`) monta a frase legível ("Nível Júnior
+  não pode conferir Inventário") a partir do fato cru que o back manda — reaproveitada pela
+  lista de regras e pelo preview ao vivo do construtor guiado (RF-32).
+- **RF-32 (construtor guiado)**: é UI pura, sem endpoint próprio — monta o request de `POST
+  /regras-alcada` no fim. **Divergência deliberada do protótipo**: lá o builder deixa selecionar
+  vários alvos e cria "uma regra com array de alvos", mas o back só aceita um alvo por regra
+  (RF-31: `AlvoAlcada` é XOR etapa/tipo). Resolvido criando **uma regra por alvo selecionado**
+  (`Promise.all` de `mutateAsync`) — preserva a UX de multi-seleção do protótipo sem inventar um
+  conceito de "regra composta" que não existe no domínio.
+- **`widgets/central-de-regras-board`** — mesmo padrão de `distribuicao-board` (um widget,
+  estado de aba local, um componente por aba: `AbaAprendizado`/`AbaAlcada`/`AbaPrazos`).
+  `PillToggle` (botão de seleção preenchido/borda, cores exatas tiradas do JS do protótipo —
+  `bg:var(--ink)` selecionado vs `var(--surface)` não-selecionado) é usado pelos três: builder de
+  regra, prazo pré/pós de equipe e chips de escrevente selecionável.
+- **`EquipeCard`**: nome edita inline mas só salva no `blur` (não a cada tecla) — o back
+  recalcula vencimento dos protocolos abertos a cada `PUT /equipes/{id}` (RF-38), então um PUT
+  por tecla seria trabalho descartado. Prazo pré/pós já aplica direto no clique do pill (mesmo
+  comportamento do protótipo).
+- **Simplificações conscientes em relação ao protótipo, documentadas no código**: sem "índice de
+  confiança"/barra de confiança e sem chips de "casos concretos" nos cards de sugestão — o
+  protótipo mostra número mockado (não vem de lugar nenhum real); `Sugestao`
+  (`Dispatch.Domain.Aprendizado`) só carrega `Evidencia` (texto) e `Ocorrencias` (contagem), não
+  um score. Os 4 KPIs do topo da aba Aprendizado também trocaram "5.724 linhas lidas"/"96%
+  classificadas sem você" (mock) por métricas derivadas de dado real (tipos no catálogo, regras
+  em vigor, propostas na fila, aplicadas até hoje). Mesma linha do que já foi feito em
+  Conferentes/Distribuição: não inventar dado que o back não calcula.
+- Sem endpoint de excluir equipe — protótipo também não tem esse botão.
+- `e2e/central-de-regras.spec.ts` — verificação visual pontual das 3 abas + construtor aberto,
+  claro e escuro (ver seção de skills). Comportamento real testado à parte (não é o teste
+  permanente): criar regra multi-alvo (2 POSTs confirmados), ativar/desativar, remover, mover
+  escrevente órfão pra equipe, aplicar e descartar sugestão — todos com o efeito refletido na
+  tela (KPIs recalculando, histórico crescendo) e confirmados via resposta de rede, não só DOM.
+
 Ainda não existem testes de unidade (vitest) nem lint rodado a sério (eslint/oxlint já vem do
-scaffold do shadcn, mas ainda não foi ligado ao fluxo). Próximo passo natural: Central de
-regras (RF-31 a RF-38) — usando as skills `new-entity`/`new-feature`/`new-page` e fechando com
-`verify-visual`.
+scaffold do shadcn, mas ainda não foi ligado ao fluxo). Próximo passo natural: Dashboard
+(RF-42 a RF-46).
 
 ## Deploy — no ar
 

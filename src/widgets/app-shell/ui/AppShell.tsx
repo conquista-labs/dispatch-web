@@ -17,6 +17,7 @@ const NAV_POR_PAPEL: Record<Papel, { label: string; to: string }[]> = {
     // (ROUTES.filaConferentes: escolhe um conferente, vê a fila dele em leitura).
     { label: 'Minha fila', to: ROUTES.filaConferentes },
     { label: 'Conferentes', to: ROUTES.conferentes },
+    { label: 'Central de regras', to: ROUTES.centralDeRegras },
   ],
   Conferente: [{ label: 'Minha fila', to: ROUTES.minhaFila }],
 }

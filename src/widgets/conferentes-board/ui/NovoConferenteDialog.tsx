@@ -2,14 +2,13 @@ import { isAxiosError } from 'axios'
 import { useState } from 'react'
 
 import type { Nivel } from '@/entities/conferente'
+import { NIVEL_LABEL } from '@/entities/conferente'
 import { useCadastrarConferente } from '@/features/conferente/cadastrar'
 import { Button } from '@/shared/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/shared/ui/dialog'
 import { Input } from '@/shared/ui/input'
 import { Label } from '@/shared/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
-
-const NIVEL_LABEL: Record<Nivel, string> = { Junior: 'Júnior', Pleno: 'Pleno', Senior: 'Sênior' }
 
 const VAZIO = { nome: '', email: '', senha: '', nivel: 'Pleno' as Nivel, jornadaHoras: '8' }
 

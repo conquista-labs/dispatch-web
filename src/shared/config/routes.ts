@@ -10,4 +10,5 @@ export const ROUTES = {
   // separada porque o conteúdo/comportamento é bem diferente (escolhe conferente, somente
   // leitura) do que RequireRole(Conferente) já protege em ROUTES.minhaFila.
   filaConferentes: '/fila-conferentes',
+  centralDeRegras: '/central-de-regras',
 } as const

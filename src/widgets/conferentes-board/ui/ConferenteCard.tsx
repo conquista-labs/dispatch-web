@@ -1,6 +1,7 @@
 import { MinusIcon, PlusIcon } from 'lucide-react'
 
 import type { Conferente, Nivel } from '@/entities/conferente'
+import { NIVEL_LABEL } from '@/entities/conferente'
 import { useEditarNivelEJornada } from '@/features/conferente/editar-nivel-jornada'
 import { useMarcarPresenca } from '@/features/conferente/marcar-presenca'
 import { useRemoverConferente } from '@/features/conferente/remover'
@@ -10,7 +11,6 @@ import { SurfaceCard } from '@/shared/ui/surface-card'
 
 import { EditarConferenteDialog } from './EditarConferenteDialog'
 
-const NIVEL_LABEL: Record<Nivel, string> = { Junior: 'Júnior', Pleno: 'Pleno', Senior: 'Sênior' }
 const PROXIMO_NIVEL: Record<Nivel, Nivel> = { Junior: 'Pleno', Pleno: 'Senior', Senior: 'Junior' }
 
 const JORNADA_MIN = 2

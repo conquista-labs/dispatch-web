@@ -1,0 +1,5 @@
+export type { CriarRegraAlcadaRequest, OrigemRegra, PermissaoRegra, RegraAlcada } from './model/types'
+export { REGRAS_ALCADA_QUERY_KEY, useRegrasAlcada } from './model/use-regras-alcada'
+export { ORIGEM_LABEL, PERMISSAO_LABEL } from './lib/rotulos'
+export { fraseDaRegra } from './lib/frase'
+export type { LookupsFraseRegra } from './lib/frase'
