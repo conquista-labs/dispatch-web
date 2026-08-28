@@ -335,6 +335,22 @@ também"):
   - Dias da semana também foram trocados de abreviação de 3 letras (`dom seg ter...`, que é o que
     o locale `ptBR` do `date-fns` dá por padrão) pra uma letra maiúscula (`D S T Q Q S S`), via
     `formatters.formatWeekdayName` — o `date-fns/locale` sozinho não cobre isso.
+- **`DateTimePicker`, quarta rodada** (o dono mandou print de um "pequeno bug" e pediu pra tirar
+  o espaço morto nas laterais do calendário — ele estava certo nas duas coisas):
+  - O `PopoverContent` tinha virado `w-[266px]` fixo (rodada anterior) mas o `Calendar` continuou
+    com `--cell-size` padrão (28px/célula) — a grade de dias (212px) sobrava 27px de vão morto de
+    cada lado dentro do popover de 266px. Aumentado pra `[--cell-size:35px]` (a grade passa a
+    ocupar 261px, ~2.5px de folga por lado — bem mais perto de "100% da largura" sem forçar
+    overflow). O `flex justify-center` ao redor do `Calendar` (rodada anterior) continua
+    necessário pra distribuir essa folga igual dos dois lados.
+  - O "pequeno bug" do print: "hoje" aparecia com um anel de foco de teclado ao mesmo tempo que o
+    dia selecionado (outro dia) tinha preenchimento sólido — duas marcações ao mesmo tempo, em
+    dias vizinhos, parecendo ambíguo. Causa: `autoFocus` no `Calendar` pousa o foco de teclado em
+    "hoje" assim que o popover abre; o protótipo não tem esse conceito (não há navegação por
+    teclado nele). Removido o `autoFocus` — sem ele, "hoje" só mostra o indicador padrão e discreto
+    de "dia atual" do react-day-picker, sem ring de foco competindo com o dia selecionado.
+  - Confirmado por medição (`getBoundingClientRect`), não só por print: 266px de popover, 261px
+    de calendário, 2.5px de folga simétrica nas duas laterais.
 - **Bug real achado no caminho, não só fidelidade**: `prazoChip` (`entities/protocolo/lib/prazo-chip.ts`,
   usado por Minha fila **e** Distribuição) prefixava "vence em"/"estourou há" em qualquer faixa —
   o protótipo só usa esse prefixo nos 3 estados de risco (amarelo/laranja/vermelho); o estado
