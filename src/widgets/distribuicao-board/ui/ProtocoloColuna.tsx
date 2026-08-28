@@ -17,12 +17,13 @@ type ProtocoloColunaProps = {
    * dividindo a largura toda, não dá pra fixar em px.
    */
   variant?: 'conferente' | 'status'
+  onAbrirDetalhe?: (protocoloId: string) => void
 }
 
 // Coluna reaproveitada pelas abas "Por conferente" e "Por status" (RF-13) — mesma estrutura
 // (cabeçalho com total, lista de cards, mensagem quando vazia), só muda a largura/cabeçalho e
 // quantos cards mostra antes de truncar (protótipo corta em 3 na aba conferente, 4 na de status).
-export const ProtocoloColuna = ({ nome, sub, protocolos, now, mensagemVazia, resolverDonoNome, variant = 'conferente' }: ProtocoloColunaProps) => {
+export const ProtocoloColuna = ({ nome, sub, protocolos, now, mensagemVazia, resolverDonoNome, variant = 'conferente', onAbrirDetalhe }: ProtocoloColunaProps) => {
   const maxVisiveis = variant === 'conferente' ? 3 : 4
   const visiveis = protocolos.slice(0, maxVisiveis)
   const restantes = Math.max(0, protocolos.length - maxVisiveis)
@@ -46,7 +47,14 @@ export const ProtocoloColuna = ({ nome, sub, protocolos, now, mensagemVazia, res
 
       <div className="flex flex-col gap-2">
         {visiveis.map((protocolo) => (
-          <DistribuicaoProtocoloCard key={protocolo.id} protocolo={protocolo} now={now} donoNome={resolverDonoNome?.(protocolo)} variant={variant} />
+          <DistribuicaoProtocoloCard
+            key={protocolo.id}
+            protocolo={protocolo}
+            now={now}
+            donoNome={resolverDonoNome?.(protocolo)}
+            variant={variant}
+            onAbrirDetalhe={onAbrirDetalhe}
+          />
         ))}
         {restantes > 0 && (
           <div className="rounded-[10px] border border-dashed border-border p-2 text-center text-xs text-muted-foreground">+ {restantes} protocolos</div>

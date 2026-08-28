@@ -1,6 +1,7 @@
 import { ETAPA_LABEL, type Etapa } from '@/entities/protocolo'
 import { useConferentes } from '@/entities/conferente'
 import type { ResumoImportacao } from '@/features/protocolo/importar-lote'
+import { formatDataHora } from '@/shared/lib/format'
 import { Button } from '@/shared/ui/button'
 import { SurfaceCard } from '@/shared/ui/surface-card'
 
@@ -12,9 +13,6 @@ type PassoPreviaProps = {
   onConfirmar: () => void
   confirmando: boolean
 }
-
-const formatarDataHora = (iso: string) =>
-  new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 
 // RF-10: pra onde cada protocolo vai (pool aberto, fila de exceções ou um conferente
 // específico) — mesma lista, uma linha por destino, igual o protótipo aprovado (não são cards
@@ -39,7 +37,7 @@ export const PassoPrevia = ({ resumo, etapa, linhaDeCorte, onVoltar, onConfirmar
   return (
     <div>
       <p className="mb-1 font-mono text-xs font-medium text-muted-foreground">
-        {resumo.processadas} linhas · {ETAPA_LABEL[etapa]} · a partir de {formatarDataHora(linhaDeCorte)}
+        {resumo.processadas} linhas · {ETAPA_LABEL[etapa]} · a partir de {formatDataHora(linhaDeCorte)}
       </p>
       <p className="mb-3.5 text-[13.5px] text-text-2">Como o lote ficaria — nada foi gravado ainda.</p>
 

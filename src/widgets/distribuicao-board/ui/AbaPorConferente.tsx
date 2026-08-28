@@ -14,6 +14,7 @@ type AbaPorConferenteProps = {
   porConferente: GrupoPorConferente[]
   conferentes: Conferente[]
   now: number
+  onAbrirDetalhe: (protocoloId: string) => void
 }
 
 // RF-13/RF-14 — "Pool aberto" + uma coluna por conferente. `porConferente` só traz quem já tem
@@ -25,9 +26,17 @@ type AbaPorConferenteProps = {
 // histórico do conferente, não "hoje", e mostrar esse número com o rótulo errado seria pior que
 // não mostrar. Fica pra quando o back expuser isso (mesmo padrão do gap que fechamos pra
 // `IniciadoEm`/cronômetro em Minha fila).
-export const AbaPorConferente = ({ pool, porConferente, conferentes, now }: AbaPorConferenteProps) => (
+export const AbaPorConferente = ({ pool, porConferente, conferentes, now, onAbrirDetalhe }: AbaPorConferenteProps) => (
   <div className="flex items-start gap-3 overflow-x-auto">
-    <ProtocoloColuna nome="Pool aberto" sub="sem dono — quem tem alçada para o ato pega" protocolos={pool} now={now} mensagemVazia="pool vazio" variant="conferente" />
+    <ProtocoloColuna
+      nome="Pool aberto"
+      sub="sem dono — quem tem alçada para o ato pega"
+      protocolos={pool}
+      now={now}
+      mensagemVazia="pool vazio"
+      variant="conferente"
+      onAbrirDetalhe={onAbrirDetalhe}
+    />
 
     {conferentes.map((conferente) => {
       const grupo = porConferente.find((g) => g.conferenteId === conferente.id)
@@ -40,6 +49,7 @@ export const AbaPorConferente = ({ pool, porConferente, conferentes, now }: AbaP
           now={now}
           mensagemVazia={conferente.naEscala ? 'fila vazia' : 'ausente'}
           variant="conferente"
+          onAbrirDetalhe={onAbrirDetalhe}
         />
       )
     })}

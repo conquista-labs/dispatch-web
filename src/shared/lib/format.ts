@@ -21,6 +21,11 @@ export const formatCronometro = (ms: number): string => {
   return `${hh}:${mm}:${ss}`
 }
 
+// "28/08/2026 16:00" — extraído na terceira repetição (PassoLinhas, PassoPrevia, painel de
+// detalhe do protocolo) do mesmo `toLocaleString` inline.
+export const formatDataHora = (iso: string): string =>
+  new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+
 // Duracao do back vem como TimeSpan do .NET, formato "[d.]hh:mm:ss[.fffffff]" — parseia só o
 // que precisa pra virar "21 min" (RF-24, lista de concluídos hoje).
 export const formatDuracaoConcluida = (duracaoTimeSpan: string): string => {

@@ -24,12 +24,13 @@ const tagDaExcecao = (motivo: string | null) => (motivo === 'tipo desconhecido' 
 type ExcecaoCardProps = {
   protocolo: ProtocoloResumo
   conferentes: Conferente[]
+  onAbrirDetalhe: (protocoloId: string) => void
 }
 
 // RF-17 — cada exceção traz o motivo e duas ações: descartar, ou resolver atribuindo na mão a
 // um conferente (o motor já disse que não sabe decidir sozinho). "Resolver" abre um seletor
 // inline em vez de navegar pra outro lugar — a decisão é rápida, não precisa de tela própria.
-export const ExcecaoCard = ({ protocolo, conferentes }: ExcecaoCardProps) => {
+export const ExcecaoCard = ({ protocolo, conferentes, onAbrirDetalhe }: ExcecaoCardProps) => {
   const [resolvendo, setResolvendo] = useState(false)
   const [conferenteId, setConferenteId] = useState('')
   const atribuir = useAtribuirManualmente()
@@ -41,7 +42,7 @@ export const ExcecaoCard = ({ protocolo, conferentes }: ExcecaoCardProps) => {
   }
 
   return (
-    <SurfaceCard className="mb-2">
+    <SurfaceCard className="mb-2 cursor-pointer" onClick={() => onAbrirDetalhe(protocolo.id)}>
       <div className="flex items-start justify-between gap-3.5">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
@@ -53,7 +54,7 @@ export const ExcecaoCard = ({ protocolo, conferentes }: ExcecaoCardProps) => {
         </div>
 
         {!resolvendo && (
-          <div className="flex flex-none gap-1.5">
+          <div className="flex flex-none gap-1.5" onClick={(evento) => evento.stopPropagation()}>
             <Button variant="outline" onClick={() => descartar.mutate(protocolo.id)} disabled={descartar.isPending}>
               Descartar
             </Button>
@@ -63,7 +64,7 @@ export const ExcecaoCard = ({ protocolo, conferentes }: ExcecaoCardProps) => {
       </div>
 
       {resolvendo && (
-        <div className="mt-3 flex items-center gap-1.5">
+        <div className="mt-3 flex items-center gap-1.5" onClick={(evento) => evento.stopPropagation()}>
           <Select value={conferenteId} onValueChange={setConferenteId}>
             <SelectTrigger className="h-8 flex-1">
               <SelectValue placeholder="Escolher conferente…" />

@@ -1,5 +1,6 @@
 import { ETAPA_LABEL, TIPO_PRAZO_LABEL, prazoChip, type Etapa } from '@/entities/protocolo'
 import type { ResumoImportacao } from '@/features/protocolo/importar-lote'
+import { formatDataHora } from '@/shared/lib/format'
 import { useNow } from '@/shared/lib/use-now'
 import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/ui/button'
@@ -38,7 +39,7 @@ export const PassoLinhas = ({ resumo, etapa, linhaDeCorte, onVoltar, onContinuar
   return (
     <div>
       <p className="font-mono text-xs font-medium text-muted-foreground">
-        {linhas.length} linhas · {ETAPA_LABEL[etapa]} · a partir de {formatarDataHora(linhaDeCorte)}
+        {linhas.length} linhas · {ETAPA_LABEL[etapa]} · a partir de {formatDataHora(linhaDeCorte)}
       </p>
 
       <div className="mt-2.5 mb-3 flex flex-wrap gap-1.5">
@@ -114,5 +115,3 @@ export const PassoLinhas = ({ resumo, etapa, linhaDeCorte, onVoltar, onContinuar
   )
 }
 
-const formatarDataHora = (iso: string) =>
-  new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })

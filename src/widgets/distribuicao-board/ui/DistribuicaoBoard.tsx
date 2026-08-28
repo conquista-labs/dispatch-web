@@ -4,6 +4,7 @@ import { useConferentes } from '@/entities/conferente'
 import { useVisaoDistribuicao } from '@/entities/protocolo'
 import { cn } from '@/shared/lib/utils'
 import { useNow } from '@/shared/lib/use-now'
+import { PainelDetalheProtocolo } from '@/widgets/painel-detalhe-protocolo'
 
 import { AbaExcecoes } from './AbaExcecoes'
 import { AbaPorConferente } from './AbaPorConferente'
@@ -25,6 +26,7 @@ const LEGENDA = [
 // status" (kanban) e "exceções" (RF-17).
 export const DistribuicaoBoard = () => {
   const [aba, setAba] = useState<Aba>('conferente')
+  const [protocoloDetalheId, setProtocoloDetalheId] = useState<string | null>(null)
   const { data: visao, isLoading } = useVisaoDistribuicao()
   const { data: conferentes } = useConferentes()
   const now = useNow()
@@ -69,10 +71,20 @@ export const DistribuicaoBoard = () => {
       </div>
 
       <div className="mt-4">
-        {aba === 'conferente' && <AbaPorConferente pool={visao.pool} porConferente={visao.porConferente} conferentes={conferentesNaEscala} now={now} />}
-        {aba === 'status' && <AbaPorStatus visao={visao} conferentes={conferentes} now={now} />}
-        {aba === 'excecoes' && <AbaExcecoes excecoes={visao.excecoes} conferentes={conferentesNaEscala} />}
+        {aba === 'conferente' && (
+          <AbaPorConferente
+            pool={visao.pool}
+            porConferente={visao.porConferente}
+            conferentes={conferentesNaEscala}
+            now={now}
+            onAbrirDetalhe={setProtocoloDetalheId}
+          />
+        )}
+        {aba === 'status' && <AbaPorStatus visao={visao} conferentes={conferentes} now={now} onAbrirDetalhe={setProtocoloDetalheId} />}
+        {aba === 'excecoes' && <AbaExcecoes excecoes={visao.excecoes} conferentes={conferentesNaEscala} onAbrirDetalhe={setProtocoloDetalheId} />}
       </div>
+
+      <PainelDetalheProtocolo protocoloId={protocoloDetalheId} onFechar={() => setProtocoloDetalheId(null)} />
     </div>
   )
 }

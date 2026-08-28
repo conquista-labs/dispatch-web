@@ -11,6 +11,8 @@ export type FaixaSemaforo = 'Verde' | 'Amarelo' | 'Laranja' | 'Vermelho'
 // TipoPrazo (Dispatch.Domain) — prazo bruto de uma Equipe, antes de virar vencimento.
 export type TipoPrazo = 'UmaHora' | 'D0' | 'D1' | 'D2'
 
+export type Prioridade = 'Normal' | 'Alta'
+
 // ProtocoloResumo (Api) — DateTimeOffset do C# chega como string ISO 8601 (axios não faz
 // parse automático pra Date), TimeSpan chega como string "hh:mm:ss[.fffffff]".
 export type ProtocoloResumo = {
@@ -43,6 +45,41 @@ export type VisaoDistribuicao = {
   concluidos: ProtocoloResumo[]
   excecoes: ProtocoloResumo[]
   porConferente: GrupoPorConferente[]
+}
+
+// AlcadaConferenteResponse (Api) — "quem pode conferir este ato especificamente" (RF-18a).
+// RegraEtapaId/RegraTipoId nulos não significam "sem alçada" (pode ser padrão aberto) — só
+// `elegivel` decide isso; as duas regras servem só pra mostrar "por qual regra" quando existir.
+export type AlcadaConferente = {
+  conferenteId: string
+  elegivel: boolean
+  regraEtapaId: string | null
+  regraTipoId: string | null
+}
+
+// DetalheProtocoloResponse (Api) — painel de detalhe (RF-18a/b), aberto ao clicar em qualquer
+// card de protocolo em Distribuição.
+export type DetalheProtocolo = {
+  id: string
+  numero: string
+  tipoAtoId: string | null
+  tipoAtoNomeOriginal: string | null
+  escreventeId: string
+  etapa: Etapa
+  prioridade: Prioridade
+  andamentoEm: string
+  prazo: TipoPrazo | null
+  vencimentoEm: string | null
+  status: StatusProtocolo
+  donoId: string | null
+  motivoExcecao: string | null
+  observacao: string | null
+  atribuidoEm: string | null
+  iniciadoEm: string | null
+  concluidoEm: string | null
+  regraAplicadaId: string | null
+  semaforo: FaixaSemaforo | null
+  alcada: AlcadaConferente[]
 }
 
 export type ProtocoloConcluidoResumo = {

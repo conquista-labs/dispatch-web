@@ -40,6 +40,8 @@ type DistribuicaoProtocoloCardProps = {
    * mas o protótipo estiliza esse valor de jeito diferente em cada uma.
    */
   variant?: 'conferente' | 'status'
+  /** RF-18a: clicar no card abre o painel de detalhe — mesmo card em qualquer aba. */
+  onAbrirDetalhe?: (protocoloId: string) => void
 }
 
 // Card reaproveitado pelas abas "Por conferente" e "Por status" (RF-13/RF-14) — o card inteiro
@@ -50,7 +52,7 @@ type DistribuicaoProtocoloCardProps = {
 // "Alta" (`Protocolo.Prioridade` não está exposto), e o canto de "Concluídos" mostra
 // aprovado/não aprovado em vez do tempo de conferência (sem `ConcluidoEm` no DTO pra calcular
 // duração) — ver CLAUDE.md.
-export const DistribuicaoProtocoloCard = ({ protocolo, now, donoNome, variant = 'conferente' }: DistribuicaoProtocoloCardProps) => {
+export const DistribuicaoProtocoloCard = ({ protocolo, now, donoNome, variant = 'conferente', onAbrirDetalhe }: DistribuicaoProtocoloCardProps) => {
   const emConferencia = protocolo.status === 'Conferindo' && protocolo.iniciadoEm
   const concluido = protocolo.status === 'Aprovado' || protocolo.status === 'Reprovado'
   const chip = prazoChip(protocolo.semaforo, protocolo.vencimentoEm, now)
@@ -66,7 +68,12 @@ export const DistribuicaoProtocoloCard = ({ protocolo, now, donoNome, variant = 
   const meta = variant === 'status' ? `${donoNome ?? 'sem dono'}${sufixoConcluido}` : ETAPA_LABEL[protocolo.etapa]
 
   return (
-    <SurfaceCard tom={tom} destaque={!!emConferencia}>
+    <SurfaceCard
+      tom={tom}
+      destaque={!!emConferencia}
+      onClick={() => onAbrirDetalhe?.(protocolo.id)}
+      className={onAbrirDetalhe && 'cursor-pointer'}
+    >
       <div className="flex items-center justify-between gap-1.5">
         <span className="font-mono text-[12.5px] font-medium">{protocolo.numero}</span>
         {emConferencia && <span className="font-mono text-[11.5px] font-medium">{formatCronometro(now - new Date(protocolo.iniciadoEm!).getTime())}</span>}

@@ -6,10 +6,11 @@ import { ExcecaoCard } from './ExcecaoCard'
 type AbaExcecoesProps = {
   excecoes: ProtocoloResumo[]
   conferentes: Conferente[]
+  onAbrirDetalhe: (protocoloId: string) => void
 }
 
 // RF-17.
-export const AbaExcecoes = ({ excecoes, conferentes }: AbaExcecoesProps) => {
+export const AbaExcecoes = ({ excecoes, conferentes, onAbrirDetalhe }: AbaExcecoesProps) => {
   if (excecoes.length === 0) {
     return (
       <div className="max-w-[780px] rounded-xl border border-dashed border-border bg-card p-10 text-center text-[13.5px] text-muted-foreground">
@@ -21,7 +22,7 @@ export const AbaExcecoes = ({ excecoes, conferentes }: AbaExcecoesProps) => {
   return (
     <div className="max-w-[780px]">
       {excecoes.map((protocolo) => (
-        <ExcecaoCard key={protocolo.id} protocolo={protocolo} conferentes={conferentes} />
+        <ExcecaoCard key={protocolo.id} protocolo={protocolo} conferentes={conferentes} onAbrirDetalhe={onAbrirDetalhe} />
       ))}
     </div>
   )

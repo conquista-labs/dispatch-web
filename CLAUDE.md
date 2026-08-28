@@ -559,9 +559,40 @@ nesses dois endpoints). `NavBadge` é local ao AppShell, não reaproveita o `Chi
 — o protótipo usa `var(--text-3)` no badge do menu, um tom mais escuro que o
 `text-muted-foreground` que o Chip usa em todo canto.
 
+**Painel de detalhe do protocolo (RF-18a/b) — primeira frente do "v2" do protótipo/requisitos**
+(o dono atualizou os dois com bastante coisa nova; as outras frentes — Regras em vigor, Tipos
+de ato com merge, correção de resultado + reabertura, Dashboard — ficam pra depois, ver plano
+salvo). Drawer lateral (432px, desliza da direita) aberto ao clicar em qualquer card de
+protocolo, em qualquer aba de Distribuição (`Por conferente`/`Por status`/`Exceções`).
+
+- **`shared/ui/sheet.tsx`** (shadcn `Sheet`, Radix Dialog por baixo) — **não construído na mão**:
+  o dono cobrou isso explicitamente ("nada de fazer as coisas do 0, veja se tem no shadcn
+  primeiro"), certo — o `Sheet` já resolve animação de entrada/saída, overlay com blur e fechar
+  por Esc/clique fora de graça, nenhuma dessas três coisas precisou de código próprio.
+  `showCloseButton={false}` porque o protótipo tem um botão "Fechar" de texto, não o X padrão do
+  componente.
+- **`widgets/painel-detalhe-protocolo`** — `PainelDetalheProtocolo`, recebe `protocoloId: string
+  | null` + `onFechar`. Reaproveita `ObservacaoField` (mesmo campo de Minha fila/Distribuição),
+  `fraseDaRegra` (Central de Regras, pra "regra aplicada"), `prazoChip`/`Chip` (mesmo semáforo
+  de todo canto). `entities/protocolo` ganha `DetalheProtocolo`/`useDetalheProtocolo(id)` —
+  `enabled: !!id`, só busca quando o painel está de fato aberto.
+- **Duas ações novas** (`features/protocolo/devolver-ao-pool`, `features/protocolo/atribuir-ao-menos-carregado`)
+  — um verbo por slice, igual todo o resto do projeto; invalidam `VISAO_DISTRIBUICAO_QUERY_KEY`
+  e a query de detalhe do próprio protocolo (assim o painel atualiza sozinho depois da ação).
+- **`formatDataHora`** subiu pra `shared/lib/format.ts` na terceira repetição (já existia
+  duplicado em `PassoLinhas`/`PassoPrevia` do wizard de importação) — mesma regra que já vale
+  pra classe Tailwind repetida, agora aplicada a uma função utilitária.
+- Card de protocolo (`DistribuicaoProtocoloCard`) e card de exceção (`ExcecaoCard`) ganharam
+  `onClick`/`cursor-pointer` no card inteiro; os botões de ação existentes (Descartar/Resolver,
+  Confirmar/Cancelar) pararam de abrir o painel com `stopPropagation` no wrapper deles.
+- Testado de ponta a ponta, não só aparência: `devolver-ao-pool` e `atribuir-ao-menos-carregado`
+  clicados de verdade contra a API local, resposta de rede conferida (204/409), e o card por
+  trás do painel atualiza sozinho (volta pro pool na tela, sem precisar de refresh).
+
 Ainda não existem testes de unidade (vitest) nem lint rodado a sério (eslint/oxlint já vem do
-scaffold do shadcn, mas ainda não foi ligado ao fluxo). Próximo passo natural: Dashboard
-(RF-42 a RF-46).
+scaffold do shadcn, mas ainda não foi ligado ao fluxo). Próximo passo natural: as frentes que
+ficaram de fora do plano do painel de detalhe (Regras em vigor, Tipos de ato completo,
+correção/reabertura, Dashboard).
 
 ## Deploy — no ar
 
