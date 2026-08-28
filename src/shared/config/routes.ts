@@ -6,4 +6,8 @@ export const ROUTES = {
   importar: '/importar',
   conferentes: '/conferentes',
   minhaFila: '/minha-fila',
+  // RF-19 — mesmo rótulo de menu "Minha fila" do protótipo aprovado pra Distribuidora, rota
+  // separada porque o conteúdo/comportamento é bem diferente (escolhe conferente, somente
+  // leitura) do que RequireRole(Conferente) já protege em ROUTES.minhaFila.
+  filaConferentes: '/fila-conferentes',
 } as const

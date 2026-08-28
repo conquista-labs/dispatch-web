@@ -2,6 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 
 import { ConferentesPage } from '@/pages/conferentes'
 import { DistribuicaoPage } from '@/pages/distribuicao'
+import { FilaConferentesPage } from '@/pages/fila-conferentes'
 import { ImportarPage } from '@/pages/importar'
 import { LoginPage } from '@/pages/login'
 import { MinhaFilaPage } from '@/pages/minha-fila'
@@ -47,6 +48,14 @@ export const Router = () => (
             element={
               <RequireRole roles={['Conferente']}>
                 <MinhaFilaPage />
+              </RequireRole>
+            }
+          />
+          <Route
+            path={ROUTES.filaConferentes}
+            element={
+              <RequireRole roles={['Distribuidora']}>
+                <FilaConferentesPage />
               </RequireRole>
             }
           />

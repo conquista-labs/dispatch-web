@@ -12,6 +12,10 @@ const NAV_POR_PAPEL: Record<Papel, { label: string; to: string }[]> = {
   Distribuidora: [
     { label: 'Distribuição', to: ROUTES.distribuicao },
     { label: 'Importar', to: ROUTES.importar },
+    // RF-19: protótipo aprovado tem "Minha fila" no menu de quem é gestão também — mesmo
+    // rótulo, ordem do protótipo (entre Importar e Conferentes); o conteúdo é diferente
+    // (ROUTES.filaConferentes: escolhe um conferente, vê a fila dele em leitura).
+    { label: 'Minha fila', to: ROUTES.filaConferentes },
     { label: 'Conferentes', to: ROUTES.conferentes },
   ],
   Conferente: [{ label: 'Minha fila', to: ROUTES.minhaFila }],

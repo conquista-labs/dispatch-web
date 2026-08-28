@@ -13,14 +13,16 @@ const ETAPA_LABEL: Record<ProtocoloResumo['etapa'], string> = {
 type EmConferenciaCardProps = {
   protocolo: ProtocoloResumo
   now: number
-  onAprovar: () => void
-  onReprovar: () => void
+  onAprovar?: () => void
+  onReprovar?: () => void
   desabilitado?: boolean
+  /** Distribuidora vendo a fila de um conferente (RF-19) — sem ação, sem editar observação. */
+  somenteLeitura?: boolean
 }
 
 // Card "Em conferência" (RF-21/RF-22) — único com borda destacada (é o que está em andamento
 // agora) e cronômetro ao vivo em vez do chip de prazo no topo.
-export const EmConferenciaCard = ({ protocolo, now, onAprovar, onReprovar, desabilitado }: EmConferenciaCardProps) => {
+export const EmConferenciaCard = ({ protocolo, now, onAprovar, onReprovar, desabilitado, somenteLeitura }: EmConferenciaCardProps) => {
   const chip = prazoChip(protocolo.semaforo, protocolo.vencimentoEm, now)
   const decorridoMs = protocolo.iniciadoEm ? now - new Date(protocolo.iniciadoEm).getTime() : 0
 
@@ -35,16 +37,18 @@ export const EmConferenciaCard = ({ protocolo, now, onAprovar, onReprovar, desab
         <Chip tom={chip.tom}>{chip.label}</Chip>
       </div>
 
-      <ObservacaoField protocoloId={protocolo.id} observacao={protocolo.observacao} />
+      <ObservacaoField protocoloId={protocolo.id} observacao={protocolo.observacao} somenteLeitura={somenteLeitura} />
 
-      <div className="mt-2 flex gap-1.5">
-        <Button onClick={onAprovar} disabled={desabilitado} className="flex-1">
-          Aprovar
-        </Button>
-        <Button variant="destructive" onClick={onReprovar} disabled={desabilitado} className="flex-1">
-          Não aprovar
-        </Button>
-      </div>
+      {!somenteLeitura && onAprovar && onReprovar && (
+        <div className="mt-2 flex gap-1.5">
+          <Button onClick={onAprovar} disabled={desabilitado} className="flex-1">
+            Aprovar
+          </Button>
+          <Button variant="destructive" onClick={onReprovar} disabled={desabilitado} className="flex-1">
+            Não aprovar
+          </Button>
+        </div>
+      )}
     </SurfaceCard>
   )
 }

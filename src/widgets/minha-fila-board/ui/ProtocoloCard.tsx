@@ -12,16 +12,18 @@ const ETAPA_LABEL: Record<ProtocoloResumo['etapa'], string> = {
 type ProtocoloCardProps = {
   protocolo: ProtocoloResumo
   now: number
-  acaoLabel: string
-  onAcao: () => void
+  acaoLabel?: string
+  onAcao?: () => void
   acaoDesabilitada?: boolean
   /** "outline": Pegar este (pool). "default": Iniciar conferência (atribuídas). */
   acaoVariante?: 'outline' | 'default'
+  /** Distribuidora vendo a fila de um conferente (RF-19) — sem ação, sem editar observação. */
+  somenteLeitura?: boolean
 }
 
 // Card do pool disponível / atribuídos a você (RF-19) — mesmo layout dos dois, só muda o
 // botão de ação ("Pegar este" / "Iniciar conferência").
-export const ProtocoloCard = ({ protocolo, now, acaoLabel, onAcao, acaoDesabilitada, acaoVariante = 'outline' }: ProtocoloCardProps) => {
+export const ProtocoloCard = ({ protocolo, now, acaoLabel, onAcao, acaoDesabilitada, acaoVariante = 'outline', somenteLeitura }: ProtocoloCardProps) => {
   const chip = prazoChip(protocolo.semaforo, protocolo.vencimentoEm, now)
 
   return (
@@ -32,11 +34,13 @@ export const ProtocoloCard = ({ protocolo, now, acaoLabel, onAcao, acaoDesabilit
       </div>
       <div className="mt-1.5 text-[13px] text-text-5">{ETAPA_LABEL[protocolo.etapa]}</div>
 
-      <ObservacaoField protocoloId={protocolo.id} observacao={protocolo.observacao} />
+      <ObservacaoField protocoloId={protocolo.id} observacao={protocolo.observacao} somenteLeitura={somenteLeitura} />
 
-      <Button variant={acaoVariante} onClick={onAcao} disabled={acaoDesabilitada} className="mt-1.5 w-full">
-        {acaoLabel}
-      </Button>
+      {!somenteLeitura && onAcao && (
+        <Button variant={acaoVariante} onClick={onAcao} disabled={acaoDesabilitada} className="mt-1.5 w-full">
+          {acaoLabel}
+        </Button>
+      )}
     </SurfaceCard>
   )
 }

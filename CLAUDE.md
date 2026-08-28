@@ -437,6 +437,36 @@ estimada, RF-30 aviso de cobertura) — ver `../dispatch-api/CLAUDE.md`.
   tentar achar "o card certo" por texto — mais confiável quando há vários cards com estrutura
   parecida na tela.
 
+**"Minha fila" da Distribuidora (RF-19, leitura) construída** — o protótipo aprovado tem
+"Minha fila" no menu de quem é gestão também, achado só depois de um print do dono (a
+varredura inicial olhou a tela isolada, não a lógica do menu — ver CLAUDE.md do dispatch-api
+pra a explicação completa de como o filtro do `nav` do protótipo libera todos os itens pra
+gestão). Rota separada (`ROUTES.filaConferentes`, `/fila-conferentes`) da `Minha fila` do
+Conferente — mesmo rótulo no menu, conteúdo bem diferente:
+
+- `pages/fila-conferentes` — seletor de conferente (shadcn `Select`, populado por
+  `useConferentes()`) + `widgets/fila-do-conferente-board`. **Diferença de UX de propósito em
+  relação ao protótipo**: lá é um botão "Ver como outro conferente" que cicla um de cada vez;
+  aqui é um seletor de verdade — mais direto com mais de dois ou três conferentes cadastrados.
+  Seleciona o primeiro conferente na escala por padrão (`naEscala`), ou o primeiro da lista se
+  ninguém estiver.
+- `widgets/fila-do-conferente-board` — mesmo board de 3 colunas de `minha-fila-board`, sempre
+  em modo leitura. **Reaproveita os componentes de card** (`ProtocoloCard`, `EmConferenciaCard`,
+  `ConcluidosHojeList`) do outro widget em vez de duplicar — os dois agora saem no barrel de
+  `minha-fila-board/index.ts` (FSD permite import entre widgets do mesmo nível via API pública,
+  não path direto pro `ui/` interno). Os dois cards ganharam `somenteLeitura?: boolean`: quando
+  `true`, esconde o(s) botão(ões) de ação e passa o mesmo prop pro `ObservacaoField`
+  (`onAcao`/`onAprovar`/`onReprovar` viraram opcionais).
+- `entities/protocolo` ganha `useFilaDoConferente(id)`/`useConcluidosHojeDoConferente(id)` —
+  chave de query com o id embutido (`['conferentes', id, 'fila']`), cada conferente com seu
+  próprio cache, não uma query só trocando de dono por baixo.
+- Nada de mutation nessa tela — os endpoints de ação nem aceitam chamada de quem não é
+  Conferente (RNF-04), então não tem sentido a UI oferecer o que o servidor vai rejeitar.
+- `e2e/fila-conferentes.spec.ts` (regressão permanente) — confirma que a tela carrega, que
+  nenhum botão de escrita aparece (nem "Pegar este" nem "+ Observação"), e que trocar de
+  conferente no seletor dispara uma leitura nova do back (`GET /conferentes/{id}/fila`), não é
+  filtro local.
+
 Ainda não existem testes de unidade (vitest) nem lint rodado a sério (eslint/oxlint já vem do
 scaffold do shadcn, mas ainda não foi ligado ao fluxo). Próximo passo natural: Central de
 regras (RF-31 a RF-38) — usando as skills `new-entity`/`new-feature`/`new-page` e fechando com
