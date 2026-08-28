@@ -2,6 +2,7 @@ import { ptBR } from 'date-fns/locale'
 import { CalendarIcon, ChevronDownIcon, MinusIcon, PlusIcon } from 'lucide-react'
 import { useState } from 'react'
 
+import { Button } from '@/shared/ui/button'
 import { Calendar } from '@/shared/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
 
@@ -10,6 +11,10 @@ type DateTimePickerProps = { value: Date; onChange: (date: Date) => void }
 const formatarData = (data: Date) => data.toLocaleDateString('pt-BR')
 const formatarHora = (data: Date) => data.toTimeString().slice(0, 5)
 const doisDigitos = (n: number) => String(n).padStart(2, '0')
+
+// Uma letra maiúscula (D S T Q Q S S), igual o protótipo — o `date-fns/locale` sozinho dá 3
+// letras minúsculas ("dom", "seg"...).
+const LETRA_DIA_SEMANA = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S']
 
 // Substitui o <input type="datetime-local"> nativo (chrome do sistema operacional, não dá pra
 // estilizar de verdade). Gatilho e o painel de hora seguem o protótipo aprovado (Dispatch.dc.html,
@@ -32,6 +37,14 @@ export const DateTimePicker = ({ value, onChange }: DateTimePickerProps) => {
     onChange(novaData)
   }
 
+  const irParaInicioDoDia = () => {
+    const novaData = new Date(value)
+    novaData.setHours(0, 0, 0, 0)
+    onChange(novaData)
+  }
+
+  const irParaAgora = () => onChange(new Date())
+
   return (
     <Popover open={aberto} onOpenChange={setAberto}>
       <PopoverTrigger asChild>
@@ -49,12 +62,35 @@ export const DateTimePicker = ({ value, onChange }: DateTimePickerProps) => {
         </button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0" align="start">
-        <Calendar mode="single" selected={value} onSelect={handleSelecionarData} locale={ptBR} autoFocus />
+        <Calendar
+          mode="single"
+          selected={value}
+          onSelect={handleSelecionarData}
+          locale={ptBR}
+          formatters={{ formatWeekdayName: (dia) => LETRA_DIA_SEMANA[dia.getDay()] }}
+          // Protótipo usa JetBrains Mono (número/dado tabular) nos dias e na letra da semana —
+          // só o rótulo do mês ("agosto 2026") fica na fonte de texto normal. `[&_.rdp-x]` em vez
+          // de `classNames` porque esse prop substitui a classe inteira da chave (perderia o
+          // `flex`/tamanho padrão do react-day-picker), só quero acrescentar a fonte.
+          className="[&_.rdp-weekday]:font-mono [&_.rdp-weekday]:text-[10px] [&_.rdp-day_button]:font-mono [&_.rdp-day_button]:text-[11.5px]"
+          autoFocus
+        />
         <div className="flex items-center gap-2 border-t border-border p-2.5">
           <span className="flex-1 text-[11.5px] text-text-2">Hora</span>
           <Stepper valor={doisDigitos(value.getHours())} onDecrementar={() => mexerHora('horas', -1)} onIncrementar={() => mexerHora('horas', 1)} />
           <span className="font-mono text-[12.5px] font-medium text-muted-foreground">:</span>
           <Stepper valor={doisDigitos(value.getMinutes())} onDecrementar={() => mexerHora('minutos', -1)} onIncrementar={() => mexerHora('minutos', 1)} />
+        </div>
+        <div className="flex gap-1.5 border-t border-border p-2.5">
+          <Button variant="outline" size="sm" className="flex-1 text-[11.5px]" onClick={irParaInicioDoDia}>
+            Início do dia
+          </Button>
+          <Button variant="outline" size="sm" className="flex-1 text-[11.5px]" onClick={irParaAgora}>
+            Agora
+          </Button>
+          <Button size="sm" className="flex-1 text-[11.5px]" onClick={() => setAberto(false)}>
+            Pronto
+          </Button>
         </div>
       </PopoverContent>
     </Popover>

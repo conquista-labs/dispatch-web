@@ -315,6 +315,26 @@ também"):
   virou dinâmica (`tagDaExcecao`, deriva de `motivoExcecao`: "tipo desconhecido" → "tipo novo",
   resto → "sem alçada" — o back não distingue "escala vazia" de "barrado por regra" como o
   protótipo simula, então não dá pra replicar os dois rótulos sem inventar dado).
+- **`DateTimePicker`, terceira rodada** (o dono seguiu comparando depois do commit anterior —
+  "continua diferente" foi certo duas vezes seguidas, valeu a pena insistir):
+  - Fonte dos números do calendário e da letra do dia da semana estava na fonte de texto normal;
+    protótipo usa JetBrains Mono nos dois (é dado tabular, mesmo padrão de número de protocolo/
+    prazo em qualquer outra tela) — só o rótulo do mês ("agosto 2026") fica na fonte de texto.
+    Como o `Calendar` do shadcn expõe um prop `classNames` que **substitui** a classe inteira da
+    chave (não faz merge — passar `weekday: 'font-mono'` perderia o `flex`/tamanho que o
+    react-day-picker já aplica), a correção foi via `className` do `Calendar` com seletor de
+    descendente nas classes que o `getDefaultClassNames()` do react-day-picker já expõe
+    (`rdp-weekday`, `rdp-day_button` — confirmado lendo o pacote, são classes reais, não hash de
+    CSS module): `[&_.rdp-weekday]:font-mono [&_.rdp-day_button]:font-mono`.
+  - Faltavam os 3 botões de atalho do protótipo embaixo dos steppers de hora: "Início do dia"
+    (zera a hora, mantém a data), "Agora" (pula pra data/hora atual) e "Pronto" (fecha o
+    popover). Adicionados. **Confirmado ao vivo, não só por print**: clicar num dia do calendário
+    não fecha o popover sozinho nem aqui nem no protótipo (conferido no código-fonte — o
+    `onClick` do dia só atualiza a data, quem fecha é sempre o "Pronto") — se parecer estranho
+    de novo, não é regressão, é assim que o protótipo também se comporta.
+  - Dias da semana também foram trocados de abreviação de 3 letras (`dom seg ter...`, que é o que
+    o locale `ptBR` do `date-fns` dá por padrão) pra uma letra maiúscula (`D S T Q Q S S`), via
+    `formatters.formatWeekdayName` — o `date-fns/locale` sozinho não cobre isso.
 - **Bug real achado no caminho, não só fidelidade**: `prazoChip` (`entities/protocolo/lib/prazo-chip.ts`,
   usado por Minha fila **e** Distribuição) prefixava "vence em"/"estourou há" em qualquer faixa —
   o protótipo só usa esse prefixo nos 3 estados de risco (amarelo/laranja/vermelho); o estado
@@ -327,6 +347,18 @@ também"):
   tempo de conferência (mesma causa); sem linha de "tipo de ato" em nenhuma das duas abas
   (`ProtocoloResumo` só tem `tipoAtoId`, sem nome — precisaria de um `entities/tipoAto` que ainda
   não existe).
+- **Verificação de comportamento, não só de aparência** (o dono cobrou isso explicitamente —
+  print bonito não garante que a interação bate): testado ao vivo nos dois lados (protótipo via
+  `file://`, app local com dado seedado por API) — adicionar observação em Minha fila, confirmar
+  que Distribuição não deixa editar (só lê), e o fluxo de "Resolver" numa exceção. As duas
+  primeiras bateram exatamente. A terceira revelou uma divergência de comportamento real (não só
+  de rótulo): o protótipo nunca deixa a distribuidora escolher manualmente o conferente na tela
+  de Distribuição — "tipo novo" navega pra Central de Regras (não existe aqui ainda), "sem
+  alçada"/"barrado por regra" atribui sozinho ao primeiro conferente apto, sem perguntar nada.
+  **Decisão consciente, confirmada com o dono**: manter o seletor manual (escolher conferente +
+  confirmar) pros dois casos — mais seguro e auditável (RNF-02) que atribuir uma exceção sem
+  revisão humana; o auto-atribuir do protótipo é lido como atalho de ferramenta de design, não
+  regra de negócio real. Diverge do protótipo de propósito, não por gap.
 
 **Bug crítico achado em uso real e corrigido**: deslogar de um papel e logar com outro
 mostrava a sessão anterior primeiro — o cache do TanStack Query não era limpo no logout
