@@ -213,7 +213,8 @@ const Stepper = ({ valor, min, max, onAlterar, onDecrementar, onIncrementar }: S
         }}
         onFocus={(event) => event.target.select()}
         inputMode="numeric"
-        className="min-w-[22px] border-none bg-transparent text-center font-mono text-[12.5px] font-medium outline-none"
+        size={2}
+        className="w-[22px] flex-none border-none bg-transparent text-center font-mono text-[12.5px] font-medium outline-none"
       />
       <button type="button" onClick={onIncrementar} className="flex size-5 items-center justify-center rounded text-text-2 hover:bg-secondary">
         <PlusIcon className="size-3" />
