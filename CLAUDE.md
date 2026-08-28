@@ -394,7 +394,50 @@ teste avulso de tema escuro — fidelidade boa nos dois temas. Dado de teste (pr
 escreventes, lote) limpo depois.
 
 Com isso o fluxo principal de entrada de dado está fechado (Importar → Distribuição → Minha
-fila). Ainda não existem testes de unidade (vitest) nem lint rodado a sério (eslint/oxlint já
-vem do scaffold do shadcn, mas ainda não foi ligado ao fluxo). Próximo passo natural: Central de
-regras (RF-31 a RF-38) ou Conferentes (RF-25 a RF-30) — usando as skills
-`new-entity`/`new-feature`/`new-page` e fechando com `verify-visual`.
+fila).
+
+**Conferentes (RF-25 a RF-30) construída de ponta a ponta.** O back não tinha tudo pronto —
+planejar a tela achou um bug adormecido (`CargaAtual` nunca era atualizado, o desempate por
+carga do motor de distribuição sempre comparava 0 contra 0) e dois gaps reais (RF-28 capacidade
+estimada, RF-30 aviso de cobertura) — ver `../dispatch-api/CLAUDE.md`.
+
+- `entities/conferente` ganha `capacidadeEstimada` no tipo `Conferente`, mais `AlcanceDoConferente`
+  (`useAlcance`, `GET /conferentes/alcance`) e `CoberturaAlcada` (`useCobertura`,
+  `GET /conferentes/cobertura`).
+- `features/conferente/{cadastrar,editar-nivel-jornada,editar-perfil,marcar-presenca,remover}` —
+  um verbo por slice. `marcar-presenca`/`remover` invalidam `VISAO_DISTRIBUICAO_QUERY_KEY` além
+  de `CONFERENTES_QUERY_KEY` (RF-27: ausência/remoção devolve protocolos ao pool, a Distribuição
+  muda junto).
+- `widgets/conferentes-board` — `ConferentesBoard` (4 KPIs + lista + banner de cobertura),
+  `ConferenteCard` (nível via pill que cicla Júnior→Pleno→Sênior, jornada via stepper ±1h
+  clampado 2–12h — os dois editam direto no card, igual o protótipo), `NovoConferenteDialog` e
+  `EditarConferenteDialog` (nome/e-mail — ver decisão abaixo).
+- **Decisão sobre edição, revista duas vezes com o dono**: o protótipo edita tudo inline
+  (inclusive o nome, direto num `<input>` no card) porque lá é uma ferramenta de design sem
+  back de verdade. Aqui nome/e-mail são campos do `Usuario` (agregado separado do `Conferente`,
+  que só sabe nível/jornada/escala) e passaram por três formatos até fechar: sem edição (gap
+  não percebido) → inputs inline no próprio card → **modal próprio (`EditarConferenteDialog`),
+  mesmo padrão visual do "Novo conferente"**, aberto por um ícone de lápis ao lado do nome.
+  Nível/jornada continuam nos controles rápidos do card (não tem por que abrir modal pra um
+  clique de stepper).
+- **Cadastro é modal, não o "rascunho" do protótipo**: lá, "Novo conferente" só insere uma linha
+  local com nome fixo "Novo conferente" pra editar depois; aqui o back exige e-mail/senha reais
+  pra criar o `Usuario` de login junto (`CadastrarConferente`), então precisa de formulário
+  completo antes de existir.
+- **Achados testando a tela de verdade, não só em isolamento** (documentados a fundo no
+  CLAUDE.md do back): lista sem `ORDER BY` "pulava" de posição a cada ação; "Remover" não
+  filtrava quem tinha sido removido (`GET /conferentes` corrigido na fonte, não no front).
+- **Alçada por linha do protótipo (frase completa, tipo "Analista Júnior pode conferir Venda e
+  Compra, Doação...") não replicada** — ficou só "pode conferir N tipos de ato". Listar os
+  nomes exigiria um `entities/tipoAto` que ainda não existe (`AlcanceDoConferente` só devolve
+  `TiposPermitidosIds`, sem nome). Fica pra quando/se Central de regras (que vai precisar dessa
+  entidade de qualquer jeito) for construída.
+- `e2e/conferentes.spec.ts` (regressão permanente) — cadastra um conferente de teste, edita
+  nome via modal, remove no final; usa `data-testid` no card (`conferente-card-{id}`) em vez de
+  tentar achar "o card certo" por texto — mais confiável quando há vários cards com estrutura
+  parecida na tela.
+
+Ainda não existem testes de unidade (vitest) nem lint rodado a sério (eslint/oxlint já vem do
+scaffold do shadcn, mas ainda não foi ligado ao fluxo). Próximo passo natural: Central de
+regras (RF-31 a RF-38) — usando as skills `new-entity`/`new-feature`/`new-page` e fechando com
+`verify-visual`.

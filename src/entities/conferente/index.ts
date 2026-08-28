@@ -1,2 +1,4 @@
-export type { Conferente, Nivel } from './model/types'
-export { useConferentes } from './model/use-conferentes'
+export type { AlcanceDoConferente, Conferente, CoberturaAlcada, Nivel, TipoDeAtoResumo } from './model/types'
+export { CONFERENTES_QUERY_KEY, useConferentes } from './model/use-conferentes'
+export { useAlcance } from './model/use-alcance'
+export { COBERTURA_QUERY_KEY, useCobertura } from './model/use-cobertura'

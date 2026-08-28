@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 
+import { ConferentesPage } from '@/pages/conferentes'
 import { DistribuicaoPage } from '@/pages/distribuicao'
 import { ImportarPage } from '@/pages/importar'
 import { LoginPage } from '@/pages/login'
@@ -30,6 +31,14 @@ export const Router = () => (
             element={
               <RequireRole roles={['Distribuidora']}>
                 <ImportarPage />
+              </RequireRole>
+            }
+          />
+          <Route
+            path={ROUTES.conferentes}
+            element={
+              <RequireRole roles={['Distribuidora']}>
+                <ConferentesPage />
               </RequireRole>
             }
           />

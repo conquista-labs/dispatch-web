@@ -4,5 +4,6 @@ export const ROUTES = {
   login: '/login',
   distribuicao: '/distribuicao',
   importar: '/importar',
+  conferentes: '/conferentes',
   minhaFila: '/minha-fila',
 } as const

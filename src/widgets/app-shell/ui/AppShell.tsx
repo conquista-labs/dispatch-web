@@ -12,6 +12,7 @@ const NAV_POR_PAPEL: Record<Papel, { label: string; to: string }[]> = {
   Distribuidora: [
     { label: 'Distribuição', to: ROUTES.distribuicao },
     { label: 'Importar', to: ROUTES.importar },
+    { label: 'Conferentes', to: ROUTES.conferentes },
   ],
   Conferente: [{ label: 'Minha fila', to: ROUTES.minhaFila }],
 }
