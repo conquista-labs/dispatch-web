@@ -14,6 +14,7 @@ import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/ui/button'
 import { SurfaceCard } from '@/shared/ui/surface-card'
 
+import { NovoTipoAtoDialog } from './NovoTipoAtoDialog'
 import { PillToggle } from './PillToggle'
 
 const NIVEIS: Nivel[] = ['Junior', 'Pleno', 'Senior']
@@ -107,9 +108,12 @@ export const AbaAlcada = () => {
       <div className="mt-5 mb-1 flex items-baseline justify-between gap-3">
         <h2 className="m-0 text-[15px] font-semibold tracking-[-0.01em]">Regras de alçada</h2>
         {!builderAberto && (
-          <Button variant="outline" size="sm" onClick={abrirBuilder}>
-            Nova regra
-          </Button>
+          <div className="flex gap-1.5">
+            <NovoTipoAtoDialog />
+            <Button variant="outline" size="sm" onClick={abrirBuilder}>
+              Nova regra
+            </Button>
+          </div>
         )}
       </div>
       <p className="m-0 mb-2.5 max-w-[74ch] text-[12.5px] text-muted-foreground text-pretty">

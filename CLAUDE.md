@@ -542,6 +542,14 @@ três desde antes desta sessão (commit "Adiciona a Central de Regras"); só fal
   escrevente órfão pra equipe, aplicar e descartar sugestão — todos com o efeito refletido na
   tela (KPIs recalculando, histórico crescendo) e confirmados via resposta de rede, não só DOM.
 
+**Cadastro manual de tipo de ato**, na aba Alçada — complementa o cadastro automático que a
+importação passou a fazer (ver `../dispatch-api/CLAUDE.md`, "Cadastro automático de tipo de ato
++ normalização"). `NovoTipoAtoDialog` (mesmo padrão de `NovaEquipeDialog`), `features/tipoAto/criar`
+(`POST /tipos-ato`, 409 se já existir mesmo nome normalizado — trata igual duplicidade de e-mail
+em `NovoConferenteDialog`). Nome sai normalizado pelo back de qualquer jeito, front não precisa
+tratar isso. Confirmado via Playwright: cadastro novo (201) e duplicata com caixa diferente (409,
+mensagem "já existe um tipo de ato com esse nome").
+
 Ainda não existem testes de unidade (vitest) nem lint rodado a sério (eslint/oxlint já vem do
 scaffold do shadcn, mas ainda não foi ligado ao fluxo). Próximo passo natural: Dashboard
 (RF-42 a RF-46).
