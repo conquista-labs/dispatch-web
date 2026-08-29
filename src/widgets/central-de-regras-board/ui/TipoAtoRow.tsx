@@ -19,16 +19,20 @@ type TipoAtoRowProps = {
 }
 
 // RF-34a-b,d-f — uma linha da tabela: nome edita inline (commit no blur, mesmo padrão de
-// EquipeCard), peso via stepper ±, ativar/desativar e remover com feedback do 409 "em uso"
-// (RF-34e — mesclar dois tipos, RF-34c, fica de fora, não tem ação aqui pra isso ainda).
+// EquipeCard), peso via stepper ± OU digitando direto (mesmo padrão de hora/minuto do
+// DateTimePicker — input controlado com w-[Npx] fixo, não min-w sozinho, senão o tamanho
+// intrínseco do <input> estoura o layout), ativar/desativar e remover com feedback do 409
+// "em uso" (RF-34e — mesclar dois tipos, RF-34c, fica de fora, não tem ação aqui pra isso ainda).
 export const TipoAtoRow = ({ tipo }: TipoAtoRowProps) => {
   const [nome, setNome] = useState(tipo.nome)
+  const [pesoTexto, setPesoTexto] = useState(String(tipo.pesoComplexidade))
   const renomear = useRenomearTipoAto()
   const alterarStatus = useAlterarStatusTipoAto()
   const definirPeso = useDefinirPesoTipoAto()
   const remover = useRemoverTipoAto()
 
   useEffect(() => setNome(tipo.nome), [tipo.nome])
+  useEffect(() => setPesoTexto(String(tipo.pesoComplexidade)), [tipo.pesoComplexidade])
 
   const commitNome = () => {
     const aparado = nome.trim()
@@ -39,10 +43,24 @@ export const TipoAtoRow = ({ tipo }: TipoAtoRowProps) => {
     }
   }
 
-  const mexerPeso = (delta: number) => {
-    const novo = Math.min(PESO_MAX, Math.max(PESO_MIN, tipo.pesoComplexidade + delta))
-    if (novo === tipo.pesoComplexidade) return
-    definirPeso.mutate({ tipoAtoId: tipo.id, peso: novo })
+  const aplicarPeso = (novo: number) => {
+    const clampado = Math.min(PESO_MAX, Math.max(PESO_MIN, novo))
+    if (clampado === tipo.pesoComplexidade) {
+      setPesoTexto(String(tipo.pesoComplexidade))
+      return
+    }
+    definirPeso.mutate({ tipoAtoId: tipo.id, peso: clampado })
+  }
+
+  const mexerPeso = (delta: number) => aplicarPeso(tipo.pesoComplexidade + delta)
+
+  const commitPesoTexto = () => {
+    const numero = Number.parseInt(pesoTexto, 10)
+    if (Number.isNaN(numero)) {
+      setPesoTexto(String(tipo.pesoComplexidade))
+      return
+    }
+    aplicarPeso(numero)
   }
 
   const emUso = isAxiosError(remover.error) && remover.error.response?.status === 409
@@ -69,7 +87,15 @@ export const TipoAtoRow = ({ tipo }: TipoAtoRowProps) => {
           >
             <MinusIcon className="size-3" />
           </button>
-          <span className="min-w-[18px] text-center font-mono text-[12.5px] font-medium">{tipo.pesoComplexidade}</span>
+          <input
+            value={pesoTexto}
+            onChange={(event) => setPesoTexto(event.target.value.replace(/\D/g, ''))}
+            onBlur={commitPesoTexto}
+            onKeyDown={(event) => event.key === 'Enter' && event.currentTarget.blur()}
+            inputMode="numeric"
+            size={2}
+            className="w-[20px] flex-none rounded text-center font-mono text-[12.5px] font-medium outline-none focus:bg-secondary"
+          />
           <button
             type="button"
             onClick={() => mexerPeso(1)}

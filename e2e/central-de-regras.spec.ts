@@ -159,7 +159,7 @@ test('Tipos de ato — CRUD completo reflete na tela', async ({ page }) => {
   // causa do bug do "Venda" acima (achado congelado + refetch no meio reordena a lista).
   await page.waitForLoadState('networkidle')
 
-  // Peso: +1.
+  // Peso: +1 pelo stepper.
   let { linha: linhaRenomeada } = await esperarLinhaPeloNome(page, nomeRenomeado)
   const [respostaPeso] = await Promise.all([
     page.waitForResponse((r) => r.request().method() === 'PUT' && r.url().includes('/peso')),
@@ -168,7 +168,22 @@ test('Tipos de ato — CRUD completo reflete na tela', async ({ page }) => {
   expect(respostaPeso.status()).toBe(204)
   await page.waitForLoadState('networkidle')
   ;({ linha: linhaRenomeada } = await esperarLinhaPeloNome(page, nomeRenomeado))
-  await expect(linhaRenomeada.getByText('2', { exact: true })).toBeVisible()
+  // Peso agora é um <input> digitável (2º input da linha, o 1º é o nome) — não dá pra achar
+  // por getByText como antes de virar input (mesma armadilha do nome, documentada acima).
+  const inputPeso = linhaRenomeada.locator('input').nth(1)
+  await expect(inputPeso).toHaveValue('2')
+
+  // Peso: digitar direto (RF-34f, pedido explícito do dono — "no peso do tipo de ato tem que
+  // ser possível digitar").
+  await inputPeso.fill('4')
+  const [respostaPesoDigitado] = await Promise.all([
+    page.waitForResponse((r) => r.request().method() === 'PUT' && r.url().includes('/peso')),
+    page.getByRole('heading', { name: 'Tipos de ato' }).click(),
+  ])
+  expect(respostaPesoDigitado.status()).toBe(204)
+  await page.waitForLoadState('networkidle')
+  ;({ linha: linhaRenomeada } = await esperarLinhaPeloNome(page, nomeRenomeado))
+  await expect(linhaRenomeada.locator('input').nth(1)).toHaveValue('4')
 
   // Desativar.
   const [respostaDesativar] = await Promise.all([
@@ -196,7 +211,11 @@ test('Tipos de ato — CRUD completo reflete na tela', async ({ page }) => {
     linhaRenomeada.getByRole('button', { name: 'Remover' }).click(),
   ])
   expect(respostaRemover.status()).toBe(204)
-  await expect
-    .poll(() => linhaPeloNomeDoTipoAto(page, nomeRenomeado).then((r) => r !== null), { timeout: 10_000 })
-    .toBe(false)
+  // waitForFunction roda dentro do browser (sem round-trip do CDP por elemento, como
+  // linhaPeloNomeDoTipoAto faz) — mais rápido e evitou uma corrida onde o poll baseado em
+  // Locator nunca convergia mesmo com a linha já removida de verdade (confirmado via API).
+  await page.waitForFunction(
+    (nome) => !Array.from(document.querySelectorAll('input')).some((el) => (el as HTMLInputElement).value === nome),
+    nomeRenomeado,
+  )
 })
