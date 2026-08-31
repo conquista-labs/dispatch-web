@@ -13,6 +13,7 @@ import { Logo } from '@/shared/ui/logo'
 // as telas de gestão nascem (Conferentes, Central de regras, Dashboard...).
 const NAV_POR_PAPEL: Record<Papel, { label: string; to: string }[]> = {
   Distribuidora: [
+    { label: 'Dashboard', to: ROUTES.dashboard },
     { label: 'Distribuição', to: ROUTES.distribuicao },
     { label: 'Importar', to: ROUTES.importar },
     // RF-19: protótipo aprovado tem "Minha fila" no menu de quem é gestão também — mesmo
@@ -21,11 +22,10 @@ const NAV_POR_PAPEL: Record<Papel, { label: string; to: string }[]> = {
     { label: 'Minha fila', to: ROUTES.filaConferentes },
     { label: 'Conferentes', to: ROUTES.conferentes },
     { label: 'Central de regras', to: ROUTES.centralDeRegras },
-    { label: 'Dashboard', to: ROUTES.dashboard },
   ],
   Conferente: [
-    { label: 'Minha fila', to: ROUTES.minhaFila },
     { label: 'Dashboard', to: ROUTES.dashboard },
+    { label: 'Minha fila', to: ROUTES.minhaFila },
   ],
 }
 

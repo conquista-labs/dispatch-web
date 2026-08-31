@@ -44,7 +44,8 @@ test('Central de regras — as 3 abas renderizam com dados reais', async ({ page
   await page.getByLabel('E-mail').fill(EMAIL)
   await page.getByLabel('Senha').fill(SENHA)
   await page.getByRole('button', { name: 'Entrar' }).click()
-  await expect(page).toHaveURL(/\/distribuicao/)
+  // RF-03, ajustado a pedido do dono: login cai no Dashboard agora — navega explicitamente.
+  await expect(page).toHaveURL(/\/dashboard/)
 
   await page.getByRole('link', { name: 'Central de regras' }).click()
   await expect(page).toHaveURL(/\/central-de-regras/)
@@ -116,7 +117,7 @@ test('Tipos de ato — CRUD completo reflete na tela', async ({ page }) => {
   await page.getByLabel('E-mail').fill(EMAIL)
   await page.getByLabel('Senha').fill(SENHA)
   await page.getByRole('button', { name: 'Entrar' }).click()
-  await expect(page).toHaveURL(/\/distribuicao/)
+  await expect(page).toHaveURL(/\/dashboard/)
 
   await page.goto('/central-de-regras')
   await page.getByRole('button', { name: 'Tipos de ato' }).click()

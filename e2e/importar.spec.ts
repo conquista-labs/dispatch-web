@@ -20,7 +20,8 @@ test('importar um relatório de verdade — dados, prévia e confirmação', asy
   await page.getByLabel('E-mail').fill(EMAIL)
   await page.getByLabel('Senha').fill(SENHA)
   await page.getByRole('button', { name: 'Entrar' }).click()
-  await expect(page).toHaveURL(/\/distribuicao/)
+  // RF-03, ajustado a pedido do dono: login cai no Dashboard agora — navega explicitamente.
+  await expect(page).toHaveURL(/\/dashboard/)
 
   await page.getByRole('link', { name: 'Importar' }).click()
   await expect(page.getByRole('heading', { name: 'Importar relatório' })).toBeVisible()

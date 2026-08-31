@@ -14,9 +14,7 @@ test('Dashboard — visão gestão renderiza KPIs, tabela de score e desempenho 
   await page.getByLabel('E-mail').fill(EMAIL_DISTRIBUIDORA)
   await page.getByLabel('Senha').fill(SENHA_DISTRIBUIDORA)
   await page.getByRole('button', { name: 'Entrar' }).click()
-  await expect(page).toHaveURL(/\/distribuicao/)
-
-  await page.getByRole('link', { name: 'Dashboard' }).click()
+  // RF-03, ajustado a pedido do dono: os dois papéis caem no Dashboard depois de logar.
   await expect(page).toHaveURL(/\/dashboard/)
   await expect(page.getByRole('heading', { name: 'Dashboard', exact: true })).toBeVisible()
   await expect(page.getByText('Atos conferidos').first()).toBeVisible()
@@ -46,9 +44,6 @@ test('Dashboard — visão conferente mostra só os próprios números, sem faix
   await page.getByLabel('E-mail').fill(EMAIL_CONFERENTE)
   await page.getByLabel('Senha').fill(SENHA_CONFERENTE)
   await page.getByRole('button', { name: 'Entrar' }).click()
-  await expect(page).toHaveURL(/\/minha-fila/)
-
-  await page.getByRole('link', { name: 'Dashboard' }).click()
   await expect(page).toHaveURL(/\/dashboard/)
   await expect(page.getByRole('heading', { name: 'Meu dashboard' })).toBeVisible()
   await expect(page.getByText('Seu score do período')).toBeVisible()

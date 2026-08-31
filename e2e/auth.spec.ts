@@ -6,17 +6,19 @@ import { expect, test } from '@playwright/test'
 const EMAIL = process.env.E2E_DISTRIBUIDORA_EMAIL ?? 'distribuidora@cartorio.com'
 const SENHA = process.env.E2E_DISTRIBUIDORA_SENHA ?? 'Senha123!'
 
-test('login como Distribuidora leva pra Distribuição (RF-03) e mostra a sidebar', async ({ page }) => {
+test('login como Distribuidora leva pro Dashboard (RF-03) e mostra a sidebar', async ({ page }) => {
   await page.goto('/login')
   await page.getByLabel('E-mail').fill(EMAIL)
   await page.getByLabel('Senha').fill(SENHA)
   await page.getByRole('button', { name: 'Entrar' }).click()
 
-  await expect(page).toHaveURL(/\/distribuicao/)
-  await expect(page.getByRole('heading', { name: 'Distribuição' })).toBeVisible()
+  // RF-03, ajustado a pedido do dono: os dois papéis caem no Dashboard depois de logar (ver
+  // entities/usuario/model/role-home-route.ts).
+  await expect(page).toHaveURL(/\/dashboard/)
+  await expect(page.getByRole('heading', { name: 'Dashboard', exact: true })).toBeVisible()
   await expect(page.getByRole('link', { name: 'Distribuição' })).toBeVisible()
 
-  await page.screenshot({ path: 'e2e/.screenshots/distribuicao-logado.png', fullPage: true })
+  await page.screenshot({ path: 'e2e/.screenshots/dashboard-logado.png', fullPage: true })
 })
 
 test('F5 mantém a sessão via GET /auth/me', async ({ page }) => {
@@ -24,10 +26,10 @@ test('F5 mantém a sessão via GET /auth/me', async ({ page }) => {
   await page.getByLabel('E-mail').fill(EMAIL)
   await page.getByLabel('Senha').fill(SENHA)
   await page.getByRole('button', { name: 'Entrar' }).click()
-  await expect(page).toHaveURL(/\/distribuicao/)
+  await expect(page).toHaveURL(/\/dashboard/)
 
   await page.reload()
 
-  await expect(page.getByRole('heading', { name: 'Distribuição' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Dashboard', exact: true })).toBeVisible()
   await expect(page).not.toHaveURL(/\/login/)
 })

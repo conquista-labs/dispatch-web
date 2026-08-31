@@ -12,7 +12,8 @@ test('deslogar de um papel e logar com outro não vaza sessão/cache entre os do
   await page.getByLabel('E-mail').fill(DISTRIBUIDORA.email)
   await page.getByLabel('Senha').fill(DISTRIBUIDORA.senha)
   await page.getByRole('button', { name: 'Entrar' }).click()
-  await expect(page).toHaveURL(/\/distribuicao/)
+  // RF-03, ajustado a pedido do dono: os dois papéis caem no Dashboard depois de logar.
+  await expect(page).toHaveURL(/\/dashboard/)
   await expect(page.getByText('Distribuidora Teste')).toBeVisible()
 
   await page.getByRole('button', { name: 'Sair' }).click()
@@ -22,7 +23,7 @@ test('deslogar de um papel e logar com outro não vaza sessão/cache entre os do
   await page.getByLabel('Senha').fill(CONFERENTE.senha)
   await page.getByRole('button', { name: 'Entrar' }).click()
 
-  await expect(page).toHaveURL(/\/minha-fila/)
+  await expect(page).toHaveURL(/\/dashboard/)
   // Não pode aparecer nada da sessão anterior — nem o nome, nem o papel, nem a rota dela.
   await expect(page.getByText('Conferente RF27').first()).toBeVisible()
   await expect(page.getByText('Distribuidora Teste')).not.toBeVisible()

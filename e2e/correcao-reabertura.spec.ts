@@ -62,6 +62,9 @@ test('Correção de resultado e pedido de reabertura — ciclo completo pela UI'
   await page.getByLabel('E-mail').fill(EMAIL_CONFERENTE)
   await page.getByLabel('Senha').fill(SENHA_CONFERENTE)
   await page.getByRole('button', { name: 'Entrar' }).click()
+  // RF-03, ajustado a pedido do dono: login cai no Dashboard agora — navega explicitamente.
+  await expect(page).toHaveURL(/\/dashboard/)
+  await page.getByRole('link', { name: 'Minha fila' }).click()
   await expect(page).toHaveURL(/\/minha-fila/)
 
   const linhaConcluido = page.getByTestId(`concluido-${protocoloId}`)
@@ -111,6 +114,9 @@ test('Correção de resultado e pedido de reabertura — ciclo completo pela UI'
   await paginaDistribuidora.getByLabel('E-mail').fill(EMAIL_DISTRIBUIDORA)
   await paginaDistribuidora.getByLabel('Senha').fill(SENHA_DISTRIBUIDORA)
   await paginaDistribuidora.getByRole('button', { name: 'Entrar' }).click()
+  // RF-03, ajustado a pedido do dono: login cai no Dashboard agora — navega explicitamente.
+  await expect(paginaDistribuidora).toHaveURL(/\/dashboard/)
+  await paginaDistribuidora.getByRole('link', { name: 'Distribuição' }).click()
   await expect(paginaDistribuidora).toHaveURL(/\/distribuicao/)
 
   await paginaDistribuidora.getByRole('button', { name: /Exceções/ }).click()
