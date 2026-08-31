@@ -1,86 +1,101 @@
+import { lazy, Suspense } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 
-import { CentralDeRegrasPage } from '@/pages/central-de-regras'
-import { ConferentesPage } from '@/pages/conferentes'
-import { DashboardPage } from '@/pages/dashboard'
-import { DistribuicaoPage } from '@/pages/distribuicao'
-import { FilaConferentesPage } from '@/pages/fila-conferentes'
-import { ImportarPage } from '@/pages/importar'
 import { LoginPage } from '@/pages/login'
-import { MinhaFilaPage } from '@/pages/minha-fila'
 import { ROUTES } from '@/shared/config/routes'
 import { AppShell } from '@/widgets/app-shell'
 
 import { RequireRole } from './require-role'
 import { SessionBoot } from './session-boot'
 
+// Lazy por página — cada uma vira um chunk próprio, baixado só quando a rota é visitada.
+// `LoginPage` fica de fora de propósito: é a primeira tela que qualquer sessão não autenticada
+// vê, então carregar ela já faz parte do boot inicial mesmo, não tem o que adiar.
+const DashboardPage = lazy(() => import('@/pages/dashboard').then((m) => ({ default: m.DashboardPage })))
+const DistribuicaoPage = lazy(() => import('@/pages/distribuicao').then((m) => ({ default: m.DistribuicaoPage })))
+const ImportarPage = lazy(() => import('@/pages/importar').then((m) => ({ default: m.ImportarPage })))
+const ConferentesPage = lazy(() => import('@/pages/conferentes').then((m) => ({ default: m.ConferentesPage })))
+const MinhaFilaPage = lazy(() => import('@/pages/minha-fila').then((m) => ({ default: m.MinhaFilaPage })))
+const FilaConferentesPage = lazy(() => import('@/pages/fila-conferentes').then((m) => ({ default: m.FilaConferentesPage })))
+const CentralDeRegrasPage = lazy(() => import('@/pages/central-de-regras').then((m) => ({ default: m.CentralDeRegrasPage })))
+
+// Mesmo texto/classe já usado em todo canto do app enquanto uma query carrega (ver
+// MinhaFilaBoard, DistribuicaoBoard etc.) — consistente com o resto, não é um spinner novo.
+const CarregandoPagina = () => (
+  <div className="px-7 pt-6 pb-7">
+    <p className="text-[13.5px] text-muted-foreground">Carregando…</p>
+  </div>
+)
+
 export const Router = () => (
   <BrowserRouter>
     <SessionBoot>
-      <Routes>
-        <Route path={ROUTES.login} element={<LoginPage />} />
+      <Suspense fallback={<CarregandoPagina />}>
+        <Routes>
+          <Route path={ROUTES.login} element={<LoginPage />} />
 
-        <Route element={<AppShell />}>
-          <Route
-            path={ROUTES.distribuicao}
-            element={
-              <RequireRole roles={['Distribuidora']}>
-                <DistribuicaoPage />
-              </RequireRole>
-            }
-          />
-          <Route
-            path={ROUTES.importar}
-            element={
-              <RequireRole roles={['Distribuidora']}>
-                <ImportarPage />
-              </RequireRole>
-            }
-          />
-          <Route
-            path={ROUTES.conferentes}
-            element={
-              <RequireRole roles={['Distribuidora']}>
-                <ConferentesPage />
-              </RequireRole>
-            }
-          />
-          <Route
-            path={ROUTES.minhaFila}
-            element={
-              <RequireRole roles={['Conferente']}>
-                <MinhaFilaPage />
-              </RequireRole>
-            }
-          />
-          <Route
-            path={ROUTES.filaConferentes}
-            element={
-              <RequireRole roles={['Distribuidora']}>
-                <FilaConferentesPage />
-              </RequireRole>
-            }
-          />
-          <Route
-            path={ROUTES.centralDeRegras}
-            element={
-              <RequireRole roles={['Distribuidora']}>
-                <CentralDeRegrasPage />
-              </RequireRole>
-            }
-          />
-          <Route
-            path={ROUTES.dashboard}
-            element={
-              <RequireRole roles={['Distribuidora', 'Conferente']}>
-                <DashboardPage />
-              </RequireRole>
-            }
-          />
-        </Route>
+          <Route element={<AppShell />}>
+            <Route
+              path={ROUTES.distribuicao}
+              element={
+                <RequireRole roles={['Distribuidora']}>
+                  <DistribuicaoPage />
+                </RequireRole>
+              }
+            />
+            <Route
+              path={ROUTES.importar}
+              element={
+                <RequireRole roles={['Distribuidora']}>
+                  <ImportarPage />
+                </RequireRole>
+              }
+            />
+            <Route
+              path={ROUTES.conferentes}
+              element={
+                <RequireRole roles={['Distribuidora']}>
+                  <ConferentesPage />
+                </RequireRole>
+              }
+            />
+            <Route
+              path={ROUTES.minhaFila}
+              element={
+                <RequireRole roles={['Conferente']}>
+                  <MinhaFilaPage />
+                </RequireRole>
+              }
+            />
+            <Route
+              path={ROUTES.filaConferentes}
+              element={
+                <RequireRole roles={['Distribuidora']}>
+                  <FilaConferentesPage />
+                </RequireRole>
+              }
+            />
+            <Route
+              path={ROUTES.centralDeRegras}
+              element={
+                <RequireRole roles={['Distribuidora']}>
+                  <CentralDeRegrasPage />
+                </RequireRole>
+              }
+            />
+            <Route
+              path={ROUTES.dashboard}
+              element={
+                <RequireRole roles={['Distribuidora', 'Conferente']}>
+                  <DashboardPage />
+                </RequireRole>
+              }
+            />
+          </Route>
 
-        <Route path="*" element={<Navigate to={ROUTES.login} replace />} />
-      </Routes>
+          <Route path="*" element={<Navigate to={ROUTES.login} replace />} />
+        </Routes>
+      </Suspense>
     </SessionBoot>
   </BrowserRouter>
 )

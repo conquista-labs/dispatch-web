@@ -741,3 +741,17 @@ sem sufixo tipo `-cartorio` — ver `../dispatch-api/CLAUDE.md`, seção "Deploy
   dois lados guardam o nome um do outro, não tem descoberta automática.
 - Sem CI/CD ligado a git push ainda — deploy é manual via `netlify deploy --prod --build`,
   disparado quando o dono decide subir.
+
+## Lazy loading por página
+
+`app/routing/router.tsx` — cada `*Page` (exceto `LoginPage`, que faz parte do boot inicial de
+qualquer sessão não autenticada) vira `React.lazy(() => import('@/pages/x').then(m => ({
+default: m.XPage })))`, com um `<Suspense fallback={<CarregandoPagina />}>` envolvendo o
+`<Routes>` inteiro. Precisa do `.then(...)` porque as páginas exportam nomeado (`export {
+XPage }`), não `export default` — `React.lazy` só aceita módulo com `default`.
+
+Efeito real, não só teórico: o build antes gerava um bundle único de ~655 kB (acima do limiar
+de aviso do Vite); depois virou vários chunks por rota (o maior isolado ficou com ~241 kB, o
+"core" compartilhado — React/TanStack Query/router — o resto de cada tela varia de ~1 kB a
+~96 kB, `importar` é a maior por causa do `calendar`/`date-fns` do `DateTimePicker`). Quem abre
+o app pela primeira vez não baixa mais código de telas que talvez nunca visite.
