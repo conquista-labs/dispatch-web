@@ -818,3 +818,14 @@ classe original) pra o `tailwind-merge` reconhecer o conflito e descartar o `h-8
 um `h-auto` sem o modificador não teria sido substituído (grupos de classe com modificador
 diferente não colidem no `twMerge`, os dois ficariam na `className` final e a ordem de quem
 vence no CSS gerado ficaria imprevisível).
+
+## Índice de confiança real da sugestão (RF-39)
+
+Fecha a simplificação consciente documentada desde a construção da Central de Regras — ver
+`../dispatch-api/CLAUDE.md`, seção "Índice de confiança real da sugestão", pra fórmula. `Sugestao`
+(`entities/sugestao/model/types.ts`) ganhou `indiceConfianca: number` (0.0–1.0).
+`AbaAprendizado.tsx` — cada card de sugestão pendente ganhou uma barra
+(`shared/ui/progress.tsx`, já com o bug de `value` corrigido nesta sessão) + "N% de confiança",
+mesma posição do protótipo aprovado (badge de classe à esquerda, barra+percentual à direita, na
+mesma linha do topo do card). Chips de "casos concretos" continuam de fora — `Sugestao` só
+carrega evidência agregada (texto) e contagem, nunca uma lista de exemplos específicos.

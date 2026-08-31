@@ -16,6 +16,8 @@ export type Sugestao = {
   chave: string
   evidencia: string
   ocorrencias: number
+  // RF-39: 0.0-1.0 — front multiplica por 100 pra mostrar "N% de confiança" + barra.
+  indiceConfianca: number
   status: StatusSugestao
   criadaEm: string
   atualizadaEm: string

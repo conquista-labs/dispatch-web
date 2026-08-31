@@ -8,17 +8,19 @@ import { useDescartarSugestao } from '@/features/sugestao/descartar'
 import { useGerarSugestoes } from '@/features/sugestao/gerar'
 import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/ui/button'
+import { Progress } from '@/shared/ui/progress'
 import { SurfaceCard } from '@/shared/ui/surface-card'
 
 // RF-39 a RF-41 — fila de propostas geradas pelo próprio uso, aplicar/descartar e histórico.
 //
-// Simplificações conscientes em relação ao protótipo (que mostra dado mockado sem back real
-// por trás): sem "índice de confiança"/barra de confiança e sem chips de "casos concretos" —
-// `Sugestao` (Dispatch.Domain.Aprendizado) só carrega `Evidencia` (texto) e `Ocorrencias`
-// (contagem), não um score nem uma lista de exemplos; mostrar um número ali seria inventar dado
-// que o back não calcula. Os 4 KPIs do topo também trocaram de número (o protótipo usa "5.724
-// linhas lidas"/"96% classificadas sem você", que não vem de lugar nenhum real) por métricas
-// derivadas de dado que existe de verdade.
+// Simplificação consciente em relação ao protótipo que continua de fora: chips de "casos
+// concretos" (exemplos individuais por sugestão) — `Sugestao` (Dispatch.Domain.Aprendizado) só
+// carrega `Evidencia` (texto agregado) e `Ocorrencias` (contagem), nunca uma lista de exemplos
+// específicos; mostrar isso exigiria guardar referências que o back não persiste hoje. O índice
+// de confiança (barra + "N% de confiança", mesma posição do protótipo) já é real — ver
+// CLAUDE.md do dispatch-api, seção "Índice de confiança real da sugestão". Os 4 KPIs do topo
+// também trocaram de número (o protótipo usa "5.724 linhas lidas"/"96% classificadas sem você",
+// que não vem de lugar nenhum real) por métricas derivadas de dado que existe de verdade.
 export const AbaAprendizado = () => {
   const { data: pendentes } = useSugestoesPendentes()
   const { data: historico } = useSugestoesHistorico()
@@ -79,9 +81,17 @@ export const AbaAprendizado = () => {
         <div className="flex flex-col gap-2">
           {pendentes.map((sugestao) => (
             <SurfaceCard key={sugestao.id} className="p-4">
-              <span className="rounded-full border border-border bg-secondary px-2 py-0.5 font-mono text-[10.5px] font-medium tracking-[0.04em] text-text-2">
-                {TIPO_SUGESTAO_LABEL[sugestao.tipo]}
-              </span>
+              <div className="flex items-center justify-between gap-3">
+                <span className="rounded-full border border-border bg-secondary px-2 py-0.5 font-mono text-[10.5px] font-medium tracking-[0.04em] text-text-2">
+                  {TIPO_SUGESTAO_LABEL[sugestao.tipo]}
+                </span>
+                <div className="flex flex-none items-center gap-2">
+                  <Progress value={sugestao.indiceConfianca * 100} className="h-[5px] w-16" />
+                  <span className="font-mono text-[11px] font-medium whitespace-nowrap text-text-2">
+                    {Math.round(sugestao.indiceConfianca * 100)}% de confiança
+                  </span>
+                </div>
+              </div>
               <div className="mt-2.5 text-[15px] font-semibold tracking-[-0.01em] text-pretty">{tituloDaSugestao(sugestao, lookups)}</div>
               <p className="mt-1.5 max-w-[74ch] text-[13px] leading-relaxed text-text-2 text-pretty">{textoBaseDaSugestao(sugestao)}</p>
               <p className="mt-1 font-mono text-[11px] text-muted-foreground">{sugestao.evidencia}</p>
