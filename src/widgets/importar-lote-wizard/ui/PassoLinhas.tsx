@@ -69,19 +69,22 @@ export const PassoLinhas = ({ resumo, etapa, linhaDeCorte, onVoltar, onContinuar
           const leitura = linha.jaExiste ? 'já existe' : linha.tipoConhecido ? `${linha.comAlcada} com alçada` : 'tipo novo'
 
           return (
+            // RNF-10: tipo de ato/escrevente/equipe não truncam mais — items-start (não center)
+            // porque agora a linha pode crescer em altura; protocolo/leitura ganham mt-0.5 pra
+            // ficar alinhados com a primeira linha das colunas que podem quebrar.
             <div
               key={`${linha.protocolo}-${indice}`}
               className={cn(
-                'flex items-center gap-2 border-b border-border/60 px-3.5 py-2 text-[13px] last:border-b-0',
+                'flex items-start gap-2 border-b border-border/60 px-3.5 py-2 text-[13px] last:border-b-0',
                 !linha.jaExiste && !linha.tipoConhecido && 'bg-warn-bg',
               )}
             >
-              <span className="w-20 flex-none font-mono text-[12.5px] font-medium">{linha.protocolo}</span>
-              <span className="min-w-24 flex-1 truncate pr-2 text-text-5">{linha.tipoAto}</span>
-              <span className="w-[126px] flex-none overflow-hidden">
-                <span className="block truncate text-text-2">{linha.escrevente}</span>
+              <span className="mt-0.5 w-20 flex-none font-mono text-[12.5px] font-medium">{linha.protocolo}</span>
+              <span className="min-w-24 flex-1 pr-2 text-text-5 text-pretty">{linha.tipoAto}</span>
+              <span className="w-[126px] flex-none">
+                <span className="block text-text-2 text-pretty">{linha.escrevente}</span>
                 {!linha.jaExiste && (
-                  <span className={cn('mt-0.5 block truncate font-mono text-[10.5px]', linha.equipe ? 'text-muted-foreground' : 'text-bad-fg')}>
+                  <span className={cn('mt-0.5 block font-mono text-[10.5px] text-pretty', linha.equipe ? 'text-muted-foreground' : 'text-bad-fg')}>
                     {linha.equipe ?? 'sem equipe'}
                   </span>
                 )}
@@ -92,7 +95,7 @@ export const PassoLinhas = ({ resumo, etapa, linhaDeCorte, onVoltar, onContinuar
               </span>
               <span
                 className={cn(
-                  'w-[98px] flex-none text-right text-[12px] font-medium',
+                  'mt-0.5 w-[98px] flex-none text-right text-[12px] font-medium',
                   linha.jaExiste ? 'text-muted-foreground' : linha.tipoConhecido ? 'text-text-2' : 'text-bad-fg',
                 )}
               >

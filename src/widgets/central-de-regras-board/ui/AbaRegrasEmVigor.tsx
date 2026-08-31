@@ -56,7 +56,9 @@ export const AbaRegrasEmVigor = ({ onIrParaAlcada, onIrParaTipos, onIrParaPrazos
       const doTime = escreventes.filter((e) => e.equipeId === equipe.id)
       return {
         frase: `Escreventes de ${equipe.nome}: pré-conferência em ${TIPO_PRAZO_LABEL[equipe.prazoPreConferencia]}, pós-conferência em ${TIPO_PRAZO_LABEL[equipe.prazoPosConferencia]}`,
-        detalhe: doTime.length ? `${plural(doTime.length, 'escrevente', 'escreventes')} · ${doTime.map((e) => e.nome.split(' ')[0]).join(', ')}` : 'nenhum escrevente nesta equipe',
+        // RNF-10: nome completo — dois escreventes com o mesmo primeiro nome na mesma equipe
+        // ficariam indistinguíveis nessa lista.
+        detalhe: doTime.length ? `${plural(doTime.length, 'escrevente', 'escreventes')} · ${doTime.map((e) => e.nome).join(', ')}` : 'nenhum escrevente nesta equipe',
       }
     })
     .concat(orfaos.length > 0 ? [{ frase: 'Escrevente sem equipe: prazo padrão D+1', detalhe: `${plural(orfaos.length, 'escrevente', 'escreventes')} hoje sem equipe` }] : [])

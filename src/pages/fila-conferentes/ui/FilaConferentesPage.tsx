@@ -74,13 +74,15 @@ const SeletorConferente = ({ conferentes, selecionadoId, onSelecionar }: Seletor
       <PopoverTrigger asChild>
         <button
           type="button"
-          className="flex min-w-[216px] items-center gap-2.5 rounded-lg border border-border bg-card px-2.5 py-2 text-left hover:border-muted-foreground/40"
+          className="flex min-w-[216px] items-start gap-2.5 rounded-lg border border-border bg-card px-2.5 py-2 text-left hover:border-muted-foreground/40"
         >
           <span className="min-w-0 flex-1">
             <span className="block font-mono text-[10px] font-medium tracking-[0.04em] text-muted-foreground">VER COMO</span>
-            <span className="mt-px block truncate text-[13px] font-medium">{selecionado?.nome ?? 'Escolher conferente'}</span>
+            {/* RNF-10: nome completo — essa tela existe pra escolher 1 entre vários conferentes,
+                é o caso mais direto do requisito de não confundir registros parecidos. */}
+            <span className="mt-px block text-[13px] font-medium text-pretty">{selecionado?.nome ?? 'Escolher conferente'}</span>
           </span>
-          <ChevronDownIcon className="size-4 flex-none text-muted-foreground" />
+          <ChevronDownIcon className="mt-0.5 size-4 flex-none text-muted-foreground" />
         </button>
       </PopoverTrigger>
       <PopoverContent align="end" className="max-h-80 w-[262px] overflow-y-auto p-1">
@@ -95,22 +97,27 @@ const SeletorConferente = ({ conferentes, selecionadoId, onSelecionar }: Seletor
                 setAberto(false)
               }}
               className={cn(
-                'flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left hover:bg-secondary',
+                'flex w-full items-start gap-2.5 rounded-md px-2.5 py-2 text-left hover:bg-secondary',
                 ativo && 'bg-secondary',
                 !conferente.naEscala && 'opacity-55',
               )}
             >
-              <span className={cn('flex size-3.5 flex-none items-center justify-center rounded-full border', ativo ? 'border-foreground' : 'border-border')}>
+              <span
+                className={cn(
+                  'mt-0.5 flex size-3.5 flex-none items-center justify-center rounded-full border',
+                  ativo ? 'border-foreground' : 'border-border',
+                )}
+              >
                 {ativo && <span className="size-1.5 rounded-full bg-foreground" />}
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-[13px] font-medium">{conferente.nome}</span>
+                <span className="block text-[13px] font-medium text-pretty">{conferente.nome}</span>
                 <span className="block text-[11px] text-muted-foreground">
                   Analista {NIVEL_LABEL[conferente.nivel]}
                   {!conferente.naEscala && ' · ausente'}
                 </span>
               </span>
-              <span className="flex-none font-mono text-[11px] text-text-2">{conferente.cargaAtual}</span>
+              <span className="mt-0.5 flex-none font-mono text-[11px] text-text-2">{conferente.cargaAtual}</span>
             </button>
           )
         })}

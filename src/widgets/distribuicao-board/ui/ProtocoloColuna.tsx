@@ -32,9 +32,14 @@ export const ProtocoloColuna = ({ nome, sub, protocolos, now, mensagemVazia, res
     <div className={cn('flex flex-col gap-2', variant === 'conferente' ? 'w-[206px] flex-none' : 'min-w-0 flex-1')}>
       {variant === 'conferente' ? (
         <div className="rounded-[10px] border border-border bg-card p-2.5 shadow-sm">
-          <div className="flex items-center justify-between gap-2">
-            <strong className="text-[13.5px] font-semibold">{nome}</strong>
-            <span className="rounded-full bg-secondary px-1.5 py-px font-mono text-[11px] text-text-3">{protocolos.length}</span>
+          {/* RNF-10: nome completo, sem truncar/cortar pro primeiro nome — dois conferentes
+              homônimos (ex.: "Ana Silva"/"Ana Souza") ficariam indistinguíveis nesse cabeçalho.
+              items-start (não center) + min-w-0 no nome: com o nome podendo quebrar em mais de
+              uma linha, o contador fica alinhado ao topo em vez de centralizado no meio do
+              texto, e o texto tem onde encolher antes do contador. */}
+          <div className="flex items-start justify-between gap-2">
+            <strong className="min-w-0 text-[13.5px] font-semibold text-pretty">{nome}</strong>
+            <span className="flex-none rounded-full bg-secondary px-1.5 py-px font-mono text-[11px] text-text-3">{protocolos.length}</span>
           </div>
           {sub && <div className="mt-0.5 text-[11.5px] leading-snug text-muted-foreground">{sub}</div>}
         </div>

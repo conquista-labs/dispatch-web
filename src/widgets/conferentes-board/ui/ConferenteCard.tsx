@@ -51,9 +51,11 @@ export const ConferenteCard = ({ conferente, tiposAlcancados }: ConferenteCardPr
     <SurfaceCard data-testid={`conferente-card-${conferente.id}`} className={cn('p-3.5 px-4', !conferente.naEscala && 'bg-secondary/40')}>
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-start gap-1.5">
+          {/* RNF-10: nome/e-mail não truncam — dois conferentes parecidos ("Ana Silva"/"Ana
+              Souza") não podem virar "Ana S..." indistinguível nessa lista. */}
           <div className="min-w-0">
-            <div className="truncate text-[14px] font-medium">{conferente.nome}</div>
-            <div className="truncate font-mono text-[11.5px] text-muted-foreground">{conferente.email}</div>
+            <div className="text-[14px] font-medium text-pretty">{conferente.nome}</div>
+            <div className="font-mono text-[11.5px] break-words text-muted-foreground">{conferente.email}</div>
           </div>
           <div className="mt-0.5">
             <EditarConferenteDialog conferente={conferente} />

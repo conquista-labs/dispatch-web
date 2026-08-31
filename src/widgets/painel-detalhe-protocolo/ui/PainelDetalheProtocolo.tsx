@@ -104,7 +104,8 @@ export const PainelDetalheProtocolo = ({ protocoloId, onFechar }: PainelDetalheP
         <SheetHeader className="sticky top-0 z-10 flex-row items-start justify-between gap-3 space-y-0 border-b border-border bg-background p-5">
           <div className="min-w-0">
             <SheetTitle className="font-mono text-[17px] font-semibold tracking-[-0.01em]">{detalhe?.numero ?? '…'}</SheetTitle>
-            <SheetDescription className="mt-0.5 truncate text-[12.5px]">
+            {/* RNF-10: nome do tipo de ato não trunca */}
+            <SheetDescription className="mt-0.5 text-[12.5px] text-pretty">
               {detalhe ? (nomePorTipoAtoId.get(detalhe.tipoAtoId ?? '') ?? detalhe.tipoAtoNomeOriginal ?? '—') : ''}
             </SheetDescription>
           </div>

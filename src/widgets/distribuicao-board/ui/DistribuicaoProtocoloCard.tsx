@@ -88,7 +88,9 @@ export const DistribuicaoProtocoloCard = ({ protocolo, now, donoNome, variant = 
             <Chip tom={chip.tom}>{chip.label}</Chip>
           ))}
       </div>
-      <div className="mt-1.5 truncate text-[11.5px] text-muted-foreground">{meta}</div>
+      {/* RNF-10: sem truncar — na variante "status" isso é o nome do dono do protocolo, dois
+          donos com nome parecido não podem ficar indistinguíveis aqui. */}
+      <div className="mt-1.5 text-[11.5px] text-pretty text-muted-foreground">{meta}</div>
 
       <ObservacaoField protocoloId={protocolo.id} observacao={protocolo.observacao} somenteLeitura />
     </SurfaceCard>

@@ -105,9 +105,10 @@ export const AppShell = () => {
           <div className="mb-1.5 text-[11px] font-medium text-muted-foreground">Sessão</div>
 
           {usuario && (
-            <div className="flex items-center justify-between gap-1.5 rounded-md border border-border bg-card px-2.5 py-1.5 text-[13px]">
-              <span className="truncate">{usuario.nome}</span>
-              <span className="flex-none text-[11px] text-muted-foreground">{usuario.papel}</span>
+            // RNF-10: nome do usuário logado não trunca
+            <div className="flex items-start justify-between gap-1.5 rounded-md border border-border bg-card px-2.5 py-1.5 text-[13px]">
+              <span className="text-pretty">{usuario.nome}</span>
+              <span className="mt-px flex-none text-[11px] text-muted-foreground">{usuario.papel}</span>
             </div>
           )}
 

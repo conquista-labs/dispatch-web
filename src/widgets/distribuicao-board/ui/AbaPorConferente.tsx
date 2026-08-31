@@ -43,7 +43,9 @@ export const AbaPorConferente = ({ pool, porConferente, conferentes, now, onAbri
       return (
         <ProtocoloColuna
           key={conferente.id}
-          nome={conferente.nome.split(' ')[0]}
+          // RNF-10: nome completo — dois conferentes com o mesmo primeiro nome ficariam
+          // indistinguíveis nesta coluna (a tela mais usada do sistema).
+          nome={conferente.nome}
           sub={conferente.naEscala ? `Analista ${NIVEL_LABEL[conferente.nivel]}` : 'ausente hoje — não recebe'}
           protocolos={grupo?.protocolos ?? []}
           now={now}

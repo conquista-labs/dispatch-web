@@ -785,3 +785,36 @@ repetido em componentes diferentes — `useVisaoDistribuicao` em `DistribuicaoPa
 `DistribuicaoBoard`, `usePedidosReaberturaPendentes` em `DistribuicaoBoard`+`AbaExcecoes`,
 `useSugestoesPendentes` em `AppShell`+`CentralDeRegrasBoard`+`AbaAprendizado` — todos usam a
 mesma `queryKey`, então o TanStack Query já dedupa em uma requisição só).
+
+## RNF-10 — nome de registro não trunca
+
+*"Nenhum nome de registro pode ser truncado em tela cuja função é distinguir registros
+parecidos (catálogo de tipos, lista de escreventes): o nome quebra em linha."* Levantamento
+completo achou 16 ocorrências, corrigidas em duas categorias:
+
+- **Corte de dado** (`AbaPorConferente.tsx`, `AbaPorStatus.tsx`, `AbaRegrasEmVigor.tsx`):
+  `.split(' ')[0]` cortava o nome pro primeiro nome só — colisão garantida entre homônimos.
+  Trocado por mostrar o nome completo.
+- **Truncamento CSS** (`ConferenteCard`, `FilaConferentesPage` — seletor "VER COMO",
+  `AbaAlcada` — matriz "o que cada um alcança", `PassoLinhas`/`PassoPrevia` do wizard de
+  importação, `DistribuicaoProtocoloCard`, `PainelDetalheProtocolo`, `AppShell`, `ExcecaoCard`):
+  classe `truncate`/`line-clamp-1` trocada por `text-pretty`/quebra de linha normal.
+
+**Padrão de correção usado em toda linha/card com nome ao lado de outros campos de 1 linha**
+(contagem, badge, chip): trocar `items-center` do container por `items-start`, e compensar os
+campos vizinhos (que continuam sempre 1 linha) com `mt-0.5`/`mt-1`/`mt-px` — sem isso, um nome
+que quebra em 2 linhas faz o container inteiro crescer e os vizinhos ficam centralizados no meio
+do bloco todo, em vez de alinhados com a primeira linha do nome. Não é troca mecânica de classe:
+cada arquivo pede o offset certo pro próprio layout (`ver AbaAlcada.tsx`, `PassoLinhas.tsx` como
+referência do padrão).
+
+**`ExcecaoCard.tsx` é o único caso que precisou de override local em vez de só trocar
+classe**: o seletor de conferente usa `SelectValue` do shadcn, que tem `line-clamp-1` +
+`whitespace-nowrap` + `h-8` fixos direto no `shared/ui/select.tsx` (`SelectTrigger`). Mexer no
+componente compartilhado afetaria outros selects do app que não são "nome de registro" (ex.
+seletor de nível/status) — a correção ficou local, via `className` no `SelectTrigger`/
+`SelectValue` específico desse card, usando `data-[size=default]:h-auto` (mesmo modificador da
+classe original) pra o `tailwind-merge` reconhecer o conflito e descartar o `h-8` de verdade —
+um `h-auto` sem o modificador não teria sido substituído (grupos de classe com modificador
+diferente não colidem no `twMerge`, os dois ficariam na `className` final e a ordem de quem
+vence no CSS gerado ficaria imprevisível).

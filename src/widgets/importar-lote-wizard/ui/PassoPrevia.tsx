@@ -43,12 +43,15 @@ export const PassoPrevia = ({ resumo, etapa, linhaDeCorte, onVoltar, onConfirmar
 
       <div className="grid grid-cols-2 gap-2">
         {destinos.map((destino) => (
-          <SurfaceCard key={destino.chave} className="flex items-center justify-between gap-2.5 p-3.5 px-4">
+          // RNF-10: nome do destino não trunca — items-start (não center) porque o nome agora
+          // pode quebrar em mais de uma linha, e a contagem ganha mt-0.5 pra ficar alinhada
+          // com a primeira linha, não com o meio de um bloco que pode ter 1 ou 2 linhas.
+          <SurfaceCard key={destino.chave} className="flex items-start justify-between gap-2.5 p-3.5 px-4">
             <div className="min-w-0">
-              <div className="truncate text-[13.5px] font-medium">{destino.nome}</div>
+              <div className="text-[13.5px] font-medium text-pretty">{destino.nome}</div>
               <div className="mt-0.5 text-[11.5px] text-muted-foreground">{destino.sub}</div>
             </div>
-            <span className="shrink-0 font-mono text-base font-medium">{destino.qtd}</span>
+            <span className="mt-0.5 shrink-0 font-mono text-base font-medium">{destino.qtd}</span>
           </SurfaceCard>
         ))}
       </div>

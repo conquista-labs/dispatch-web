@@ -13,7 +13,9 @@ type AbaPorStatusProps = {
 // RF-13/RF-14 — Pool, Atribuídos, Em conferência, Concluídos: o mesmo conjunto de protocolos,
 // só que agrupado por status em vez de por dono.
 export const AbaPorStatus = ({ visao, conferentes, now, onAbrirDetalhe }: AbaPorStatusProps) => {
-  const nomePorConferenteId = new Map(conferentes.map((c) => [c.id, c.nome.split(' ')[0]]))
+  // RNF-10: nome completo — dois conferentes com o mesmo primeiro nome ficariam
+  // indistinguíveis no card de protocolo (mesmo cuidado de AbaPorConferente.tsx).
+  const nomePorConferenteId = new Map(conferentes.map((c) => [c.id, c.nome]))
   const resolverDono = (protocolo: ProtocoloResumo) => (protocolo.donoId ? (nomePorConferenteId.get(protocolo.donoId) ?? null) : null)
 
   return (

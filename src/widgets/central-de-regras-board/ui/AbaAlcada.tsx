@@ -265,16 +265,20 @@ export const AbaAlcada = () => {
           const etapasLabel = a && a.etapasPermitidas.length > 0 ? a.etapasPermitidas.map((e) => ETAPA_LABEL[e]).join(' e ') : 'nenhuma etapa liberada'
           const largura = totalTipos > 0 ? Math.round((qtd / totalTipos) * 100) : 0
           return (
-            <div key={c.id} className={cn('flex items-center gap-3 py-1.5', !c.ativo && 'opacity-50')}>
-              <span className="w-[130px] flex-none truncate text-[13px]">{c.nome}</span>
-              <span className="w-[110px] flex-none text-[11.5px] text-text-2">Analista {NIVEL_LABEL[c.nivel]}</span>
-              <div className="h-2 flex-1 overflow-hidden rounded-full bg-secondary">
+            // RNF-10: nome não trunca — items-start (não center) porque o nome agora pode
+            // quebrar em mais de uma linha, e os outros campos da linha (barra, contagem,
+            // etapas) ganham mt-1 pra ficar alinhados com a primeira linha do nome, não com o
+            // meio de um bloco que pode ter 1 ou 2 linhas.
+            <div key={c.id} className={cn('flex items-start gap-3 py-1.5', !c.ativo && 'opacity-50')}>
+              <span className="w-[130px] flex-none text-[13px] text-pretty">{c.nome}</span>
+              <span className="mt-1 w-[110px] flex-none text-[11.5px] text-text-2">Analista {NIVEL_LABEL[c.nivel]}</span>
+              <div className="mt-1.5 h-2 flex-1 overflow-hidden rounded-full bg-secondary">
                 <div className="h-2 rounded-full bg-foreground" style={{ width: `${largura}%` }} />
               </div>
-              <span className="w-[52px] flex-none text-right font-mono text-[12.5px] font-medium">
+              <span className="mt-1 w-[52px] flex-none text-right font-mono text-[12.5px] font-medium">
                 {qtd}/{totalTipos}
               </span>
-              <span className="w-[150px] flex-none text-right text-[11.5px] text-muted-foreground">{etapasLabel}</span>
+              <span className="mt-1 w-[150px] flex-none text-right text-[11.5px] text-muted-foreground">{etapasLabel}</span>
             </div>
           )
         })}

@@ -66,8 +66,11 @@ export const ExcecaoCard = ({ protocolo, conferentes, onAbrirDetalhe }: ExcecaoC
       {resolvendo && (
         <div className="mt-3 flex items-center gap-1.5" onClick={(evento) => evento.stopPropagation()}>
           <Select value={conferenteId} onValueChange={setConferenteId}>
-            <SelectTrigger className="h-8 flex-1">
-              <SelectValue placeholder="Escolher conferente…" />
+            {/* RNF-10: nome do conferente não trunca — override local (não em shared/ui/select.tsx,
+                que outros selects do app usam pra coisa que não é "nome de registro") do
+                line-clamp-1/whitespace-nowrap/h-8 fixos do trigger, pra caber um nome de 2 linhas. */}
+            <SelectTrigger className="h-auto min-h-8 flex-1 items-start whitespace-normal data-[size=default]:h-auto *:data-[slot=select-value]:line-clamp-none *:data-[slot=select-value]:items-start">
+              <SelectValue placeholder="Escolher conferente…" className="text-pretty" />
             </SelectTrigger>
             <SelectContent>
               {conferentes.map((conferente) => (
