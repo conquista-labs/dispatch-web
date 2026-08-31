@@ -755,3 +755,33 @@ de aviso do Vite); depois virou vários chunks por rota (o maior isolado ficou c
 "core" compartilhado — React/TanStack Query/router — o resto de cada tela varia de ~1 kB a
 ~96 kB, `importar` é a maior por causa do `calendar`/`date-fns` do `DateTimePicker`). Quem abre
 o app pela primeira vez não baixa mais código de telas que talvez nunca visite.
+
+## Auditoria de over-fetching — achados e correções
+
+Levantamento pedido pelo dono: pra cada página, quais queries ela dispara e se fazem sentido.
+A maioria do projeto já seguia o padrão certo (`enabled` condicional onde importa, mount
+condicional por aba nas telas com abas). Dois achados reais, corrigidos:
+
+- **`PainelDetalheProtocolo` fica montado o tempo todo em `DistribuicaoBoard.tsx`** (só o
+  `Sheet` visualmente abre/fecha — desmontar o componente inteiro cortaria a animação de saída
+  do Radix). `useDetalheProtocolo` já tinha `enabled: !!id` desde que o painel foi construído,
+  mas as outras 5 queries do painel (`useConferentes`, `useTiposAto`, `useRegrasAlcada`,
+  `useEscreventes`, `useEquipes`) não tinham guarda nenhuma — disparavam sempre que
+  `/distribuicao` carregava, painel aberto ou não. Os cinco hooks (em `entities/*`) ganharam
+  `options?: { enabled?: boolean }` (mesmo padrão já usado em `useVisaoDistribuicao`/
+  `useSugestoesPendentes` pro `AppShell`), e `PainelDetalheProtocolo.tsx` passa `enabled:
+  !!protocoloId` nos cinco. `useDetalheProtocolo` fica de fora da lista de hooks alterados —
+  já estava certo.
+- **`AbaPrazos.tsx` buscava `GET /escreventes` e `GET /escreventes/sem-equipe` juntos**, sendo
+  que o segundo é um subconjunto trivial do primeiro (`escreventes.filter(e => !e.equipeId)`)
+  — o próprio `AbaRegrasEmVigor.tsx` já fazia esse filtro localmente em vez de um GET
+  dedicado. Removido: `useEscreventesSemEquipe`/`ESCREVENTES_SEM_EQUIPE_QUERY_KEY`/
+  `getEscreventesSemEquipe` (ninguém mais os usava depois da troca), `AbaPrazos.tsx` deriva
+  `semEquipe` do `escreventes` que já busca, e as duas mutations que invalidavam essa query
+  key à toa (`useMoverParaEquipe`, `useAplicarSugestao`) pararam de fazê-lo.
+
+Não achado: nenhuma duplicata real de `queryKey` diferente pro mesmo dado (os casos de hook
+repetido em componentes diferentes — `useVisaoDistribuicao` em `DistribuicaoPage`+
+`DistribuicaoBoard`, `usePedidosReaberturaPendentes` em `DistribuicaoBoard`+`AbaExcecoes`,
+`useSugestoesPendentes` em `AppShell`+`CentralDeRegrasBoard`+`AbaAprendizado` — todos usam a
+mesma `queryKey`, então o TanStack Query já dedupa em uma requisição só).

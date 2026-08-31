@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 import { ALCANCE_QUERY_KEY } from '@/entities/conferente'
 import { EQUIPES_QUERY_KEY } from '@/entities/equipe'
-import { ESCREVENTES_QUERY_KEY, ESCREVENTES_SEM_EQUIPE_QUERY_KEY } from '@/entities/escrevente'
+import { ESCREVENTES_QUERY_KEY } from '@/entities/escrevente'
 import { REGRAS_ALCADA_QUERY_KEY } from '@/entities/regraAlcada'
 import { SUGESTOES_HISTORICO_QUERY_KEY, SUGESTOES_PENDENTES_QUERY_KEY } from '@/entities/sugestao'
 import { TIPOS_ATO_QUERY_KEY } from '@/entities/tipoAto'
@@ -24,7 +24,6 @@ export const useAplicarSugestao = () => {
       queryClient.invalidateQueries({ queryKey: ALCANCE_QUERY_KEY })
       queryClient.invalidateQueries({ queryKey: EQUIPES_QUERY_KEY })
       queryClient.invalidateQueries({ queryKey: ESCREVENTES_QUERY_KEY })
-      queryClient.invalidateQueries({ queryKey: ESCREVENTES_SEM_EQUIPE_QUERY_KEY })
       queryClient.invalidateQueries({ queryKey: TIPOS_ATO_QUERY_KEY })
     },
   })

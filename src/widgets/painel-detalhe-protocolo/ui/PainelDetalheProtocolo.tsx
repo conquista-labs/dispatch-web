@@ -46,12 +46,17 @@ const STATUS_TOM: Record<StatusProtocolo, NonNullable<React.ComponentProps<typeo
 // Reaproveita ObservacaoField (mesmo campo de Minha fila/Distribuição) e fraseDaRegra (Central
 // de Regras).
 export const PainelDetalheProtocolo = ({ protocoloId, onFechar }: PainelDetalheProtocoloProps) => {
+  // O painel fica montado o tempo todo em Distribuição (só o Sheet abre/fecha visualmente —
+  // ver DistribuicaoBoard.tsx), então sem `enabled: !!protocoloId` essas 5 buscas disparariam
+  // sempre que a tela carrega, painel aberto ou não. `useDetalheProtocolo` já tinha essa
+  // guarda; as outras 4 ganharam agora (achado de auditoria de over-fetching).
+  const estaAberto = !!protocoloId
   const { data: detalhe } = useDetalheProtocolo(protocoloId)
-  const { data: conferentes } = useConferentes()
-  const { data: tiposAto } = useTiposAto()
-  const { data: regras } = useRegrasAlcada()
-  const { data: escreventes } = useEscreventes()
-  const { data: equipes } = useEquipes()
+  const { data: conferentes } = useConferentes({ enabled: estaAberto })
+  const { data: tiposAto } = useTiposAto({ enabled: estaAberto })
+  const { data: regras } = useRegrasAlcada({ enabled: estaAberto })
+  const { data: escreventes } = useEscreventes({ enabled: estaAberto })
+  const { data: equipes } = useEquipes({ enabled: estaAberto })
   const now = useNow()
 
   const devolver = useDevolverAoPool()

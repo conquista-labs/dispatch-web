@@ -1,7 +1,7 @@
 import { useState } from 'react'
 
 import { useEquipes } from '@/entities/equipe'
-import { useEscreventes, useEscreventesSemEquipe } from '@/entities/escrevente'
+import { useEscreventes } from '@/entities/escrevente'
 import { useMoverParaEquipe } from '@/features/escrevente/mover-para-equipe'
 import { Button } from '@/shared/ui/button'
 
@@ -13,14 +13,18 @@ import { PillToggle } from './PillToggle'
 export const AbaPrazos = () => {
   const { data: equipes } = useEquipes()
   const { data: escreventes } = useEscreventes()
-  const { data: semEquipe } = useEscreventesSemEquipe()
   const mover = useMoverParaEquipe()
 
   const [escreventeSelecionadoId, setEscreventeSelecionadoId] = useState<string | null>(null)
 
-  if (!equipes || !escreventes || !semEquipe) {
+  if (!equipes || !escreventes) {
     return <p className="mt-5 text-[13.5px] text-muted-foreground">Carregando…</p>
   }
+
+  // Derivado localmente em vez de um segundo GET (/escreventes/sem-equipe) — `escreventes` já
+  // trouxe tudo, e é o mesmo filtro que AbaRegrasEmVigor.tsx já faz (achado de auditoria de
+  // over-fetching: os dois endpoints traziam informação sobreposta).
+  const semEquipe = escreventes.filter((e) => !e.equipeId)
 
   const toggleSelecao = (id: string) => setEscreventeSelecionadoId((atual) => (atual === id ? null : id))
 
