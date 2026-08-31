@@ -629,11 +629,55 @@ painel de detalhe.
   avulso) pra aba Prazos por equipe não falhar mais por falta de dado — documentado no topo do
   arquivo de teste.
 
+**Correção de resultado + pedido de reabertura (RF-24a-d) — terceira frente do "v2"**, junto
+com o ajuste de digitação do peso de tipo de ato (RF-34f, `TipoAtoRow.tsx` — o stepper ganhou
+um `<input>` digitável ao lado dos botões ±, mesmo padrão `w-[Npx]`+`size` do `DateTimePicker`).
+
+- **`ConcluidosHojeList.tsx`** (`widgets/minha-fila-board`) ganhou `now: number` (já calculado
+  no board via `useNow()`) e `somenteLeitura?: boolean` (mesmo padrão de `ProtocoloCard`/
+  `EmConferenciaCard` — a Distribuidora vendo a fila de outro conferente, via
+  `fila-do-conferente-board`, não vê nenhum botão de ação). Por item concluído: dentro da
+  janela de 15 min mostra contagem regressiva + "Corrigir para aprovado/não aprovado"; com
+  pedido pendente mostra "Reabertura solicitada — aguardando a distribuidora" + "Cancelar
+  pedido"; fora da janela sem pedido, "Pedir reabertura à distribuidora". Três features novas
+  em `features/minha-fila/` (`corrigir-resultado`, `pedir-reabertura`,
+  `cancelar-pedido-reabertura`).
+- **`entities/pedidoReabertura`** (novo) — `usePedidosReaberturaPendentes`
+  (`GET /protocolos/pedidos-reabertura`).
+- **`AbaExcecoes.tsx`** (`widgets/distribuicao-board`) ganhou a seção "Pedidos de reabertura ·
+  N" acima da lista de exceções — `PedidoReaberturaCard.tsx` (novo), mesmo esqueleto de
+  `ExcecaoCard` mas decisão binária (Reabrir/Negar, sem alternar pra formulário — reabrir
+  mantém o mesmo dono, não precisa escolher ninguém). O rótulo da aba passou a ser
+  `Exceções · N · M pedido(s)` (RF-18b: contadores separados), reaproveitando
+  `usePedidosReaberturaPendentes` em `DistribuicaoBoard.tsx`. Feature nova
+  `features/protocolo/decidir-pedido-reabertura`.
+- **`PainelDetalheProtocolo.tsx`** ganhou `podeReabrirConferencia` (`status is 'Aprovado' |
+  'Reprovado'`) no mesmo bloco de ações condicionais que já tinha "devolver ao pool"/"atribuir
+  ao menos carregado", mais duas linhas na timeline (`Corrigido`/`Reaberto`). Feature nova
+  `features/protocolo/reabrir-conferencia`.
+- **Achado num teste de comportamento real (não só aparência), `data-testid` virou necessário**:
+  o primeiro locator por texto (`page.locator('div').filter({ hasText: numero })`) quebrava
+  porque a estrutura de `ConcluidosHojeList`/`PedidoReaberturaCard` tem o número num nó
+  descendente de mais de um `div` aninhado — `.first()`/`.last()` pegava o nível errado
+  dependendo da ordem de match. Resolvido com `data-testid={`concluido-${protocolo.id}`}` e
+  `data-testid={`pedido-reabertura-${pedido.pedidoId}`}` nos componentes — mesma convenção já
+  usada em `conferente-card-{id}` (ver CLAUDE.md, seção Conferentes), agora estendida aqui.
+- **`page.clock` do Playwright é escopado ao `BrowserContext` inteiro, não só à `Page`** —
+  usado pra avançar o relógio do browser 16 min (sair da janela de correção e testar "pedir
+  reabertura" de verdade, clicando). Abrir uma `page.context().newPage()` pro login da
+  Distribuidora ainda herdava o relógio mockado/congelado e travava a navegação; precisou de
+  `browser.newContext()` (contexto novo de verdade) pra ter relógio real de novo.
+- `e2e/correcao-reabertura.spec.ts` (novo) — comportamento real ponta a ponta: cria o próprio
+  cenário via API (tipo de ato, protocolo, conferente concluindo), corrige dentro da janela
+  pela UI, avança o relógio, pede reabertura, decide como distribuidora (aba Exceções) —
+  confirmado por resposta de rede em cada passo, não só pelo que aparece na tela. Limpa
+  qualquer sobra de uma execução anterior no início (RF-21: limite de 1 ato simultâneo
+  bloquearia "iniciar" se sobrasse algo "em conferência" de um teste interrompido no meio).
+
 Ainda não existem testes de unidade (vitest) nem lint rodado a sério (eslint/oxlint já vem do
-scaffold do shadcn, mas ainda não foi ligado ao fluxo). Próximo passo natural: as frentes que
-ficaram de fora (correção de resultado + pedido de reabertura, Dashboard, e os ajustes
-cirúrgicos documentados no plano — carga acumulada na rodada de importação, RNF-10, índice de
-confiança da sugestão).
+scaffold do shadcn, mas ainda não foi ligado ao fluxo). Próximo passo natural: Dashboard
+(RF-42-46) e os ajustes cirúrgicos documentados no plano (carga acumulada na rodada de
+importação, RNF-10, índice de confiança da sugestão).
 
 ## Deploy — no ar
 

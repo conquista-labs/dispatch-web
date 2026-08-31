@@ -7,6 +7,7 @@ import { useTiposAto } from '@/entities/tipoAto'
 import { useAtribuirAoMenosCarregado } from '@/features/protocolo/atribuir-ao-menos-carregado'
 import { useDevolverAoPool } from '@/features/protocolo/devolver-ao-pool'
 import { ObservacaoField } from '@/features/protocolo/definir-observacao'
+import { useReabrirConferencia } from '@/features/protocolo/reabrir-conferencia'
 import { formatDataHora } from '@/shared/lib/format'
 import { useNow } from '@/shared/lib/use-now'
 import { cn } from '@/shared/lib/utils'
@@ -55,6 +56,7 @@ export const PainelDetalheProtocolo = ({ protocoloId, onFechar }: PainelDetalheP
 
   const devolver = useDevolverAoPool()
   const atribuirMenosCarregado = useAtribuirAoMenosCarregado()
+  const reabrirConferencia = useReabrirConferencia()
 
   const carregando = !detalhe || !conferentes || !tiposAto || !regras || !escreventes || !equipes
 
@@ -87,6 +89,9 @@ export const PainelDetalheProtocolo = ({ protocoloId, onFechar }: PainelDetalheP
 
   const podeDevolverAoPool = detalhe?.status === 'Atribuido'
   const podeAtribuirAoMenosCarregado = detalhe?.status === 'Pool' || detalhe?.status === 'Excecao'
+  // RF-18a/RF-24c — ação direta, sem exigir um pedido explícito do conferente (esse fluxo
+  // vive na seção "Pedidos de reabertura" da aba Exceções).
+  const podeReabrirConferencia = detalhe?.status === 'Aprovado' || detalhe?.status === 'Reprovado'
 
   return (
     <Sheet open={!!protocoloId} onOpenChange={(aberto) => !aberto && onFechar()}>
@@ -134,6 +139,8 @@ export const PainelDetalheProtocolo = ({ protocoloId, onFechar }: PainelDetalheP
                 <LinhaDoTempo rotulo="Atribuído" quando={detalhe.atribuidoEm} />
                 <LinhaDoTempo rotulo="Iniciado" quando={detalhe.iniciadoEm} />
                 <LinhaDoTempo rotulo="Concluído" quando={detalhe.concluidoEm} />
+                <LinhaDoTempo rotulo="Corrigido" quando={detalhe.corrigidoEm} />
+                <LinhaDoTempo rotulo="Reaberto" quando={detalhe.reabertoEm} />
               </div>
 
               <div className="mt-4.5 mb-2 font-mono text-[10.5px] tracking-[0.04em] text-muted-foreground">QUEM PODE CONFERIR ESTE ATO</div>
@@ -161,7 +168,7 @@ export const PainelDetalheProtocolo = ({ protocoloId, onFechar }: PainelDetalheP
               <div className="mt-4.5 mb-2 font-mono text-[10.5px] tracking-[0.04em] text-muted-foreground">OBSERVAÇÃO</div>
               <ObservacaoField protocoloId={detalhe.id} observacao={detalhe.observacao} />
 
-              {(podeDevolverAoPool || podeAtribuirAoMenosCarregado) && (
+              {(podeDevolverAoPool || podeAtribuirAoMenosCarregado || podeReabrirConferencia) && (
                 <div className="mt-4.5 flex flex-wrap gap-1.5">
                   {podeDevolverAoPool && (
                     <Button variant="outline" size="sm" onClick={() => devolver.mutate(detalhe.id)} disabled={devolver.isPending}>
@@ -171,6 +178,11 @@ export const PainelDetalheProtocolo = ({ protocoloId, onFechar }: PainelDetalheP
                   {podeAtribuirAoMenosCarregado && (
                     <Button variant="outline" size="sm" onClick={() => atribuirMenosCarregado.mutate(detalhe.id)} disabled={atribuirMenosCarregado.isPending}>
                       Atribuir ao menos carregado
+                    </Button>
+                  )}
+                  {podeReabrirConferencia && (
+                    <Button variant="outline" size="sm" onClick={() => reabrirConferencia.mutate(detalhe.id)} disabled={reabrirConferencia.isPending}>
+                      Reabrir conferência
                     </Button>
                   )}
                 </div>

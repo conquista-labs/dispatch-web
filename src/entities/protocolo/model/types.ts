@@ -78,6 +78,8 @@ export type DetalheProtocolo = {
   iniciadoEm: string | null
   concluidoEm: string | null
   regraAplicadaId: string | null
+  corrigidoEm: string | null
+  reabertoEm: string | null
   semaforo: FaixaSemaforo | null
   alcada: AlcadaConferente[]
 }
@@ -90,4 +92,7 @@ export type ProtocoloConcluidoResumo = {
   status: StatusProtocolo
   concluidoEm: string | null
   duracao: string | null
+  // RF-24a/b — janela de correção (15min) e pedido de reabertura pendente, se houver.
+  corrigidoEm: string | null
+  pedidoReaberturaPendenteId: string | null
 }

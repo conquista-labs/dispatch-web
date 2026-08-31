@@ -1,6 +1,7 @@
 import { useState } from 'react'
 
 import { useConferentes } from '@/entities/conferente'
+import { usePedidosReaberturaPendentes } from '@/entities/pedidoReabertura'
 import { useVisaoDistribuicao } from '@/entities/protocolo'
 import { cn } from '@/shared/lib/utils'
 import { useNow } from '@/shared/lib/use-now'
@@ -29,6 +30,7 @@ export const DistribuicaoBoard = () => {
   const [protocoloDetalheId, setProtocoloDetalheId] = useState<string | null>(null)
   const { data: visao, isLoading } = useVisaoDistribuicao()
   const { data: conferentes } = useConferentes()
+  const { data: pedidosReabertura } = usePedidosReaberturaPendentes()
   const now = useNow()
 
   if (isLoading || !visao || !conferentes) {
@@ -36,6 +38,9 @@ export const DistribuicaoBoard = () => {
   }
 
   const conferentesNaEscala = conferentes.filter((c) => c.naEscala)
+  // RF-18b: exceções e pedidos de reabertura contam separado, no mesmo rótulo da aba.
+  const qtdPedidos = pedidosReabertura?.length ?? 0
+  const sufixoPedidos = qtdPedidos > 0 ? ` · ${qtdPedidos} ${qtdPedidos > 1 ? 'pedidos' : 'pedido'}` : ''
 
   return (
     <div>
@@ -44,7 +49,7 @@ export const DistribuicaoBoard = () => {
           [
             ['conferente', 'Por conferente'],
             ['status', 'Por status'],
-            ['excecoes', `Exceções · ${visao.excecoes.length}`],
+            ['excecoes', `Exceções · ${visao.excecoes.length}${sufixoPedidos}`],
           ] as const
         ).map(([valor, label]) => (
           <button

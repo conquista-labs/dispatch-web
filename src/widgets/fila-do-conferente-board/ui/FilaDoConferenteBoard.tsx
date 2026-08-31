@@ -90,7 +90,7 @@ export const FilaDoConferenteBoard = ({ conferenteId }: FilaDoConferenteBoardPro
             )}
           </div>
 
-          {concluidos && <ConcluidosHojeList concluidos={concluidos} />}
+          {concluidos && <ConcluidosHojeList concluidos={concluidos} now={now} somenteLeitura />}
         </div>
       </div>
     </div>

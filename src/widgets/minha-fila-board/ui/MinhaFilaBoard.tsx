@@ -119,7 +119,7 @@ export const MinhaFilaBoard = () => {
             )}
           </div>
 
-          {concluidos && <ConcluidosHojeList concluidos={concluidos} />}
+          {concluidos && <ConcluidosHojeList concluidos={concluidos} now={now} />}
         </div>
       </div>
     </div>

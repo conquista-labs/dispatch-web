@@ -26,8 +26,8 @@ test('Distribuição — as 3 abas renderizam com dados reais', async ({ page })
 
   // Exceções.
   await page.getByRole('button', { name: /Exceções/ }).click()
-  await expect(page.getByText(/tipo novo|sem alçada/)).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Resolver' })).toBeVisible()
+  await expect(page.getByText(/tipo novo|sem alçada/).first()).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Resolver' }).first()).toBeVisible()
   await page.screenshot({ path: 'e2e/.screenshots/distribuicao-excecoes-claro.png', fullPage: true })
 
   // Tema escuro, aba por conferente de novo.
