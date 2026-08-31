@@ -23,7 +23,7 @@ test('board de Minha fila renderiza as 3 colunas + concluídos hoje', async ({ p
   await expect(page.getByRole('heading', { name: 'Minha fila' })).toBeVisible()
   await expect(page.getByText('Pool disponível')).toBeVisible()
   await expect(page.getByText('Atribuídas a você')).toBeVisible()
-  await expect(page.getByText('Em conferência')).toBeVisible()
+  await expect(page.getByText('Em conferência', { exact: true })).toBeVisible()
 
   await page.screenshot({ path: 'e2e/.screenshots/minha-fila-claro.png', fullPage: true })
 

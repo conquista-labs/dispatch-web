@@ -11,4 +11,5 @@ export const ROUTES = {
   // leitura) do que RequireRole(Conferente) já protege em ROUTES.minhaFila.
   filaConferentes: '/fila-conferentes',
   centralDeRegras: '/central-de-regras',
+  dashboard: '/dashboard',
 } as const

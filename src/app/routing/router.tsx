@@ -2,6 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 
 import { CentralDeRegrasPage } from '@/pages/central-de-regras'
 import { ConferentesPage } from '@/pages/conferentes'
+import { DashboardPage } from '@/pages/dashboard'
 import { DistribuicaoPage } from '@/pages/distribuicao'
 import { FilaConferentesPage } from '@/pages/fila-conferentes'
 import { ImportarPage } from '@/pages/importar'
@@ -65,6 +66,14 @@ export const Router = () => (
             element={
               <RequireRole roles={['Distribuidora']}>
                 <CentralDeRegrasPage />
+              </RequireRole>
+            }
+          />
+          <Route
+            path={ROUTES.dashboard}
+            element={
+              <RequireRole roles={['Distribuidora', 'Conferente']}>
+                <DashboardPage />
               </RequireRole>
             }
           />

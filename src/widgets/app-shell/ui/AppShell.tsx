@@ -21,8 +21,12 @@ const NAV_POR_PAPEL: Record<Papel, { label: string; to: string }[]> = {
     { label: 'Minha fila', to: ROUTES.filaConferentes },
     { label: 'Conferentes', to: ROUTES.conferentes },
     { label: 'Central de regras', to: ROUTES.centralDeRegras },
+    { label: 'Dashboard', to: ROUTES.dashboard },
   ],
-  Conferente: [{ label: 'Minha fila', to: ROUTES.minhaFila }],
+  Conferente: [
+    { label: 'Minha fila', to: ROUTES.minhaFila },
+    { label: 'Dashboard', to: ROUTES.dashboard },
+  ],
 }
 
 // Badge de pílula do menu (RF-13/RF-39) — mesma medida do protótipo (Dispatch.dc.html, `n.badge`):

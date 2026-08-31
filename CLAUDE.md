@@ -674,10 +674,49 @@ um `<input>` digitável ao lado dos botões ±, mesmo padrão `w-[Npx]`+`size` d
   qualquer sobra de uma execução anterior no início (RF-21: limite de 1 ato simultâneo
   bloquearia "iniciar" se sobrasse algo "em conferência" de um teste interrompido no meio).
 
+**Dashboard (RF-42-46) — quinta frente do "v2", tela nova pros dois papéis.**
+
+- **`entities/dashboard`** (novo) — `useDashboard(periodo)`, tipos espelhando
+  `DashboardResponse`. `shared/config/routes.ts` ganhou `dashboard: '/dashboard'`, rota
+  registrada com `RequireRole(['Distribuidora','Conferente'])` (primeira rota do projeto
+  acessível pelos dois papéis ao mesmo tempo sem ser duas rotas separadas — RNF continua
+  garantida no back: o back decide o que devolver conforme o token, não o front).
+  `NAV_POR_PAPEL` ganhou "Dashboard" nos dois arrays.
+- **Dois componentes shadcn instalados** (`npx shadcn add progress` e `add table`) —
+  primeira vez que o projeto usa uma tabela HTML de verdade (`<table>`) em vez de
+  `div`+flex; fez sentido aqui porque a tela tem colunas fixas de verdade (nome, número,
+  barra, badge), diferente das listas de card do resto do app.
+- **`widgets/dashboard-board`** — `DashboardBoard` (tabs de período, mesmo padrão de
+  `DistribuicaoBoard`/`CentralDeRegrasBoard`, não Popover — só 3 opções fixas) decide entre
+  `VisaoGestao` (KPIs + tabela de desempenho/score/faixa + desempenho por tipo de ato) e
+  `VisaoConferente` (KPIs próprios + card de score com as 4 parcelas + "Você × média da
+  casa", **sem** o rótulo/badge de faixa de bônus — RF-45). `KpiCard.tsx` reaproveita o
+  mesmo padrão visual já usado em `AbaAprendizado.tsx` (Central de Regras).
+- **Bug real do componente `Progress` gerado pelo `shadcn add`, achado testando de
+  verdade (não só aparência)**: o componente desestrutura `value` das props só pra calcular
+  o `transform` do indicador manualmente, mas **nunca repassa `value` de volta pro
+  `ProgressPrimitive.Root`** do Radix — o Root ficava sempre em `data-state="indeterminate"`
+  (sem saber o valor real), e a barra renderizava com `width: 0`, invisível, mesmo com o
+  indicador interno tendo o `transform` matematicamente certo. Só apareceu inspecionando o
+  DOM via Playwright (`getBoundingClientRect`), não bastava olhar o screenshot — a barra
+  simplesmente não estava lá, sem erro nenhum no console. Corrigido em
+  `shared/ui/progress.tsx`, adicionando `value={value}` explícito na Root. Vale conferir
+  esse mesmo padrão (`value`/prop controlada desestruturada e não repassada) se algum outro
+  componente do shadcn parecer "sem efeito" no futuro — não é a primeira vez que o CLI gera
+  algo que precisa de ajuste (ver as "armadilhas do shadcn" já catalogadas acima).
+- `e2e/dashboard.spec.ts` (novo) — visão gestão (KPIs, tabela, troca de período dispara
+  refetch de verdade) e visão conferente (confirma que "Bônus"/faixa e a tabela com nome de
+  colega **não aparecem**, não só que os elementos certos aparecem), nos dois temas.
+- Duas correções de teste de regressão permanente pré-existentes, achadas de passagem
+  (não causadas por este trabalho): `distribuicao.spec.ts` e `minha-fila.spec.ts` usavam
+  `getByText(...)` sem `exact`/`.first()` e quebravam com dado acumulado de sessões
+  anteriores (mais de uma exceção "sem alçada", ou o texto "Em conferência" também
+  aparecendo dentro do placeholder "nada em conferência — pegue um do pool").
+
 Ainda não existem testes de unidade (vitest) nem lint rodado a sério (eslint/oxlint já vem do
-scaffold do shadcn, mas ainda não foi ligado ao fluxo). Próximo passo natural: Dashboard
-(RF-42-46) e os ajustes cirúrgicos documentados no plano (carga acumulada na rodada de
-importação, RNF-10, índice de confiança da sugestão).
+scaffold do shadcn, mas ainda não foi ligado ao fluxo). Próximo passo natural: os ajustes
+cirúrgicos documentados no plano (carga acumulada na rodada de importação, RNF-10, índice de
+confiança da sugestão, cumprimento de prazo por equipe no Dashboard).
 
 ## Deploy — no ar
 
