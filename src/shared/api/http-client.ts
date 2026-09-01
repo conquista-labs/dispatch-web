@@ -17,6 +17,16 @@ export const configureHttpClient = (config: { getToken: () => string | null; onU
   onUnauthorized = config.onUnauthorized
 }
 
+// RF-01g etapa 2: `POST /auth/recuperar/validar-codigo` é anônimo e devolve 401 pra "código
+// errado" — um resultado de negócio normal, não uma sessão morta. Sem esse escape hatch, o
+// interceptor abaixo trataria os dois casos como o mesmo evento e limparia a sessão de quem
+// estiver logado (ex.: a distribuidora testando a recuperação de outra pessoa na mesma aba).
+declare module 'axios' {
+  export interface AxiosRequestConfig {
+    ignorarSessaoEncerrada?: boolean
+  }
+}
+
 export const httpClient = axios.create({
   baseURL: env.apiUrl,
 })
@@ -32,7 +42,7 @@ httpClient.interceptors.request.use((config) => {
 httpClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    if (error.response?.status === 401 && !error.config?.ignorarSessaoEncerrada) {
       onUnauthorized()
     }
     return Promise.reject(error)

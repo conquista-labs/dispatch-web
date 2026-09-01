@@ -7,7 +7,7 @@ type LogoProps = {
    * escuro, não acompanha o tema do app, então não pode depender de var(--background) etc.).
    */
   variant?: 'on-light' | 'on-dark-fixed'
-  size?: 'sm' | 'lg'
+  size?: 'sm' | 'md' | 'lg'
   className?: string
 }
 
@@ -16,7 +16,12 @@ type LogoProps = {
 // no tom mais forte (o tempo que resta), o de baixo mais apagado (o que já passou) — a mesma
 // ideia do semáforo de prazo, em forma de ícone.
 export const Logo = ({ variant = 'on-light', size = 'sm', className }: LogoProps) => {
-  const dims = size === 'lg' ? { box: 44, radius: 12, triW: 20, triH: 11, gap: 2.5 } : { box: 26, radius: 7, triW: 12, triH: 6.5, gap: 1.5 }
+  const dims =
+    size === 'lg'
+      ? { box: 44, radius: 12, triW: 20, triH: 11, gap: 2.5 }
+      : size === 'md'
+        ? { box: 30, radius: 9, triW: 14, triH: 7.5, gap: 2 }
+        : { box: 26, radius: 7, triW: 12, triH: 6.5, gap: 1.5 }
 
   const badgeBg = variant === 'on-light' ? 'var(--primary)' : '#fafafa'
   const topTriangle = variant === 'on-light' ? 'var(--background)' : '#09090b'

@@ -18,6 +18,8 @@ const ConferentesPage = lazy(() => import('@/pages/conferentes').then((m) => ({ 
 const MinhaFilaPage = lazy(() => import('@/pages/minha-fila').then((m) => ({ default: m.MinhaFilaPage })))
 const FilaConferentesPage = lazy(() => import('@/pages/fila-conferentes').then((m) => ({ default: m.FilaConferentesPage })))
 const CentralDeRegrasPage = lazy(() => import('@/pages/central-de-regras').then((m) => ({ default: m.CentralDeRegrasPage })))
+const RegistrarTotpPage = lazy(() => import('@/pages/registrar-totp').then((m) => ({ default: m.RegistrarTotpPage })))
+const RecuperarSenhaPage = lazy(() => import('@/pages/recuperar-senha').then((m) => ({ default: m.RecuperarSenhaPage })))
 
 // Mesmo texto/classe já usado em todo canto do app enquanto uma query carrega (ver
 // MinhaFilaBoard, DistribuicaoBoard etc.) — consistente com o resto, não é um spinner novo.
@@ -33,6 +35,9 @@ export const Router = () => (
       <Suspense fallback={<CarregandoPagina />}>
         <Routes>
           <Route path={ROUTES.login} element={<LoginPage />} />
+          {/* RF-01a-l: públicas, como /login — sem RequireRole, fora do AppShell. */}
+          <Route path={ROUTES.registrarTotp} element={<RegistrarTotpPage />} />
+          <Route path={ROUTES.recuperarSenha} element={<RecuperarSenhaPage />} />
 
           <Route element={<AppShell />}>
             <Route

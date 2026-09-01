@@ -1385,3 +1385,86 @@ por um pedido pontual).
 Verificado nos dois temas, marcando um protocolo real como Alta via
 `POST /protocolos/{id}/definir-prioridade` e conferindo os dois lugares (card do quadro, item
 da lista completa) — sem quebra de layout, badge na linha certa.
+
+## TOTP e recuperação de senha, caminho feliz (RF-01a a RF-01l)
+
+Duas telas públicas novas, consumindo o back que acabou de ganhar `POST /auth/totp/registrar`,
+`POST /auth/totp/confirmar`, `POST /auth/recuperar/iniciar`, `POST /auth/recuperar/validar-codigo`,
+`POST /auth/recuperar/redefinir-senha` (ver `dispatch-api/CLAUDE.md` pra todo o desenho de
+back). RF-01m/RF-01n (liberação sem autenticador, códigos de admin) ficam de fora, por decisão
+explícita do dono — nem o link "Não tenho o app" do protótipo foi construído, de propósito.
+
+**Layout: card único centralizado, não o split de duas colunas do `/login`** — confirmado
+relendo o `Dispatch.dc.html` direto (`isTotp`/`isRec`, não `isLogin`): as duas telas usam o
+mesmo shell (crachá pequeno + wordmark acima de um card branco/superfície, `max-width` 428-452px,
+sobre `var(--bg)` plano). `Logo` ganhou um terceiro tamanho (`size="md"`, 30px) só pra bater
+exato com esse crachá — o protótipo usa 30px aqui contra 44px do login e 26px do resto do app,
+não é um dos dois tamanhos que já existiam.
+
+**Divergência necessária do protótipo — "Registrar autenticador" não pula direto pro QR.** No
+protótipo (mock, sem back de verdade) o botão da tela de login vai direto pra tela do QR, sem
+pedir senha. Isso não é seguro nem faz sentido com um back real: `POST /auth/totp/registrar` é
+autenticado de propósito (RF-01a associar o segredo a uma conta exige provar que é o dono dela
+— senão qualquer um registraria um autenticador pra e-mail alheio). `RegistrarTotpPage`
+resolve isso reaproveitando o próprio `<LoginForm/>` como portão: sem sessão, mostra o login;
+assim que a sessão existe (`useSessionStore`), troca pro QR/confirmação, sem navegar pra outro
+lugar. `LoginForm` ganhou a prop `mostrarLinksAuxiliares` (default `true`) só pra não repetir
+"Esqueci minha senha"/"Registrar autenticador" dentro da própria tela de registrar quando
+embutido assim.
+
+**QR de verdade, renderizado no cliente** — `qrcode.react` (`<QRCodeSVG value={uriOtpAuth} />`),
+nova dependência (nenhuma lib de QR existia no projeto). Servidor nunca gera imagem — só devolve
+a URI `otpauth://` crua, RF-01b permite os dois, cliente é mais simples aqui. Chave também
+mostrada em texto, quebrada em blocos de 4 (`chaveBase32.match(/.{1,4}/g)`), igual ao protótipo.
+
+**Contador de 30s do passo "código" é cosmético, calculado no cliente** (`30 - (Math.floor(Date.now()/1000) % 30)`,
+`setInterval` de 1s só enquanto esse passo está ativo) — não depende do back pra nada, é só
+lembrar visualmente que o código muda a cada 30s (mesmo raciocínio do protótipo).
+
+**Regras de senha replicadas no cliente pra feedback ao vivo** (mesmas 3 do
+`Dispatch.Domain.RegrasDeSenha`: 12+ caracteres, não começar com `senha|123|cartorio|dispatch`,
+as duas iguais) — o back segue sendo a fonte da verdade (front pode divergir por bug, back
+nunca aceita senha fraca).
+
+**Bug real de infra achado construindo isto**: `POST /auth/recuperar/validar-codigo` e
+`POST /auth/recuperar/redefinir-senha` são anônimos e devolvem 401 pra "código errado"/"token
+inválido" — resultado de negócio normal, não sessão morta. O `httpClient` compartilhado
+(`shared/api/http-client.ts`) trata **qualquer** 401 como "sessão expirou" (`onUnauthorized`:
+limpa `useSessionStore` + `queryClient.clear()`) — sem tratamento especial, testar a
+recuperação de senha em uma aba enquanto outra conta está logada no mesmo navegador limparia a
+sessão de quem está logado, por um 401 que não tem nada a ver com ela. Corrigido com um
+opt-out mínimo: `AxiosRequestConfig.ignorarSessaoEncerrada`, checado no interceptor de resposta
+antes de chamar `onUnauthorized`, usado só nesses dois `httpClient.post(...)`.
+
+**RNF-04 (tema) — decisão revertida durante a implementação, com evidência nova.** O plano
+inicial assumia (com base numa investigação anterior) que valeria a pena adicionar um botão de
+trocar tema nessas telas, já que o protótipo não tem um ali mas o RNF pede "disponível antes e
+depois do login". Investigação fresca do código (não da memória) mostrou que **a tela de login
+atual também não tem esse botão** — `useThemeStore` só é consumido em `AppShell` (sidebar
+autenticada) e `shared/ui/sonner.tsx`; o tema em `/login` só segue o que já estava persistido
+(ou `prefers-color-scheme`), sem controle nenhum na tela. Adicionar um toggle só nas duas telas
+novas, e não no login (a mais importante das três), seria inconsistente e vistoso — as duas
+telas novas seguem exatamente o mesmo comportamento real do `/login`: sem toggle próprio, tema
+herdado.
+
+**`e2e/totp-recuperacao-senha.spec.ts`, TOTP de verdade, sem mock** — gera um segredo, computa
+o código RFC 6238 na mão em Node (`node:crypto`, HMAC-SHA1, sem lib nova só pro teste), extrai
+a chave Base32 exibida na tela, confirma o registro, depois roda a recuperação completa até
+trocar a senha de verdade e logar com ela. Cria e remove um conferente de teste (mesma
+convenção de `conferentes.spec.ts`) — não pode reusar a conta seed fixa porque o fluxo troca a
+senha dela.
+
+**Achado só ao rodar o teste, não um bug do app**: primeiras tentativas de screenshot em tema
+escuro (`page.goto` seguido de `page.screenshot` sem esperar nada) capturaram a tela presa em
+"Carregando…" — não é o app travando, é o teste tirando o print antes do chunk lazy terminar de
+montar depois de um reload completo (`page.goto`, diferente de navegação via `<Link>`). Corrigido
+esperando um heading/texto da tela ficar visível antes de cada `page.screenshot`.
+
+**Também achado só no screenshot, não um bug real**: o botão "Continuar" desabilitado no tema
+escuro aparece com um degradê estranho no PNG. Inspecionado via `getComputedStyle` — o CSS é
+uma cor sólida (`background-color: rgb(242, 242, 244)`, sem `background-image`, opacidade 0.6
+uniforme) — é artefato de composição do Chromium headless ao tirar screenshot de um elemento
+com `border-radius` + opacidade reduzida, não algo que um usuário real veria no navegador.
+
+Verificado nos dois temas via Playwright (screenshots + suíte permanente rodada de novo: mesmas
+8 falhas pré-existentes de antes desta rodada, nenhuma nova).

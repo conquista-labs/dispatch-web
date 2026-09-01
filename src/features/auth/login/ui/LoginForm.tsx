@@ -1,11 +1,19 @@
 import { EyeIcon, EyeOffIcon } from 'lucide-react'
 import { type FormEvent, useState } from 'react'
+import { Link } from 'react-router-dom'
 
+import { ROUTES } from '@/shared/config/routes'
 import { Button } from '@/shared/ui/button'
 
 import { useLogin } from '../model/use-login'
 
-export const LoginForm = () => {
+type LoginFormProps = {
+  /** false quando embutido em outra tela pública (ex.: RegistrarTotpPage) — evita repetir
+   * "Esqueci minha senha"/"Registrar autenticador" dentro da própria tela de registrar. */
+  mostrarLinksAuxiliares?: boolean
+}
+
+export const LoginForm = ({ mostrarLinksAuxiliares = true }: LoginFormProps = {}) => {
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
   const [senhaVisivel, setSenhaVisivel] = useState(false)
@@ -60,6 +68,17 @@ export const LoginForm = () => {
       <Button type="submit" disabled={isPending} className="mt-[22px] h-auto w-full rounded-[7px] py-2.5 text-sm">
         {isPending ? 'Entrando…' : 'Entrar'}
       </Button>
+      {mostrarLinksAuxiliares && (
+        <div className="mt-3.5 flex flex-wrap justify-center gap-3.5">
+          <Link to={ROUTES.recuperarSenha} className="p-0.5 text-[12.5px] font-medium text-text-2 hover:text-foreground">
+            Esqueci minha senha
+          </Link>
+          <span className="text-[12.5px] text-border">·</span>
+          <Link to={ROUTES.registrarTotp} className="p-0.5 text-[12.5px] font-medium text-text-2 hover:text-foreground">
+            Registrar autenticador
+          </Link>
+        </div>
+      )}
       <p className="mt-3.5 text-center text-xs text-muted-foreground">O papel vem do cadastro do usuário.</p>
     </form>
   )

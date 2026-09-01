@@ -2,6 +2,8 @@
 // daqui, nunca com a string escrita na mão em mais de um arquivo.
 export const ROUTES = {
   login: '/login',
+  registrarTotp: '/totp/registrar',
+  recuperarSenha: '/recuperar-senha',
   distribuicao: '/distribuicao',
   importar: '/importar',
   conferentes: '/conferentes',
