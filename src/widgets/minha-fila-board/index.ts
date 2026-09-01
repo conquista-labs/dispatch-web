@@ -3,4 +3,5 @@ export { MinhaFilaBoard } from './ui/MinhaFilaBoard'
 // conferente, RF-19) — mesmos cards, só em modo somenteLeitura.
 export { ConcluidosHojeList } from './ui/ConcluidosHojeList'
 export { EmConferenciaCard } from './ui/EmConferenciaCard'
+export { ListaCompletaPoolSheet } from './ui/ListaCompletaPoolSheet'
 export { ProtocoloCard } from './ui/ProtocoloCard'

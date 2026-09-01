@@ -1,10 +1,16 @@
+import { useState } from 'react'
+
 import { useEquipes } from '@/entities/equipe'
 import { useEscreventes } from '@/entities/escrevente'
 import { useConcluidosHojeDoConferente, useFilaDoConferente, type InfoProtocolo, type ProtocoloResumo } from '@/entities/protocolo'
 import { useTiposAto } from '@/entities/tipoAto'
 import { useNow } from '@/shared/lib/use-now'
 import { BarraDeFiltros, useFiltroProtocolos } from '@/widgets/filtro-protocolos'
-import { ConcluidosHojeList, EmConferenciaCard, ProtocoloCard } from '@/widgets/minha-fila-board'
+import { ConcluidosHojeList, EmConferenciaCard, ListaCompletaPoolSheet, ProtocoloCard } from '@/widgets/minha-fila-board'
+
+// Mesmo limite de MinhaFilaBoard/ProtocoloColuna (Distribuição) — truncar em 3 e abrir a
+// lista completa num Sheet quando tiver mais.
+const MAX_POOL_VISIVEL = 3
 
 const LEGENDA = [
   { label: 'no prazo', className: 'bg-ok-bg border-ok-border-2' },
@@ -29,6 +35,7 @@ export const FilaDoConferenteBoard = ({ conferenteId }: FilaDoConferenteBoardPro
   const { data: equipes } = useEquipes()
   const { data: tiposAto } = useTiposAto()
   const now = useNow()
+  const [listaCompletaAberta, setListaCompletaAberta] = useState(false)
 
   // RF-24f: mesmo filtro de Minha fila — a Distribuidora acompanhando a fila de alguém também
   // se beneficia de filtrar por equipe/tipo/prioridade/prazo.
@@ -84,15 +91,31 @@ export const FilaDoConferenteBoard = ({ conferenteId }: FilaDoConferenteBoardPro
             <span className="font-mono text-[11px] text-muted-foreground">{filaFiltrada.poolDisponivel.length}</span>
           </div>
           <div className="flex flex-col gap-2">
-            {filaFiltrada.poolDisponivel.map((protocolo) => (
+            {filaFiltrada.poolDisponivel.slice(0, MAX_POOL_VISIVEL).map((protocolo) => (
               <ProtocoloCard key={protocolo.id} protocolo={protocolo} now={now} somenteLeitura />
             ))}
+            {filaFiltrada.poolDisponivel.length > MAX_POOL_VISIVEL && (
+              <button
+                type="button"
+                onClick={() => setListaCompletaAberta(true)}
+                className="rounded-[10px] border border-dashed border-border p-2 text-center text-xs text-muted-foreground hover:border-muted-foreground/40 hover:text-text-2"
+              >
+                + {filaFiltrada.poolDisponivel.length - MAX_POOL_VISIVEL} protocolos
+              </button>
+            )}
             {filaFiltrada.poolDisponivel.length === 0 && (
               <div className="rounded-[10px] border border-dashed border-border p-4 text-center text-xs text-muted-foreground">
                 nada no pool dentro da alçada dele
               </div>
             )}
           </div>
+          <ListaCompletaPoolSheet
+            aberto={listaCompletaAberta}
+            onFechar={() => setListaCompletaAberta(false)}
+            protocolos={filaFiltrada.poolDisponivel}
+            now={now}
+            somenteLeitura
+          />
         </div>
 
         <div className="min-w-0 flex-1">

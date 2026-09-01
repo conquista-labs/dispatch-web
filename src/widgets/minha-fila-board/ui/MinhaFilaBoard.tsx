@@ -1,3 +1,5 @@
+import { useState } from 'react'
+
 import { useEquipes } from '@/entities/equipe'
 import { useEscreventes } from '@/entities/escrevente'
 import { useConcluidosHoje, useMinhaFila, type InfoProtocolo, type ProtocoloResumo } from '@/entities/protocolo'
@@ -10,7 +12,12 @@ import { BarraDeFiltros, useFiltroProtocolos } from '@/widgets/filtro-protocolos
 
 import { ConcluidosHojeList } from './ConcluidosHojeList'
 import { EmConferenciaCard } from './EmConferenciaCard'
+import { ListaCompletaPoolSheet } from './ListaCompletaPoolSheet'
 import { ProtocoloCard } from './ProtocoloCard'
+
+// Mesmo limite da coluna "Pool aberto" de Distribuição (ver ProtocoloColuna.tsx, variant
+// "conferente") — truncar em 3 e abrir a lista completa num Sheet quando tiver mais.
+const MAX_POOL_VISIVEL = 3
 
 const LEGENDA = [
   { label: 'no prazo', className: 'bg-ok-bg border-ok-border-2' },
@@ -32,6 +39,7 @@ export const MinhaFilaBoard = () => {
   const pegar = usePegarProtocolo()
   const iniciar = useIniciarConferencia()
   const concluir = useConcluirConferencia()
+  const [listaCompletaAberta, setListaCompletaAberta] = useState(false)
 
   // RF-24f: mesmos 4 eixos de Distribuição, aplicados nas três colunas ao mesmo tempo. O
   // card de Minha fila não mostra tipo/escrevente/equipe (RF-14 é só de Distribuição — ver
@@ -91,7 +99,7 @@ export const MinhaFilaBoard = () => {
             <span className="font-mono text-[11px] text-muted-foreground">{filaFiltrada.poolDisponivel.length}</span>
           </div>
           <div className="flex flex-col gap-2">
-            {filaFiltrada.poolDisponivel.map((protocolo) => (
+            {filaFiltrada.poolDisponivel.slice(0, MAX_POOL_VISIVEL).map((protocolo) => (
               <ProtocoloCard
                 key={protocolo.id}
                 protocolo={protocolo}
@@ -101,12 +109,30 @@ export const MinhaFilaBoard = () => {
                 acaoDesabilitada={pegar.isPending}
               />
             ))}
+            {filaFiltrada.poolDisponivel.length > MAX_POOL_VISIVEL && (
+              <button
+                type="button"
+                onClick={() => setListaCompletaAberta(true)}
+                className="rounded-[10px] border border-dashed border-border p-2 text-center text-xs text-muted-foreground hover:border-muted-foreground/40 hover:text-text-2"
+              >
+                + {filaFiltrada.poolDisponivel.length - MAX_POOL_VISIVEL} protocolos
+              </button>
+            )}
             {filaFiltrada.poolDisponivel.length === 0 && (
               <div className="rounded-[10px] border border-dashed border-border p-4 text-center text-xs text-muted-foreground">
                 nada no pool dentro da sua alçada
               </div>
             )}
           </div>
+          <ListaCompletaPoolSheet
+            aberto={listaCompletaAberta}
+            onFechar={() => setListaCompletaAberta(false)}
+            protocolos={filaFiltrada.poolDisponivel}
+            now={now}
+            acaoLabel="Pegar este"
+            onAcao={(protocoloId) => pegar.mutate(protocoloId)}
+            acaoDesabilitada={pegar.isPending}
+          />
         </div>
 
         <div className="min-w-0 flex-1">

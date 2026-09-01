@@ -1029,3 +1029,23 @@ tipo individual, simulador "Testar" com um caso reservado mostrando a trilha com
 mais) — bateu exatamente com o que `POST /regras-alcada/testar` devolveu, conferido também via
 `curl` direto antes de confiar no render. Regressão permanente (`auth`/`session-isolation`/
 `cursor`/`login`) verde depois da mudança.
+
+## Pool ordenado + "+N protocolos" em Minha fila
+
+Pool de Distribuição e de Minha fila já vem ordenado por vencimento do back (ver CLAUDE.md do
+`dispatch-api`, mesma seção) — nenhuma mudança de front precisou pra isso, `.filter()` do
+`useFiltroProtocolos` preserva ordem.
+
+**`ListaCompletaPoolSheet.tsx`** (novo, `widgets/minha-fila-board/ui/`) — "Pool disponível"
+de Minha fila ganhou o mesmo truncamento em 3 + "+N protocolos" que a coluna "Pool aberto" de
+Distribuição já tinha (`ProtocoloColuna`/`ListaCompletaColunaSheet`), só que reaproveitando
+`ProtocoloCard` (não o card de Distribuição, que mostra tipo/escrevente/equipe que Minha fila
+não usa) — mesmo Sheet exportado pelo barrel de `minha-fila-board` e reaproveitado por
+`MinhaFilaBoard` (com `onAcao`, "Pegar este" funciona dentro do Sheet também) e
+`FilaDoConferenteBoard` (`somenteLeitura`, sem ação — a Distribuidora só olha a fila de outro
+conferente, RNF-04).
+
+Verificado nos dois temas: pool com 16 itens, 3 visíveis + "+13 protocolos", Sheet abrindo com
+a lista completa ordenada (mais vencido no topo) e "Pegar este" funcionando de dentro do Sheet.
+Regressão permanente (`fila-conferentes`/`conferentes`/`auth`/`session-isolation`/`cursor`/
+`login`) verde.
