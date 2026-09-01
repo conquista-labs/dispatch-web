@@ -1,5 +1,6 @@
 import { NIVEL_LABEL } from '@/entities/conferente'
 import { FAIXA_LABEL, type Dashboard, type FaixaBonificacao } from '@/entities/dashboard'
+import { ETAPA_LABEL, TIPO_PRAZO_LABEL } from '@/entities/protocolo'
 import { formatDuracaoConcluida } from '@/shared/lib/format'
 import { Chip } from '@/shared/ui/chip'
 import { Progress } from '@/shared/ui/progress'
@@ -16,16 +17,23 @@ const FAIXA_TOM: Record<FaixaBonificacao, 'ok' | 'atencao' | 'vencido'> = {
   Fora: 'vencido',
 }
 
+// Mesmos limiares do protótipo aprovado (`slaEquipes`, Dispatch.dc.html): >=90% ok, >=70%
+// atenção, abaixo disso vencido — cores batendo com as faixas do semáforo (ok/warn/bad-*),
+// não um esquema novo só pra este card.
+const corDoCumprimento = (percentual: number): 'ok' | 'warn' | 'bad' => (percentual >= 0.9 ? 'ok' : percentual >= 0.7 ? 'warn' : 'bad')
+const TEXTO_TOM: Record<'ok' | 'warn' | 'bad', string> = { ok: 'text-ok-fg', warn: 'text-warn-fg', bad: 'text-bad-fg' }
+const BARRA_TOM: Record<'ok' | 'warn' | 'bad', string> = { ok: 'bg-ok-bar', warn: 'bg-warn-bar', bad: 'bg-bad-bar' }
+
 type VisaoGestaoProps = {
   dashboard: Dashboard
   periodoLabel: string
 }
 
 // RF-43: KPIs agregados + tabela de desempenho/bonificação com nome de todo mundo + desempenho
-// por tipo de ato. "Cumprimento de prazo por equipe" e o KPI de "custo por ato" (RF-43 também
-// pede os dois) ficam de fora desta rodada — ver CLAUDE.md do dispatch-api.
+// por tipo de ato + cumprimento de prazo por equipe. O KPI de "custo por ato" (RF-43 também
+// pede) fica de fora — ver CLAUDE.md do dispatch-api.
 export const VisaoGestao = ({ dashboard, periodoLabel }: VisaoGestaoProps) => {
-  const { kpis, desempenho, porTipoAto } = dashboard
+  const { kpis, desempenho, porTipoAto, cumprimentoPrazoEquipe } = dashboard
 
   return (
     <div>
@@ -84,30 +92,54 @@ export const VisaoGestao = ({ dashboard, periodoLabel }: VisaoGestaoProps) => {
         score corrige isso.
       </p>
 
-      <h2 className="mt-5.5 mb-2.5 text-[15px] font-semibold tracking-[-0.01em]">Desempenho por tipo de ato</h2>
-      <SurfaceCard className="p-0">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Tipo de ato</TableHead>
-              <TableHead>Volume</TableHead>
-              <TableHead>T. médio</TableHead>
-              <TableHead>Reprovação</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {porTipoAto.map((t) => (
-              <TableRow key={t.tipoAtoId}>
-                <TableCell className="text-[13px]">{t.nome}</TableCell>
-                <TableCell className="font-mono">{t.volume}</TableCell>
-                <TableCell className="font-mono">{t.tempoMedio ? formatDuracaoConcluida(t.tempoMedio) : '—'}</TableCell>
-                <TableCell className="font-mono">{pct(t.percentualReprovacao)}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-        {porTipoAto.length === 0 && <p className="p-3.5 text-[13px] text-muted-foreground">Nada concluído neste período.</p>}
-      </SurfaceCard>
+      <div className="mt-6.5 grid grid-cols-1 gap-2 md:grid-cols-2">
+        <div className="rounded-[10px] border border-border bg-card p-4 shadow-sm">
+          <div className="text-[13.5px] font-semibold">Cumprimento de prazo por equipe</div>
+          <div className="mt-[3px] mb-3 text-[11.5px] text-muted-foreground">onde o prazo combinado não está sendo cumprido</div>
+          {cumprimentoPrazoEquipe.map((c, indice) => {
+            const tom = corDoCumprimento(c.percentualNoPrazo)
+            return (
+              <div key={indice} className="flex items-center gap-2.5 border-t border-border py-1.75">
+                <span className="w-33 flex-none min-w-0">
+                  <span className="block truncate text-[12.5px]">{c.equipeNome}</span>
+                  <span className="block text-[10.5px] text-muted-foreground">
+                    {ETAPA_LABEL[c.etapa]}
+                    {c.prazo && ` · ${TIPO_PRAZO_LABEL[c.prazo]}`}
+                  </span>
+                </span>
+                <span className="block h-2 flex-1 overflow-hidden rounded-full bg-secondary">
+                  <span className={`block h-2 rounded-full ${BARRA_TOM[tom]}`} style={{ width: pct(c.percentualNoPrazo) }} />
+                </span>
+                <span className={`w-10.5 flex-none text-right font-mono text-[12.5px] font-medium ${TEXTO_TOM[tom]}`}>{pct(c.percentualNoPrazo)}</span>
+                <span className="w-14.5 flex-none text-right text-[11px] text-muted-foreground">{c.total} atos</span>
+              </div>
+            )
+          })}
+          {cumprimentoPrazoEquipe.length === 0 && <p className="text-[12.5px] text-muted-foreground">Nada concluído neste período.</p>}
+        </div>
+
+        <div className="rounded-[10px] border border-border bg-card p-4 shadow-sm">
+          <div className="text-[13.5px] font-semibold">Por tipo de ato</div>
+          <div className="mt-[3px] mb-3 text-[11.5px] text-muted-foreground">volume, tempo médio e retrabalho</div>
+          <div className="flex pb-1.5 text-[10.5px] font-medium text-muted-foreground">
+            <span className="flex-1">Tipo</span>
+            <span className="w-14.5 text-right">Volume</span>
+            <span className="w-14.5 text-right">Tempo</span>
+            <span className="w-14.5 text-right">Repro.</span>
+          </div>
+          {porTipoAto.map((t) => (
+            <div key={t.tipoAtoId} className="flex items-center border-t border-border py-1.75 text-[12.5px]">
+              <span className="min-w-0 flex-1 truncate text-text-5">{t.nome}</span>
+              <span className="w-14.5 text-right font-mono text-[12.5px] font-medium">{t.volume}</span>
+              <span className="w-14.5 text-right text-text-2">{t.tempoMedio ? formatDuracaoConcluida(t.tempoMedio) : '—'}</span>
+              <span className={`w-14.5 text-right font-mono text-[12.5px] font-medium ${t.percentualReprovacao >= 0.3 ? 'text-bad-fg' : t.percentualReprovacao >= 0.2 ? 'text-warn-fg' : 'text-text-2'}`}>
+                {pct(t.percentualReprovacao)}
+              </span>
+            </div>
+          ))}
+          {porTipoAto.length === 0 && <p className="text-[12.5px] text-muted-foreground">Nada concluído neste período.</p>}
+        </div>
+      </div>
     </div>
   )
 }

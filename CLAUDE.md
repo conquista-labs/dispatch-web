@@ -1171,3 +1171,45 @@ localmente): toolbar, painel aberto, busca dentro de um eixo (accent-insensitive
 "venda" acha "Venda e Compra"), badge de contagem (ignora busca livre/data, só eixos), busca
 livre combinada com eixo marcado, `DatePicker`. Suíte permanente (`auth`, `session-isolation`,
 `cursor`, `login`, `fila-conferentes`, `conferentes`) verde depois da mudança.
+
+## Cumprimento de prazo por equipe — fecha metade do gap do RF-43 no front
+
+Consome o campo novo `cumprimentoPrazoEquipe` do `GET /dashboard` (ver `dispatch-api/CLAUDE.md`,
+mesma seção). Aproveitando a mudança, `VisaoGestao.tsx` também corrigiu um gap de fidelidade que
+já existia antes desta rodada: "Desempenho por tipo de ato" era renderizado como uma `Table`
+cheia, largura total — o protótipo aprovado (`Dispatch.dc.html`, `gridDois`, linhas ~1568-1600)
+sempre mostrou os dois blocos ("Cumprimento de prazo por equipe" e "Por tipo de ato", esse
+último com esse rótulo exato, não "Desempenho por tipo de ato") lado a lado, num grid de 2
+colunas, em cards compactos sem borda de tabela — divisor simples entre linhas (`border-t`), não
+`<table>`. Os dois blocos foram reconstruídos juntos nesse estilo (`grid grid-cols-1
+md:grid-cols-2 gap-2`), confirmado direto no markup do protótipo, não por aproximação visual.
+
+**Cores/limiares da barra "cumprimento de prazo"**: `>=90%` ok (verde), `>=70%` atenção
+(amarelo), abaixo disso vencido (vermelho) — mesmos limiares do protótipo (`slaEquipes`,
+`x.noPrazo >= 0.9`/`>= 0.7`) e mesmos tokens já usados no resto do app pras faixas do semáforo
+(`bg-ok-bar`/`bg-warn-bar`/`bg-bad-bar`, `text-ok-fg`/`text-warn-fg`/`text-bad-fg` — já existiam
+em `app/styles/index.css`, nenhum token novo precisou entrar). Linha ordenada por pior
+percentual primeiro (o back já manda ordenado, `OrderBy(PercentualNoPrazo)` — o front só
+itera). Rótulo "N atos" sem singular/plural (`1 atos`) é fidelidade ao protótipo, que também não
+trata singular ali (`x.total + ' atos'`) — não é bug.
+
+`entities/dashboard` ganhou o tipo `CumprimentoPrazoEquipe` (campo `equipeId: string | null` —
+`null` é "sem equipe", mesmo padrão de `InfoProtocolo.equipeId`); `ETAPA_LABEL`/`TIPO_PRAZO_LABEL`
+reaproveitados de `entities/protocolo` (já existiam, minúsculos, batendo com o texto do
+protótipo "pós-conferência · D+1" sem precisar de rótulo novo).
+
+**Dado de teste criado pra verificar visualmente** (banco local, não produção): 3 protocolos
+avulsos via `/protocolos/distribuir` (dois com o mesmo escrevente de uma equipe cadastrada,
+etapas diferentes — pra aparecer mais de uma linha da mesma equipe; um com escrevente novo sem
+equipe), atribuídos e concluídos via o fluxo real de Minha fila (pegar/iniciar/concluir) logado
+como o conferente de teste `conferente-rf27@cartorio.com`. Sem endpoint de excluir protocolo
+ainda (RF-18i não implementado) — ficam no banco local, sem risco (não é produção).
+
+Suíte permanente + `e2e/dashboard.spec.ts` rodada depois da mudança: a assertion do texto do
+card precisou de ajuste (`"Desempenho por tipo de ato"` → `"Por tipo de ato"` + nova assertion
+de `"Cumprimento de prazo por equipe"`) — mudança esperada, não regressão, já que o rótulo do
+card mudou de propósito pra bater com o protótipo. O segundo teste do arquivo (visão conferente,
+conta `conferente-visual@cartorio.com`) continua falhando por motivo **pré-existente e
+documentado no próprio arquivo de teste**: essa conta não tem nenhum protocolo concluído no
+banco local (confirmado via `GET /dashboard` direto, `desempenho: []` em qualquer período) —
+não é regressão desta mudança.

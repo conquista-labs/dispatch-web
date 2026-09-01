@@ -20,7 +20,10 @@ test('Dashboard — visão gestão renderiza KPIs, tabela de score e desempenho 
   await expect(page.getByText('Atos conferidos').first()).toBeVisible()
   await expect(page.getByText(/Desempenho e bonificação/)).toBeVisible()
   await expect(page.getByRole('columnheader', { name: 'Score' })).toBeVisible()
-  await expect(page.getByText('Desempenho por tipo de ato')).toBeVisible()
+  // RF-43: "Cumprimento de prazo por equipe" e "Por tipo de ato" lado a lado — rótulos exatos
+  // do protótipo aprovado (Dispatch.dc.html), não paráfrase.
+  await expect(page.getByText('Cumprimento de prazo por equipe')).toBeVisible()
+  await expect(page.getByText('Por tipo de ato')).toBeVisible()
 
   await page.screenshot({ path: 'e2e/.screenshots/dashboard-gestao-claro.png', fullPage: true })
 
