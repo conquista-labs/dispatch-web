@@ -21,6 +21,7 @@ export type ProtocoloResumo = {
   tipoAtoId: string | null
   escreventeId: string
   etapa: Etapa
+  prioridade: Prioridade
   status: StatusProtocolo
   donoId: string | null
   vencimentoEm: string | null
@@ -82,6 +83,19 @@ export type DetalheProtocolo = {
   reabertoEm: string | null
   semaforo: FaixaSemaforo | null
   alcada: AlcadaConferente[]
+}
+
+// Nomes resolvidos localmente a partir de ProtocoloResumo (que só traz EscreventeId/TipoAtoId
+// crus) — cruzando com entities/escrevente, entities/equipe e entities/tipoAto. RF-14: a
+// equipe é o único campo que distingue "sem equipe" (null) de "ainda não resolvido/carregando"
+// — aqui ela já vem resolvida, então null significa mesmo "sem equipe".
+export type InfoProtocolo = {
+  tipoAtoNome: string | null
+  escreventeNome: string | null
+  // `equipeId` fica junto do nome (não só o nome) pra filtrar por equipe sem depender de nome
+  // não colidir entre equipes diferentes (BarraDeFiltros usa o id, não o nome, como valor).
+  equipeId: string | null
+  equipeNome: string | null
 }
 
 export type ProtocoloConcluidoResumo = {

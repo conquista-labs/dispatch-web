@@ -862,3 +862,77 @@ Fecha a simplificação consciente documentada desde a construção da Central d
 mesma posição do protótipo aprovado (badge de classe à esquerda, barra+percentual à direita, na
 mesma linha do topo do card). Chips de "casos concretos" continuam de fora — `Sugestao` só
 carrega evidência agregada (texto) e contagem, nunca uma lista de exemplos específicos.
+
+## Distribuição/Minha fila v2 — prioridade manual, RF-14, RF-16, RF-18c, RF-18e/RF-24f
+
+Sexta frente do "v2", escolhida pelo dono entre as opções apresentadas depois do motor de
+alçada v2. Cinco itens, back já pronto (ver `../dispatch-api/CLAUDE.md`, mesma seção):
+
+- **Prioridade manual** (pré-requisito dos outros) — `entities/protocolo` ganha `prioridade`
+  em `ProtocoloResumo`. `features/protocolo/definir-prioridade` (mesmo molde de
+  `reabrir-conferencia`). `PainelDetalheProtocolo.tsx` ganha um botão que alterna "Marcar como
+  urgente"/"Remover urgência" (texto conforme `detalhe.prioridade`), visível quando o status
+  não é `Aprovado`/`Reprovado`/`Descartado` — mesmo critério de "estado ativo" que já rege
+  `podeDevolverAoPool`/`podeAtribuirAoMenosCarregado`.
+- **RF-14** (card de Distribuição mostra tipo de ato/escrevente/equipe) — sem DTO novo, mesmo
+  padrão de "back manda o fato cru, front resolve o nome" já usado no painel de detalhe:
+  `DistribuicaoBoard.tsx` busca `useEscreventes()`/`useEquipes()`/`useTiposAto()` e monta um
+  resolver único `resolverInfoProtocolo` (devolve `InfoProtocolo`, os 4 campos juntos) em vez
+  de 3 props separadas — evita prop-drilling pelos componentes que só repassam adiante
+  (`ProtocoloColuna`/`ExcecaoCard`). `DistribuicaoProtocoloCard.tsx` ganha duas linhas (tipo de
+  ato; escrevente + `Chip` de equipe, vermelho quando `null` — "sem equipe"). Escopo
+  consciente: só o card de Distribuição — RF-14 é seção 6.3, específica dessa tela; Minha fila
+  (RF-24, seção 6.4) não pede o mesmo no card, só no filtro (ver RF-24f abaixo).
+- **RF-16** (loading no "Redistribuir pool") — `DistribuicaoPage.tsx`, texto do botão vira
+  "Redistribuindo…" com `Loader2Icon` (`animate-spin`) enquanto `redistribuir.isPending`.
+- **RF-18c** (lista completa da coluna, expansível) — `ProtocoloColuna.tsx`: o texto estático
+  "+N protocolos" virou `<button>` que abre `ListaCompletaColunaSheet.tsx` (novo), listando
+  **todos** os protocolos da coluna (não só os ocultos), ordenados por vencimento; clicar num
+  item abre o painel de detalhe e fecha o sheet. Simplificação consciente, documentada no
+  componente: sem "quantos têm alçada" por item — exigiria `IConferenteRepository`/
+  `IRegraAlcadaRepository` novos em `ObterVisaoDistribuicao` só pra isso, e a mesma informação
+  já está um clique adiante no painel de detalhe (lista completa de "quem pode conferir",
+  estritamente mais rica que uma contagem).
+- **RF-18e/RF-24f** (barra de filtros, Distribuição e Minha fila) — **100% client-side**
+  ("os filtros não alteram dado nenhum, só o recorte exibido" — RF-18e é explícito nisso, sem
+  endpoint novo). Novo widget compartilhado `widgets/filtro-protocolos` (mesmo precedente de
+  reuso entre widgets já usado por `fila-do-conferente-board` importando de
+  `minha-fila-board`): hook `useFiltroProtocolos` devolve um predicado `passaNoFiltro`, não uma
+  lista já filtrada — `DistribuicaoBoard` tem 5+ sub-listas (pool/atribuidos/emConferencia/
+  concluidos/excecoes/grupos de `porConferente`) que precisam do mesmo estado de filtro
+  aplicado independentemente, então cada board faz `.filter(passaNoFiltro)` na própria lista.
+  4 eixos combináveis (equipe, tipo de ato, prioridade, prazo pelas 4 faixas do semáforo) —
+  interpretação assumida (texto do requisito ambíguo): "prioridade e prazo" são dois eixos
+  separados, não um combinado; contagem por opção sempre contra o conjunto completo não
+  filtrado (não o recorte já filtrado pelos outros eixos), mais simples e ainda cobre "a gestão
+  sabe o tamanho do recorte antes de aplicar". `MinhaFilaBoard.tsx`/`FilaDoConferenteBoard.tsx`
+  ganham a mesma barra, sobre `poolDisponivel`/`atribuidos`/`emConferencia`.
+
+**Bug real de Rules of Hooks, achado por revisão de código antes de rodar** — não em produção,
+mas registrado porque é o tipo de erro que passa despercebido em diff superficial:
+`DistribuicaoBoard.tsx` chamava `useFiltroProtocolos` **depois** do `if (isLoading || !visao ||
+...) return <p>Carregando…</p>` já existente — número de hooks diferente entre renders.
+Corrigido movendo a chamada (com `todosOsProtocolos` calculado via `visao ? [...] : []`, e as
+outras dependências com fallback `?? []`) pra **antes** do early return, sem mudar a posição do
+early return em si.
+
+**Bug real de autorização, achado só pelo Playwright, não pelo `tsc`/build** — documentado a
+fundo do lado do back (`../dispatch-api/CLAUDE.md`, mesma seção): `useEquipes`/`useEscreventes`/
+`useTiposAto` (as três queries que `resolverInfoProtocolo`/`useFiltroProtocolos` dependem)
+voltavam 403 quando quem estava logado era um Conferente, porque os endpoints eram
+Distribuidora-only — sobrou como se o filtro "funcionasse" (marcava "1 filtro ativo") mas não
+reduzisse nada de verdade (todo protocolo caía em "sem equipe" pelo `?? null` do lookup vazio).
+Corrigido no back; o teste que pegou isso (`e2e/distribuicao-v2.spec.ts`) ficou com uma
+asserção explícita de contagem antes/depois do filtro — não só "o filtro está marcado como
+ativo", que teria deixado passar o bug de novo se reaparecesse. **Lição**: pra qualquer barra
+de filtro/leitura cruzada nova, testar logado como o papel de menor privilégio que a usa, não
+só como Distribuidora — um 403 silencioso em uma das queries auxiliares não quebra o layout,
+só o resultado.
+
+Verificado nos dois temas via `verify-visual` (`e2e/distribuicao-v2.spec.ts`, novo): badge
+"urgente" e marcar/desmarcar pelo painel refletindo no card, RF-14 com os dois casos (equipe
+normal e "sem equipe" vermelho), "Redistribuindo…" capturado com `page.route` atrasando a
+resposta, lista expandida da coluna abrindo e navegando pro detalhe, filtro de Prioridade e
+Prazo isolados e combinados em Distribuição, filtro de Equipe em Minha fila com assert de
+contagem reduzindo de verdade. Regressão permanente (`auth`/`session-isolation`/`cursor`/
+`login`) e os 239 testes do back confirmados verdes depois da correção de autorização.

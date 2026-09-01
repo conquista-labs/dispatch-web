@@ -7,6 +7,7 @@ import { useTiposAto } from '@/entities/tipoAto'
 import { useAtribuirAoMenosCarregado } from '@/features/protocolo/atribuir-ao-menos-carregado'
 import { useDevolverAoPool } from '@/features/protocolo/devolver-ao-pool'
 import { ObservacaoField } from '@/features/protocolo/definir-observacao'
+import { useDefinirPrioridade } from '@/features/protocolo/definir-prioridade'
 import { useReabrirConferencia } from '@/features/protocolo/reabrir-conferencia'
 import { formatDataHora } from '@/shared/lib/format'
 import { useNow } from '@/shared/lib/use-now'
@@ -62,6 +63,7 @@ export const PainelDetalheProtocolo = ({ protocoloId, onFechar }: PainelDetalheP
   const devolver = useDevolverAoPool()
   const atribuirMenosCarregado = useAtribuirAoMenosCarregado()
   const reabrirConferencia = useReabrirConferencia()
+  const definirPrioridade = useDefinirPrioridade()
 
   const carregando = !detalhe || !conferentes || !tiposAto || !regras || !escreventes || !equipes
 
@@ -104,6 +106,9 @@ export const PainelDetalheProtocolo = ({ protocoloId, onFechar }: PainelDetalheP
   // RF-18a/RF-24c — ação direta, sem exigir um pedido explícito do conferente (esse fluxo
   // vive na seção "Pedidos de reabertura" da aba Exceções).
   const podeReabrirConferencia = detalhe?.status === 'Aprovado' || detalhe?.status === 'Reprovado'
+  // A importação nunca marca prioridade alta (não vem no relatório) — este botão é o único
+  // jeito real de um protocolo virar urgente. Não faz sentido depois de concluído/descartado.
+  const podeDefinirPrioridade = !!detalhe && !['Aprovado', 'Reprovado', 'Descartado'].includes(detalhe.status)
 
   return (
     <Sheet open={!!protocoloId} onOpenChange={(aberto) => !aberto && onFechar()}>
@@ -181,7 +186,7 @@ export const PainelDetalheProtocolo = ({ protocoloId, onFechar }: PainelDetalheP
               <div className="mt-4.5 mb-2 font-mono text-[10.5px] tracking-[0.04em] text-muted-foreground">OBSERVAÇÃO</div>
               <ObservacaoField protocoloId={detalhe.id} observacao={detalhe.observacao} />
 
-              {(podeDevolverAoPool || podeAtribuirAoMenosCarregado || podeReabrirConferencia) && (
+              {(podeDevolverAoPool || podeAtribuirAoMenosCarregado || podeReabrirConferencia || podeDefinirPrioridade) && (
                 <div className="mt-4.5 flex flex-wrap gap-1.5">
                   {podeDevolverAoPool && (
                     <Button variant="outline" size="sm" onClick={() => devolver.mutate(detalhe.id)} disabled={devolver.isPending}>
@@ -196,6 +201,18 @@ export const PainelDetalheProtocolo = ({ protocoloId, onFechar }: PainelDetalheP
                   {podeReabrirConferencia && (
                     <Button variant="outline" size="sm" onClick={() => reabrirConferencia.mutate(detalhe.id)} disabled={reabrirConferencia.isPending}>
                       Reabrir conferência
+                    </Button>
+                  )}
+                  {podeDefinirPrioridade && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        definirPrioridade.mutate({ protocoloId: detalhe.id, prioridade: detalhe.prioridade === 'Alta' ? 'Normal' : 'Alta' })
+                      }
+                      disabled={definirPrioridade.isPending}
+                    >
+                      {detalhe.prioridade === 'Alta' ? 'Remover urgência' : 'Marcar como urgente'}
                     </Button>
                   )}
                 </div>

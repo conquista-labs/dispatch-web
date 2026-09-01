@@ -1,10 +1,14 @@
 import { useState } from 'react'
 
 import { useConferentes } from '@/entities/conferente'
+import { useEquipes } from '@/entities/equipe'
+import { useEscreventes } from '@/entities/escrevente'
 import { usePedidosReaberturaPendentes } from '@/entities/pedidoReabertura'
-import { useVisaoDistribuicao } from '@/entities/protocolo'
+import { useVisaoDistribuicao, type InfoProtocolo, type ProtocoloResumo } from '@/entities/protocolo'
+import { useTiposAto } from '@/entities/tipoAto'
 import { cn } from '@/shared/lib/utils'
 import { useNow } from '@/shared/lib/use-now'
+import { BarraDeFiltros, useFiltroProtocolos } from '@/widgets/filtro-protocolos'
 import { PainelDetalheProtocolo } from '@/widgets/painel-detalhe-protocolo'
 
 import { AbaExcecoes } from './AbaExcecoes'
@@ -31,9 +35,45 @@ export const DistribuicaoBoard = () => {
   const { data: visao, isLoading } = useVisaoDistribuicao()
   const { data: conferentes } = useConferentes()
   const { data: pedidosReabertura } = usePedidosReaberturaPendentes()
+  const { data: escreventes } = useEscreventes()
+  const { data: equipes } = useEquipes()
+  const { data: tiposAto } = useTiposAto()
   const now = useNow()
 
-  if (isLoading || !visao || !conferentes) {
+  // RF-14: tipo de ato/escrevente/equipe do card — back manda só os ids (EscreventeId,
+  // TipoAtoId), o front resolve o nome cruzando com GET /escreventes, /equipes e /tipos-ato,
+  // mesmo padrão já usado no painel de detalhe do protocolo. Um resolver só (em vez de três
+  // props separadas) pra não espalhar prop de mais pelos componentes que só repassam adiante
+  // (ProtocoloColuna/ExcecaoCard não usam o valor, só entregam pro card).
+  const nomePorTipoAtoId = new Map((tiposAto ?? []).map((t) => [t.id, t.nome]))
+  const escreventePorId = new Map((escreventes ?? []).map((e) => [e.id, e]))
+  const nomePorEquipeId = new Map((equipes ?? []).map((e) => [e.id, e.nome]))
+  const resolverInfoProtocolo = (protocolo: ProtocoloResumo): InfoProtocolo => {
+    const escrevente = escreventePorId.get(protocolo.escreventeId)
+    return {
+      tipoAtoNome: protocolo.tipoAtoId ? (nomePorTipoAtoId.get(protocolo.tipoAtoId) ?? null) : null,
+      escreventeNome: escrevente?.nome ?? null,
+      equipeId: escrevente?.equipeId ?? null,
+      equipeNome: escrevente?.equipeId ? (nomePorEquipeId.get(escrevente.equipeId) ?? null) : null,
+    }
+  }
+
+  // RF-18e: os filtros afetam as três visões (abas) ao mesmo tempo — um estado só, aplicado
+  // em cada lista antes de repassar pras abas. A contagem por opção usa a união de tudo (as 5
+  // listas somadas, sem repetir "porConferente" que já é atribuidos+emConferencia agrupado).
+  // Hook chamado incondicionalmente (regra dos hooks) — antes de qualquer `return` cedo por
+  // carregamento, com listas vazias como fallback enquanto os dados não chegam.
+  const todosOsProtocolos = visao
+    ? [...visao.pool, ...visao.atribuidos, ...visao.emConferencia, ...visao.concluidos, ...visao.excecoes]
+    : []
+  const filtroProtocolos = useFiltroProtocolos({
+    protocolos: todosOsProtocolos,
+    resolverInfo: resolverInfoProtocolo,
+    equipes: equipes ?? [],
+    tiposAto: tiposAto ?? [],
+  })
+
+  if (isLoading || !visao || !conferentes || !escreventes || !equipes || !tiposAto) {
     return <p className="text-[13.5px] text-muted-foreground">Carregando…</p>
   }
 
@@ -42,6 +82,17 @@ export const DistribuicaoBoard = () => {
   const qtdPedidos = pedidosReabertura?.length ?? 0
   const sufixoPedidos = qtdPedidos > 0 ? ` · ${qtdPedidos} ${qtdPedidos > 1 ? 'pedidos' : 'pedido'}` : ''
 
+  const { passaNoFiltro } = filtroProtocolos
+  const visaoFiltrada = {
+    ...visao,
+    pool: visao.pool.filter(passaNoFiltro),
+    atribuidos: visao.atribuidos.filter(passaNoFiltro),
+    emConferencia: visao.emConferencia.filter(passaNoFiltro),
+    concluidos: visao.concluidos.filter(passaNoFiltro),
+    excecoes: visao.excecoes.filter(passaNoFiltro),
+    porConferente: visao.porConferente.map((grupo) => ({ ...grupo, protocolos: grupo.protocolos.filter(passaNoFiltro) })),
+  }
+
   return (
     <div>
       <div className="inline-flex gap-0.5 rounded-lg bg-secondary p-0.75">
@@ -49,7 +100,7 @@ export const DistribuicaoBoard = () => {
           [
             ['conferente', 'Por conferente'],
             ['status', 'Por status'],
-            ['excecoes', `Exceções · ${visao.excecoes.length}${sufixoPedidos}`],
+            ['excecoes', `Exceções · ${visaoFiltrada.excecoes.length}${sufixoPedidos}`],
           ] as const
         ).map(([valor, label]) => (
           <button
@@ -65,28 +116,41 @@ export const DistribuicaoBoard = () => {
         ))}
       </div>
 
-      <div className="mt-3.5 flex flex-wrap items-center gap-3.5">
-        <span className="font-mono text-[11.5px] text-muted-foreground">Prazo do ato</span>
-        {LEGENDA.map((item) => (
-          <span key={item.label} className="flex items-center gap-1.5 text-[11.5px] text-text-3">
-            <span className={`block size-2.5 flex-none rounded-[3px] border ${item.className}`} />
-            {item.label}
-          </span>
-        ))}
+      <div className="mt-3.5 flex flex-wrap items-center justify-between gap-3.5">
+        <div className="flex flex-wrap items-center gap-3.5">
+          <span className="font-mono text-[11.5px] text-muted-foreground">Prazo do ato</span>
+          {LEGENDA.map((item) => (
+            <span key={item.label} className="flex items-center gap-1.5 text-[11.5px] text-text-3">
+              <span className={`block size-2.5 flex-none rounded-[3px] border ${item.className}`} />
+              {item.label}
+            </span>
+          ))}
+        </div>
+        <BarraDeFiltros {...filtroProtocolos} />
       </div>
 
       <div className="mt-4">
         {aba === 'conferente' && (
           <AbaPorConferente
-            pool={visao.pool}
-            porConferente={visao.porConferente}
+            pool={visaoFiltrada.pool}
+            porConferente={visaoFiltrada.porConferente}
             conferentes={conferentesNaEscala}
             now={now}
+            resolverInfo={resolverInfoProtocolo}
             onAbrirDetalhe={setProtocoloDetalheId}
           />
         )}
-        {aba === 'status' && <AbaPorStatus visao={visao} conferentes={conferentes} now={now} onAbrirDetalhe={setProtocoloDetalheId} />}
-        {aba === 'excecoes' && <AbaExcecoes excecoes={visao.excecoes} conferentes={conferentesNaEscala} onAbrirDetalhe={setProtocoloDetalheId} />}
+        {aba === 'status' && (
+          <AbaPorStatus visao={visaoFiltrada} conferentes={conferentes} now={now} resolverInfo={resolverInfoProtocolo} onAbrirDetalhe={setProtocoloDetalheId} />
+        )}
+        {aba === 'excecoes' && (
+          <AbaExcecoes
+            excecoes={visaoFiltrada.excecoes}
+            conferentes={conferentesNaEscala}
+            resolverInfo={resolverInfoProtocolo}
+            onAbrirDetalhe={setProtocoloDetalheId}
+          />
+        )}
       </div>
 
       <PainelDetalheProtocolo protocoloId={protocoloDetalheId} onFechar={() => setProtocoloDetalheId(null)} />

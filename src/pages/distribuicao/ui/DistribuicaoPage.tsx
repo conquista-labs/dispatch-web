@@ -1,3 +1,4 @@
+import { Loader2Icon } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
 import { useVisaoDistribuicao } from '@/entities/protocolo'
@@ -28,8 +29,11 @@ export const DistribuicaoPage = () => {
           )}
         </div>
         <div className="flex flex-none gap-2">
+          {/* RF-16: indicador de carregamento no próprio botão — já tinha disabled, faltava o
+              feedback visual de "está rodando" (spinner + texto muda). */}
           <Button variant="outline" onClick={() => redistribuir.mutate()} disabled={redistribuir.isPending}>
-            Redistribuir pool
+            {redistribuir.isPending && <Loader2Icon className="size-3.5 animate-spin" />}
+            {redistribuir.isPending ? 'Redistribuindo…' : 'Redistribuir pool'}
           </Button>
           <Button onClick={() => navigate(ROUTES.importar)}>Importar relatório</Button>
         </div>

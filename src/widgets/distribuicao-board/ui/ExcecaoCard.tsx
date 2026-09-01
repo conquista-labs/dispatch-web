@@ -1,7 +1,7 @@
 import { useState } from 'react'
 
 import type { Conferente } from '@/entities/conferente'
-import type { ProtocoloResumo } from '@/entities/protocolo'
+import type { InfoProtocolo, ProtocoloResumo } from '@/entities/protocolo'
 import { useAtribuirManualmente } from '@/features/protocolo/atribuir-manualmente'
 import { useDescartarExcecao } from '@/features/protocolo/descartar-excecao'
 import { Button } from '@/shared/ui/button'
@@ -24,13 +24,14 @@ const tagDaExcecao = (motivo: string | null) => (motivo === 'tipo desconhecido' 
 type ExcecaoCardProps = {
   protocolo: ProtocoloResumo
   conferentes: Conferente[]
+  info: InfoProtocolo
   onAbrirDetalhe: (protocoloId: string) => void
 }
 
 // RF-17 — cada exceção traz o motivo e duas ações: descartar, ou resolver atribuindo na mão a
 // um conferente (o motor já disse que não sabe decidir sozinho). "Resolver" abre um seletor
 // inline em vez de navegar pra outro lugar — a decisão é rápida, não precisa de tela própria.
-export const ExcecaoCard = ({ protocolo, conferentes, onAbrirDetalhe }: ExcecaoCardProps) => {
+export const ExcecaoCard = ({ protocolo, conferentes, info, onAbrirDetalhe }: ExcecaoCardProps) => {
   const [resolvendo, setResolvendo] = useState(false)
   const [conferenteId, setConferenteId] = useState('')
   const atribuir = useAtribuirManualmente()
@@ -49,6 +50,13 @@ export const ExcecaoCard = ({ protocolo, conferentes, onAbrirDetalhe }: ExcecaoC
             <span className="font-mono text-[12.5px] font-medium">{protocolo.numero}</span>
             <span className="text-[13px] text-text-5">{ETAPA_LABEL[protocolo.etapa]}</span>
             <Chip tom="atencao">{tagDaExcecao(protocolo.motivoExcecao)}</Chip>
+          </div>
+          {/* RF-14: tipo de ato + escrevente/equipe — mesmo dado dos outros cards de protocolo. */}
+          <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[12px] text-text-2">
+            <span className="text-pretty">{info.tipoAtoNome ?? '—'}</span>
+            <span className="text-muted-foreground">·</span>
+            <span className="text-pretty">{info.escreventeNome ?? '—'}</span>
+            <Chip tom={info.equipeNome ? 'neutro' : 'vencido'}>{info.equipeNome ?? 'sem equipe'}</Chip>
           </div>
           <div className="mt-1 text-[12.5px] leading-snug text-text-2">{protocolo.motivoExcecao}</div>
         </div>

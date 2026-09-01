@@ -1,5 +1,9 @@
-import { useConcluidosHojeDoConferente, useFilaDoConferente } from '@/entities/protocolo'
+import { useEquipes } from '@/entities/equipe'
+import { useEscreventes } from '@/entities/escrevente'
+import { useConcluidosHojeDoConferente, useFilaDoConferente, type InfoProtocolo, type ProtocoloResumo } from '@/entities/protocolo'
+import { useTiposAto } from '@/entities/tipoAto'
 import { useNow } from '@/shared/lib/use-now'
+import { BarraDeFiltros, useFiltroProtocolos } from '@/widgets/filtro-protocolos'
 import { ConcluidosHojeList, EmConferenciaCard, ProtocoloCard } from '@/widgets/minha-fila-board'
 
 const LEGENDA = [
@@ -21,35 +25,69 @@ type FilaDoConferenteBoardProps = {
 export const FilaDoConferenteBoard = ({ conferenteId }: FilaDoConferenteBoardProps) => {
   const { data: fila, isLoading } = useFilaDoConferente(conferenteId)
   const { data: concluidos } = useConcluidosHojeDoConferente(conferenteId)
+  const { data: escreventes } = useEscreventes()
+  const { data: equipes } = useEquipes()
+  const { data: tiposAto } = useTiposAto()
   const now = useNow()
+
+  // RF-24f: mesmo filtro de Minha fila — a Distribuidora acompanhando a fila de alguém também
+  // se beneficia de filtrar por equipe/tipo/prioridade/prazo.
+  const escreventePorId = new Map((escreventes ?? []).map((e) => [e.id, e]))
+  const nomePorEquipeId = new Map((equipes ?? []).map((e) => [e.id, e.nome]))
+  const resolverInfoProtocolo = (protocolo: ProtocoloResumo): InfoProtocolo => {
+    const escrevente = escreventePorId.get(protocolo.escreventeId)
+    return {
+      tipoAtoNome: null,
+      escreventeNome: escrevente?.nome ?? null,
+      equipeId: escrevente?.equipeId ?? null,
+      equipeNome: escrevente?.equipeId ? (nomePorEquipeId.get(escrevente.equipeId) ?? null) : null,
+    }
+  }
+  const todosOsProtocolos = fila ? [...fila.poolDisponivel, ...fila.atribuidos, ...fila.emConferencia] : []
+  const filtroProtocolos = useFiltroProtocolos({
+    protocolos: todosOsProtocolos,
+    resolverInfo: resolverInfoProtocolo,
+    equipes: equipes ?? [],
+    tiposAto: tiposAto ?? [],
+  })
 
   if (isLoading || !fila) {
     return <p className="text-[13.5px] text-muted-foreground">Carregando…</p>
   }
 
+  const { passaNoFiltro } = filtroProtocolos
+  const filaFiltrada = {
+    poolDisponivel: fila.poolDisponivel.filter(passaNoFiltro),
+    atribuidos: fila.atribuidos.filter(passaNoFiltro),
+    emConferencia: fila.emConferencia.filter(passaNoFiltro),
+  }
+
   return (
     <div>
-      <div className="flex flex-wrap items-center gap-3.5">
-        <span className="font-mono text-[11.5px] text-muted-foreground">Prazo do ato</span>
-        {LEGENDA.map((item) => (
-          <span key={item.label} className="flex items-center gap-1.5 text-[11.5px] text-text-3">
-            <span className={`block size-2.5 flex-none rounded-[3px] border ${item.className}`} />
-            {item.label}
-          </span>
-        ))}
+      <div className="flex flex-wrap items-center justify-between gap-3.5">
+        <div className="flex flex-wrap items-center gap-3.5">
+          <span className="font-mono text-[11.5px] text-muted-foreground">Prazo do ato</span>
+          {LEGENDA.map((item) => (
+            <span key={item.label} className="flex items-center gap-1.5 text-[11.5px] text-text-3">
+              <span className={`block size-2.5 flex-none rounded-[3px] border ${item.className}`} />
+              {item.label}
+            </span>
+          ))}
+        </div>
+        <BarraDeFiltros {...filtroProtocolos} />
       </div>
 
       <div className="mt-4 flex items-start gap-3">
         <div className="min-w-0 flex-1">
           <div className="flex justify-between px-0.5 pb-0.5">
             <strong className="text-[13.5px] font-semibold">Pool disponível</strong>
-            <span className="font-mono text-[11px] text-muted-foreground">{fila.poolDisponivel.length}</span>
+            <span className="font-mono text-[11px] text-muted-foreground">{filaFiltrada.poolDisponivel.length}</span>
           </div>
           <div className="flex flex-col gap-2">
-            {fila.poolDisponivel.map((protocolo) => (
+            {filaFiltrada.poolDisponivel.map((protocolo) => (
               <ProtocoloCard key={protocolo.id} protocolo={protocolo} now={now} somenteLeitura />
             ))}
-            {fila.poolDisponivel.length === 0 && (
+            {filaFiltrada.poolDisponivel.length === 0 && (
               <div className="rounded-[10px] border border-dashed border-border p-4 text-center text-xs text-muted-foreground">
                 nada no pool dentro da alçada dele
               </div>
@@ -60,13 +98,13 @@ export const FilaDoConferenteBoard = ({ conferenteId }: FilaDoConferenteBoardPro
         <div className="min-w-0 flex-1">
           <div className="flex justify-between px-0.5 pb-0.5">
             <strong className="text-[13.5px] font-semibold">Atribuídas</strong>
-            <span className="font-mono text-[11px] text-muted-foreground">{fila.atribuidos.length}</span>
+            <span className="font-mono text-[11px] text-muted-foreground">{filaFiltrada.atribuidos.length}</span>
           </div>
           <div className="flex flex-col gap-2">
-            {fila.atribuidos.map((protocolo) => (
+            {filaFiltrada.atribuidos.map((protocolo) => (
               <ProtocoloCard key={protocolo.id} protocolo={protocolo} now={now} somenteLeitura />
             ))}
-            {fila.atribuidos.length === 0 && (
+            {filaFiltrada.atribuidos.length === 0 && (
               <div className="rounded-[10px] border border-dashed border-border p-4 text-center text-xs text-muted-foreground">
                 nada atribuído
               </div>
@@ -77,13 +115,13 @@ export const FilaDoConferenteBoard = ({ conferenteId }: FilaDoConferenteBoardPro
         <div className="min-w-0 flex-1">
           <div className="flex justify-between px-0.5 pb-0.5">
             <strong className="text-[13.5px] font-semibold">Em conferência</strong>
-            <span className="font-mono text-[11px] text-muted-foreground">{fila.emConferencia.length}</span>
+            <span className="font-mono text-[11px] text-muted-foreground">{filaFiltrada.emConferencia.length}</span>
           </div>
           <div className="flex flex-col gap-2">
-            {fila.emConferencia.map((protocolo) => (
+            {filaFiltrada.emConferencia.map((protocolo) => (
               <EmConferenciaCard key={protocolo.id} protocolo={protocolo} now={now} somenteLeitura />
             ))}
-            {fila.emConferencia.length === 0 && (
+            {filaFiltrada.emConferencia.length === 0 && (
               <div className="rounded-[10px] border border-dashed border-border p-4 text-center text-xs text-muted-foreground">
                 ninguém conferindo agora
               </div>

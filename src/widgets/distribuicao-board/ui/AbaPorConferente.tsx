@@ -1,5 +1,5 @@
 import type { Conferente } from '@/entities/conferente'
-import type { GrupoPorConferente, ProtocoloResumo } from '@/entities/protocolo'
+import type { GrupoPorConferente, InfoProtocolo, ProtocoloResumo } from '@/entities/protocolo'
 
 import { ProtocoloColuna } from './ProtocoloColuna'
 
@@ -14,6 +14,7 @@ type AbaPorConferenteProps = {
   porConferente: GrupoPorConferente[]
   conferentes: Conferente[]
   now: number
+  resolverInfo: (protocolo: ProtocoloResumo) => InfoProtocolo
   onAbrirDetalhe: (protocoloId: string) => void
 }
 
@@ -26,7 +27,7 @@ type AbaPorConferenteProps = {
 // histórico do conferente, não "hoje", e mostrar esse número com o rótulo errado seria pior que
 // não mostrar. Fica pra quando o back expuser isso (mesmo padrão do gap que fechamos pra
 // `IniciadoEm`/cronômetro em Minha fila).
-export const AbaPorConferente = ({ pool, porConferente, conferentes, now, onAbrirDetalhe }: AbaPorConferenteProps) => (
+export const AbaPorConferente = ({ pool, porConferente, conferentes, now, resolverInfo, onAbrirDetalhe }: AbaPorConferenteProps) => (
   <div className="flex items-start gap-3 overflow-x-auto">
     <ProtocoloColuna
       nome="Pool aberto"
@@ -35,6 +36,7 @@ export const AbaPorConferente = ({ pool, porConferente, conferentes, now, onAbri
       now={now}
       mensagemVazia="pool vazio"
       variant="conferente"
+      resolverInfo={resolverInfo}
       onAbrirDetalhe={onAbrirDetalhe}
     />
 
@@ -51,6 +53,7 @@ export const AbaPorConferente = ({ pool, porConferente, conferentes, now, onAbri
           now={now}
           mensagemVazia={conferente.naEscala ? 'fila vazia' : 'ausente'}
           variant="conferente"
+          resolverInfo={resolverInfo}
           onAbrirDetalhe={onAbrirDetalhe}
         />
       )

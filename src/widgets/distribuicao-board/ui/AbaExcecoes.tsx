@@ -1,6 +1,6 @@
 import type { Conferente } from '@/entities/conferente'
 import { usePedidosReaberturaPendentes } from '@/entities/pedidoReabertura'
-import type { ProtocoloResumo } from '@/entities/protocolo'
+import type { InfoProtocolo, ProtocoloResumo } from '@/entities/protocolo'
 
 import { ExcecaoCard } from './ExcecaoCard'
 import { PedidoReaberturaCard } from './PedidoReaberturaCard'
@@ -8,11 +8,12 @@ import { PedidoReaberturaCard } from './PedidoReaberturaCard'
 type AbaExcecoesProps = {
   excecoes: ProtocoloResumo[]
   conferentes: Conferente[]
+  resolverInfo: (protocolo: ProtocoloResumo) => InfoProtocolo
   onAbrirDetalhe: (protocoloId: string) => void
 }
 
 // RF-17 + RF-24c (pedidos de reabertura contabilizados à parte das exceções — RF-18b).
-export const AbaExcecoes = ({ excecoes, conferentes, onAbrirDetalhe }: AbaExcecoesProps) => {
+export const AbaExcecoes = ({ excecoes, conferentes, resolverInfo, onAbrirDetalhe }: AbaExcecoesProps) => {
   const { data: pedidos } = usePedidosReaberturaPendentes()
 
   if (excecoes.length === 0 && (!pedidos || pedidos.length === 0)) {
@@ -38,7 +39,7 @@ export const AbaExcecoes = ({ excecoes, conferentes, onAbrirDetalhe }: AbaExceco
       )}
 
       {excecoes.map((protocolo) => (
-        <ExcecaoCard key={protocolo.id} protocolo={protocolo} conferentes={conferentes} onAbrirDetalhe={onAbrirDetalhe} />
+        <ExcecaoCard key={protocolo.id} protocolo={protocolo} conferentes={conferentes} info={resolverInfo(protocolo)} onAbrirDetalhe={onAbrirDetalhe} />
       ))}
     </div>
   )

@@ -1,7 +1,10 @@
-import type { ProtocoloResumo } from '@/entities/protocolo'
+import { useState } from 'react'
+
+import type { InfoProtocolo, ProtocoloResumo } from '@/entities/protocolo'
 import { cn } from '@/shared/lib/utils'
 
 import { DistribuicaoProtocoloCard } from './DistribuicaoProtocoloCard'
+import { ListaCompletaColunaSheet } from './ListaCompletaColunaSheet'
 
 type ProtocoloColunaProps = {
   nome: string
@@ -11,6 +14,8 @@ type ProtocoloColunaProps = {
   mensagemVazia: string
   /** Nome do dono de cada card — só a aba "Por status" precisa (a coluna já é o dono na aba "Por conferente"). */
   resolverDonoNome?: (protocolo: ProtocoloResumo) => string | null
+  /** RF-14: tipo de ato/escrevente/equipe de cada card. */
+  resolverInfo: (protocolo: ProtocoloResumo) => InfoProtocolo
   /**
    * "conferente": coluna de largura fixa com cabeçalho em card (protótipo, aba "Por conferente").
    * "status": coluna elástica com cabeçalho simples (protótipo, aba "Por status") — 4 colunas
@@ -23,10 +28,21 @@ type ProtocoloColunaProps = {
 // Coluna reaproveitada pelas abas "Por conferente" e "Por status" (RF-13) — mesma estrutura
 // (cabeçalho com total, lista de cards, mensagem quando vazia), só muda a largura/cabeçalho e
 // quantos cards mostra antes de truncar (protótipo corta em 3 na aba conferente, 4 na de status).
-export const ProtocoloColuna = ({ nome, sub, protocolos, now, mensagemVazia, resolverDonoNome, variant = 'conferente', onAbrirDetalhe }: ProtocoloColunaProps) => {
+export const ProtocoloColuna = ({
+  nome,
+  sub,
+  protocolos,
+  now,
+  mensagemVazia,
+  resolverDonoNome,
+  resolverInfo,
+  variant = 'conferente',
+  onAbrirDetalhe,
+}: ProtocoloColunaProps) => {
   const maxVisiveis = variant === 'conferente' ? 3 : 4
   const visiveis = protocolos.slice(0, maxVisiveis)
   const restantes = Math.max(0, protocolos.length - maxVisiveis)
+  const [listaCompletaAberta, setListaCompletaAberta] = useState(false)
 
   return (
     <div className={cn('flex flex-col gap-2', variant === 'conferente' ? 'w-[206px] flex-none' : 'min-w-0 flex-1')}>
@@ -57,17 +73,37 @@ export const ProtocoloColuna = ({ nome, sub, protocolos, now, mensagemVazia, res
             protocolo={protocolo}
             now={now}
             donoNome={resolverDonoNome?.(protocolo)}
+            info={resolverInfo(protocolo)}
             variant={variant}
             onAbrirDetalhe={onAbrirDetalhe}
           />
         ))}
         {restantes > 0 && (
-          <div className="rounded-[10px] border border-dashed border-border p-2 text-center text-xs text-muted-foreground">+ {restantes} protocolos</div>
+          // RF-18c: abre a lista integral da coluna (não só os N ocultos), ordenada por vencimento.
+          <button
+            type="button"
+            onClick={() => setListaCompletaAberta(true)}
+            className="rounded-[10px] border border-dashed border-border p-2 text-center text-xs text-muted-foreground hover:border-muted-foreground/40 hover:text-text-2"
+          >
+            + {restantes} protocolos
+          </button>
         )}
         {protocolos.length === 0 && (
           <div className="rounded-[10px] border border-dashed border-border p-4 text-center text-xs text-muted-foreground">{mensagemVazia}</div>
         )}
       </div>
+
+      {onAbrirDetalhe && (
+        <ListaCompletaColunaSheet
+          aberto={listaCompletaAberta}
+          onFechar={() => setListaCompletaAberta(false)}
+          nome={nome}
+          protocolos={protocolos}
+          resolverInfo={resolverInfo}
+          now={now}
+          onAbrirDetalhe={onAbrirDetalhe}
+        />
+      )}
     </div>
   )
 }
