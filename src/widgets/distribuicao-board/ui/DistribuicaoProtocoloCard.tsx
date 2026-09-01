@@ -74,12 +74,7 @@ export const DistribuicaoProtocoloCard = ({ protocolo, now, donoNome, info, vari
       className={onAbrirDetalhe && 'cursor-pointer'}
     >
       <div className="flex items-center justify-between gap-1.5">
-        <span className="flex items-center gap-1.5">
-          <span className="font-mono text-[12.5px] font-medium">{protocolo.numero}</span>
-          {/* Único jeito real de um protocolo ficar urgente hoje é a distribuidora marcar
-              manualmente (ver painel de detalhe) — a importação nunca define isso sozinha. */}
-          {protocolo.prioridade === 'Alta' && <Chip tom="vencido">urgente</Chip>}
-        </span>
+        <span className="font-mono text-[12.5px] font-medium">{protocolo.numero}</span>
         {emConferencia && <span className="font-mono text-[11.5px] font-medium">{formatCronometro(now - new Date(protocolo.iniciadoEm!).getTime())}</span>}
         {!emConferencia && concluido && (
           <span className={`text-[11.5px] font-medium ${STATUS_CONCLUIDO_CLASSE[protocolo.status]}`}>{STATUS_CONCLUIDO_LABEL[protocolo.status]}</span>
@@ -100,13 +95,23 @@ export const DistribuicaoProtocoloCard = ({ protocolo, now, donoNome, info, vari
           densa combinando 3 campos, não uma lista cujo propósito é distinguir registros). A
           equipe fica em vermelho quando o escrevente não tem equipe definida. */}
       <div className="mt-1.5 text-[12.5px] text-text-5">{info.tipoAtoNome ?? '—'}</div>
-      <div
-        className="mt-0.5 overflow-hidden text-ellipsis whitespace-nowrap text-[11.5px] text-muted-foreground"
-        title={`${info.escreventeNome ?? '—'} · ${info.equipeNome ?? 'sem equipe'}${variant === 'conferente' ? ` · ${ETAPA_LABEL[protocolo.etapa]}` : ''}`}
-      >
-        {info.escreventeNome ?? '—'} ·{' '}
-        <span className={info.equipeNome ? undefined : 'text-bad-fg'}>{info.equipeNome ?? 'sem equipe'}</span>
-        {variant === 'conferente' && <> · {ETAPA_LABEL[protocolo.etapa]}</>}
+      {/* RF-18a: "Alta" (não "urgente") — mesmo rótulo/cor do protótipo, e na MESMA linha da
+          meta de escrevente/equipe/etapa, não na linha do número/prazo — lá só cabem número e
+          o chip de prazo (confirmado direto no Dispatch.dc.html: `p.alta` fica junto de
+          `p.meta`, não de `p.protocolo`/`p.prazoLabel`). Botar o badge de prioridade na linha
+          de cima quebrava o card em telas de coluna estreita (achado ao vivo pelo dono). */}
+      <div className="mt-0.5 flex items-center gap-1.5">
+        {protocolo.prioridade === 'Alta' && (
+          <span className="flex-none rounded-full border border-bad-border bg-bad-bg px-1.5 text-[10.5px] font-semibold text-bad-fg">Alta</span>
+        )}
+        <div
+          className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-[11.5px] text-muted-foreground"
+          title={`${info.escreventeNome ?? '—'} · ${info.equipeNome ?? 'sem equipe'}${variant === 'conferente' ? ` · ${ETAPA_LABEL[protocolo.etapa]}` : ''}`}
+        >
+          {info.escreventeNome ?? '—'} ·{' '}
+          <span className={info.equipeNome ? undefined : 'text-bad-fg'}>{info.equipeNome ?? 'sem equipe'}</span>
+          {variant === 'conferente' && <> · {ETAPA_LABEL[protocolo.etapa]}</>}
+        </div>
       </div>
       {/* RNF-10: sem truncar — na variante "status" isso é o nome do dono do protocolo, dois
           donos com nome parecido não podem ficar indistinguíveis aqui. */}

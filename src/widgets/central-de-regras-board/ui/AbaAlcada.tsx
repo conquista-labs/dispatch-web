@@ -17,9 +17,9 @@ import { SurfaceCard } from '@/shared/ui/surface-card'
 import { AbaAlcadaCamadas, type Camada } from './AbaAlcadaCamadas'
 import { AbaAlcadaMatriz } from './AbaAlcadaMatriz'
 import { AbaAlcadaTestar } from './AbaAlcadaTestar'
-import { PillToggle } from './PillToggle'
+import { PillToggle } from '@/shared/ui/pill-toggle'
 import { SeletorMultiplo } from './SeletorMultiplo'
-import { SeletorUnico } from './SeletorUnico'
+import { SeletorUnico } from '@/shared/ui/seletor-unico'
 
 const NIVEIS: Nivel[] = ['Junior', 'Pleno', 'Senior']
 const ETAPAS: Etapa[] = ['PreConferencia', 'PosConferencia']

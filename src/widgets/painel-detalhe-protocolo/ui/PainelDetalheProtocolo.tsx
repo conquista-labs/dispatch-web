@@ -1,3 +1,6 @@
+import { useState } from 'react'
+import { toast } from 'sonner'
+
 import { NIVEL_LABEL, useConferentes } from '@/entities/conferente'
 import { useEquipes } from '@/entities/equipe'
 import { useEscreventes } from '@/entities/escrevente'
@@ -8,13 +11,26 @@ import { useAtribuirAoMenosCarregado } from '@/features/protocolo/atribuir-ao-me
 import { useDevolverAoPool } from '@/features/protocolo/devolver-ao-pool'
 import { ObservacaoField } from '@/features/protocolo/definir-observacao'
 import { useDefinirPrioridade } from '@/features/protocolo/definir-prioridade'
+import { useExcluirProtocolo } from '@/features/protocolo/excluir'
 import { useReabrirConferencia } from '@/features/protocolo/reabrir-conferencia'
+import { useRestaurarProtocolo } from '@/features/protocolo/restaurar'
 import { formatDataHora } from '@/shared/lib/format'
 import { useNow } from '@/shared/lib/use-now'
 import { cn } from '@/shared/lib/utils'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/shared/ui/alert-dialog'
 import { Button } from '@/shared/ui/button'
 import { Chip } from '@/shared/ui/chip'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/shared/ui/sheet'
+import { ProtocoloManualDialog } from '@/widgets/protocolo-manual'
 
 type PainelDetalheProtocoloProps = {
   protocoloId: string | null
@@ -29,6 +45,9 @@ const STATUS_LABEL: Record<StatusProtocolo, string> = {
   Reprovado: 'Não aprovado',
   Excecao: 'Exceção',
   Descartado: 'Descartado',
+  // RF-18i: painel fecha assim que a exclusão é confirmada (ver DistribuicaoBoard) — este
+  // rótulo só existiria se alguém reabrisse o detalhe pelo id logo depois, janela mínima.
+  Excluido: 'Excluído',
 }
 
 const STATUS_TOM: Record<StatusProtocolo, NonNullable<React.ComponentProps<typeof Chip>['tom']>> = {
@@ -39,6 +58,7 @@ const STATUS_TOM: Record<StatusProtocolo, NonNullable<React.ComponentProps<typeo
   Reprovado: 'vencido',
   Excecao: 'atencao',
   Descartado: 'neutro',
+  Excluido: 'vencido',
 }
 
 // RF-18a/b — drawer lateral, aberto ao clicar em qualquer card de protocolo em Distribuição.
@@ -64,6 +84,10 @@ export const PainelDetalheProtocolo = ({ protocoloId, onFechar }: PainelDetalheP
   const atribuirMenosCarregado = useAtribuirAoMenosCarregado()
   const reabrirConferencia = useReabrirConferencia()
   const definirPrioridade = useDefinirPrioridade()
+  const excluir = useExcluirProtocolo()
+  const restaurar = useRestaurarProtocolo()
+  const [editarAberto, setEditarAberto] = useState(false)
+  const [confirmarExcluirAberto, setConfirmarExcluirAberto] = useState(false)
 
   const carregando = !detalhe || !conferentes || !tiposAto || !regras || !escreventes || !equipes
 
@@ -110,9 +134,36 @@ export const PainelDetalheProtocolo = ({ protocoloId, onFechar }: PainelDetalheP
   // jeito real de um protocolo virar urgente. Não faz sentido depois de concluído/descartado.
   const podeDefinirPrioridade = !!detalhe && !['Aprovado', 'Reprovado', 'Descartado'].includes(detalhe.status)
 
+  // RF-18i: aviso condizente com o estado atual — em conferência interrompe quem está com o
+  // ato, atribuído tira da fila de alguém; nos demais estados não tem ninguém pra avisar.
+  const avisoExclusao =
+    detalhe?.status === 'Conferindo'
+      ? 'Isso interrompe a conferência de quem está com esse ato agora.'
+      : detalhe?.status === 'Atribuido'
+        ? `Isso tira o ato da fila de ${detalhe.donoId ? (nomePorConferenteId.get(detalhe.donoId) ?? 'quem está com ele') : 'quem está com ele'}.`
+        : null
+
+  const handleExcluir = () => {
+    if (!detalhe) return
+    const { id, numero } = detalhe
+    excluir.mutate(id, {
+      onSuccess: () => {
+        setConfirmarExcluirAberto(false)
+        onFechar()
+        // RF-18j: desfazer por alguns segundos — restaura o mesmo vencimento/dono/histórico
+        // (o back é soft-delete, nada além do status muda).
+        toast(`Protocolo ${numero} excluído`, {
+          action: { label: 'Desfazer', onClick: () => restaurar.mutate(id) },
+          duration: 8000,
+        })
+      },
+    })
+  }
+
   return (
-    <Sheet open={!!protocoloId} onOpenChange={(aberto) => !aberto && onFechar()}>
-      <SheetContent side="right" showCloseButton={false} className="w-[min(432px,92vw)] gap-0 overflow-y-auto p-0 sm:max-w-[432px]">
+    <>
+      <Sheet open={!!protocoloId} onOpenChange={(aberto) => !aberto && onFechar()}>
+        <SheetContent side="right" showCloseButton={false} className="w-[min(432px,92vw)] gap-0 overflow-y-auto p-0 sm:max-w-[432px]">
         <SheetHeader className="sticky top-0 z-10 flex-row items-start justify-between gap-3 space-y-0 border-b border-border bg-background p-5">
           <div className="min-w-0">
             <SheetTitle className="font-mono text-[17px] font-semibold tracking-[-0.01em]">{detalhe?.numero ?? '…'}</SheetTitle>
@@ -219,11 +270,55 @@ export const PainelDetalheProtocolo = ({ protocoloId, onFechar }: PainelDetalheP
                 </div>
               )}
               {atribuirMenosCarregado.isError && <p className="mt-2 text-[12.5px] text-bad-fg">Ninguém com alçada na escala agora.</p>}
+
+              {/* RF-18g/i: separado das ações de status acima — editar/excluir valem pra
+                  qualquer protocolo, não dependem do estado atual. */}
+              <div className="mt-4.5 flex gap-1.5 border-t border-secondary pt-4.5">
+                <Button variant="outline" size="sm" onClick={() => setEditarAberto(true)}>
+                  Editar protocolo
+                </Button>
+                <Button variant="outline" size="sm" className="text-bad-fg hover:bg-bad-bg" onClick={() => setConfirmarExcluirAberto(true)}>
+                  Excluir
+                </Button>
+              </div>
             </>
           )}
         </div>
       </SheetContent>
-    </Sheet>
+      </Sheet>
+
+      {detalhe && (
+        <ProtocoloManualDialog
+          aberto={editarAberto}
+          onFechar={() => setEditarAberto(false)}
+          protocoloParaEditar={detalhe}
+          onPedirExclusao={() => {
+            setEditarAberto(false)
+            setConfirmarExcluirAberto(true)
+          }}
+        />
+      )}
+
+      <AlertDialog open={confirmarExcluirAberto} onOpenChange={setConfirmarExcluirAberto}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Excluir protocolo {detalhe?.numero}
+              {detalhe && ` · ${nomePorTipoAtoId.get(detalhe.tipoAtoId ?? '') ?? detalhe.tipoAtoNomeOriginal ?? '—'}`}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {avisoExclusao ? `${avisoExclusao} Essa ação não pode ser desfeita depois de fechar o aviso de "desfazer".` : 'Essa ação não pode ser desfeita depois de fechar o aviso de "desfazer".'}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={excluir.isPending}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleExcluir} disabled={excluir.isPending} className="bg-bad-fg text-white hover:bg-bad-fg/90">
+              {excluir.isPending ? 'Excluindo…' : 'Excluir'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   )
 }
 

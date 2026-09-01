@@ -1,11 +1,12 @@
 import type { AvaliacaoAlcada } from '@/entities/regraAlcada'
+import type { GrupoTipoAto } from '@/entities/tipoAto'
 
 // Espelha Dispatch.Domain (Etapa, StatusProtocolo, FaixaSemaforo) e os DTOs de resposta em
 // Dispatch.Api/Endpoints/{Distribuicao,MinhaFila}Endpoints.cs — não inventar campo aqui sem
 // conferir o C# primeiro (ver skill new-entity).
 export type Etapa = 'PreConferencia' | 'PosConferencia'
 
-export type StatusProtocolo = 'Pool' | 'Atribuido' | 'Conferindo' | 'Aprovado' | 'Reprovado' | 'Excecao' | 'Descartado'
+export type StatusProtocolo = 'Pool' | 'Atribuido' | 'Conferindo' | 'Aprovado' | 'Reprovado' | 'Excecao' | 'Descartado' | 'Excluido'
 
 // RF-14/seção 5: as 4 faixas do semáforo de prazo.
 export type FaixaSemaforo = 'Verde' | 'Amarelo' | 'Laranja' | 'Vermelho'
@@ -96,6 +97,30 @@ export type InfoProtocolo = {
   // não colidir entre equipes diferentes (BarraDeFiltros usa o id, não o nome, como valor).
   equipeId: string | null
   equipeNome: string | null
+}
+
+// SimulacaoProtocoloManualResponse — prévia sem persistir (RF-18f), mostrada no modal "Novo
+// protocolo"/"Editar protocolo" antes de confirmar.
+export type SimulacaoProtocolo = {
+  numeroDisponivel: boolean
+  grupo: GrupoTipoAto | null
+  equipeNome: string | null
+  semEquipeSinalizado: boolean
+  prazo: TipoPrazo
+  vencimentoEm: string
+  destino: 'Atribuido' | 'EnviadoParaPool' | 'Excecao'
+  conferenteId: string | null
+  motivo: string | null
+}
+
+// DistribuirProtocoloResponse (Api) — mesma resposta do endpoint avulso e de criar manual
+// (RF-18f, POST /protocolos/manual).
+export type ResultadoDistribuicaoProtocolo = {
+  protocoloId: string
+  resultado: 'Atribuido' | 'EnviadoParaPool' | 'Excecao'
+  conferenteId: string | null
+  motivo: string | null
+  vencimentoEm: string | null
 }
 
 export type ProtocoloConcluidoResumo = {

@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogT
 import { Input } from '@/shared/ui/input'
 import { Label } from '@/shared/ui/label'
 
-import { PillToggle } from './PillToggle'
+import { PillToggle } from '@/shared/ui/pill-toggle'
 
 const TIPOS_PRAZO = Object.keys(TIPO_PRAZO_LABEL) as TipoPrazo[]
 const VAZIO = { nome: '', prazoPreConferencia: 'D1' as TipoPrazo, prazoPosConferencia: 'D1' as TipoPrazo }

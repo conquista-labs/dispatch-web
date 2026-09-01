@@ -50,12 +50,19 @@ export const ListaCompletaColunaSheet = ({ aberto, onFechar, nome, protocolos, r
                   <Chip tom={chip.tom}>{chip.label}</Chip>
                 </div>
                 <div className="mt-1 overflow-hidden text-ellipsis whitespace-nowrap text-[13px] text-text-5">{info.tipoAtoNome ?? '—'}</div>
-                <div
-                  className="mt-0.5 overflow-hidden text-ellipsis whitespace-nowrap text-[11.5px] text-muted-foreground"
-                  title={`${info.escreventeNome ?? '—'} · ${info.equipeNome ?? 'sem equipe'} · ${ETAPA_LABEL[protocolo.etapa]}`}
-                >
-                  {info.escreventeNome ?? '—'} ·{' '}
-                  <span className={info.equipeNome ? undefined : 'text-bad-fg'}>{info.equipeNome ?? 'sem equipe'}</span> · {ETAPA_LABEL[protocolo.etapa]}
+                {/* RF-18a: "Alta" (não "urgente") — mesmo rótulo/posição do card do quadro
+                    (DistribuicaoProtocoloCard.tsx), junto da meta de escrevente/equipe/etapa. */}
+                <div className="mt-0.5 flex items-center gap-1.5">
+                  {protocolo.prioridade === 'Alta' && (
+                    <span className="flex-none rounded-full border border-bad-border bg-bad-bg px-1.5 text-[10.5px] font-semibold text-bad-fg">Alta</span>
+                  )}
+                  <div
+                    className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-[11.5px] text-muted-foreground"
+                    title={`${info.escreventeNome ?? '—'} · ${info.equipeNome ?? 'sem equipe'} · ${ETAPA_LABEL[protocolo.etapa]}`}
+                  >
+                    {info.escreventeNome ?? '—'} ·{' '}
+                    <span className={info.equipeNome ? undefined : 'text-bad-fg'}>{info.equipeNome ?? 'sem equipe'}</span> · {ETAPA_LABEL[protocolo.etapa]}
+                  </div>
                 </div>
               </button>
             )

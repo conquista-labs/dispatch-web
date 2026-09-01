@@ -1253,3 +1253,135 @@ concluindo na hora; janela encerrada com os concluídos já existentes no banco 
 criado via o mesmo fluxo real de Minha fila (pegar/iniciar/concluir), não mock. Suíte
 permanente + `e2e/minha-fila.spec.ts`/`dashboard.spec.ts` rodadas depois, nada quebrou (mesma
 falha pré-existente e documentada de antes, não relacionada).
+
+## Protocolo manual — criar, editar, excluir com desfazer (RF-18f a RF-18j)
+
+Front do que ficou pendente no `dispatch-api` (mesma seção lá) depois do dono notar o botão
+"Novo protocolo" do protótipo, que nunca existia no app.
+
+- **`shared/ui/seletor-unico.tsx`/`pill-toggle.tsx`** (movidos de `central-de-regras-board/ui/`,
+  sem mudança de comportamento pros 6 usos existentes) — passam a ser reaproveitados fora da
+  Central de Regras pela primeira vez. `SeletorUnico` ganhou `permiteValorLivre?: boolean`
+  (RF-09: o campo de escrevente do modal precisa aceitar um nome que ainda não existe no
+  cadastro — quando a busca não bate com nenhuma opção, uma linha extra "usar «busca»" aparece
+  e vira o valor direto).
+- **`shared/ui/sonner.tsx`** (novo, via skill `add-shadcn-component`) — o gerador do shadcn
+  assume `next-themes` (Next.js); este projeto não usa Next, então trocado por `useThemeStore`
+  (o mesmo Zustand store do alternador de tema da sidebar) — sem essa troca o toast ficaria
+  sempre no tema "system", ignorando a troca manual do usuário. Dependência `next-themes`
+  removida do `package.json` (só existia por causa do arquivo gerado, nada mais no projeto
+  usava). `<Toaster />` montado uma vez em `app/providers/app-providers.tsx`.
+- **`shared/ui/alert-dialog.tsx`** (novo, via skill) — confirmação de exclusão (RF-18i), sem
+  gotcha nenhum (componente padrão, sem dependência de Next).
+- **`widgets/protocolo-manual/ui/ProtocoloManualDialog.tsx`** (novo) — um componente só serve
+  "Novo protocolo" (Distribuição) e "Editar protocolo" (painel de detalhe); a diferença é só a
+  prop `protocoloParaEditar` (presente = edição, pré-preenche o formulário). Prévia ao vivo
+  (equipe, prazo, grupo do ato, destino previsto) via `useSimularProtocoloManual`
+  (`entities/protocolo`) — dispara só quando tipo e escrevente já estão preenchidos, sem
+  persistir nada (RF-18f: "o modal mostra, antes de confirmar..."). Prioridade fica em 2 níveis
+  (Normal/Alta), não os 3 do rascunho do protótipo (Alta/Média/Baixa) — o domínio já só suporta
+  2 desde o RF-18a ("marcar como urgente"), não reabri essa discussão aqui.
+- **Bug real achado testando o fluxo de verdade, não pelos tipos**: `useCriarProtocoloManual`/
+  `useEditarProtocoloManual` só invalidavam a visão de Distribuição — um escrevente novo criado
+  junto (RF-09) ficava fora do cache de `/escreventes` (`staleTime` 60s) até expirar sozinho,
+  então reabrir o mesmo protocolo pra editar mostrava o campo Escrevente vazio (achado: o
+  `useEffect` que pré-preenche o formulário de edição não tinha `escreventes` nas dependências,
+  então nem recalculava quando a lista finalmente chegava — duas causas empilhadas do mesmo
+  sintoma). Corrigido nos dois lugares: as mutations agora invalidam `ESCREVENTES_QUERY_KEY`
+  também, e o `useEffect` do modal ganhou `!!escreventes` na lista de dependências.
+- **`PainelDetalheProtocolo.tsx`** ganhou "Editar protocolo" (abre o mesmo modal) e "Excluir"
+  (abre `AlertDialog` com aviso condizente ao status — "Conferindo" avisa que interrompe quem
+  está com o ato, "Atribuido" avisa de quem sai da fila) numa seção separada das ações de
+  status (`border-t`), já que editar/excluir valem pra qualquer protocolo, não dependem do
+  estado atual. Excluir fecha o painel e dispara o toast de desfazer
+  (`sonner`, `action: { label: 'Desfazer', onClick: () => restaurar.mutate(id) }`,
+  `duration: 8000`).
+- **`DistribuicaoPage.tsx`** ganhou o botão "Novo protocolo" no toolbar, entre "Redistribuir
+  pool" e "Importar relatório" (mesma ordem do protótipo).
+
+Testado ponta a ponta via Playwright contra a API local (não só tsc/build): criar (prévia ao
+vivo, escrevente novo via "usar «nome»", protocolo aparece na Distribuição), abrir o detalhe e
+editar (troca de etapa recalcula o vencimento — confirmado comparando os valores antes/depois),
+excluir (some da tela, toast aparece com o número certo), desfazer (protocolo volta com a
+mesma etapa/tipo/escrevente da última edição — soft-delete no back preserva tudo). Suíte
+permanente rodada depois, verde (mesma falha pré-existente já documentada).
+
+## Login — mostrar/ocultar senha
+
+Pedido direto do dono. Ícone (`lucide-react`, `EyeIcon`/`EyeOffIcon`) dentro do campo,
+alternando `type="password"`/`type="text"`. **Achado testando a suíte, não óbvio de antemão**:
+`aria-label="Mostrar senha"` no botão colidia com `page.getByLabel('Senha')` (usado em quase
+todo teste e2e que loga) — `getByLabel` do Playwright também acha elemento com `aria-label`
+batendo, não só `<label>` de verdade, então virava "2 elementos" e quebrava a suíte inteira.
+`aria-label` renomeado pra "Mostrar/ocultar caracteres digitados" (evita a palavra "senha" de
+propósito) — mesma função pra leitor de tela, sem colidir com os testes.
+
+## Modal de protocolo manual — segunda passada de fidelidade
+
+O dono perguntou diretamente "está fiel ao protótipo 100%?" — releitura do markup de
+`novoAberto` (`Dispatch.dc.html`, linhas ~1739-1808), não da memória da sessão, achou vários
+gaps reais:
+
+- **Observação faltava no "Criar"** (só existia no modo editar) — o back nem aceitava esse
+  campo na criação (ver `dispatch-api/CLAUDE.md`, mesma seção). Corrigido dos dois lados; o
+  campo agora aparece sempre, igual o protótipo.
+- **`SeletorUnico` ganhou `sub?: string`** — os dois pickers deste modal (tipo de ato, grupo;
+  escrevente, equipe) mostram a segunda linha que o `Combo` do protótipo sempre mostrou e que
+  faltava aqui.
+- **"Excluir" dentro do modal de edição** — o protótipo tem essa ação redundante com a do
+  painel de detalhe (`novo.excluirDoModal`). `ProtocoloManualDialog` ganhou
+  `onPedirExclusao?: () => void` (só usado em modo edição); `PainelDetalheProtocolo` passa uma
+  função que fecha o modal de editar e abre o `AlertDialog` de confirmação que ele já tinha.
+- **Rodapé virou `justify-between`** — Cancelar+Excluir agrupados à esquerda, Criar/Salvar à
+  direita, igual o protótipo (`DialogFooter` do shadcn é `justify-end` por padrão).
+- **Eyebrow "O QUE O SISTEMA VAI FAZER"** acima da prévia — faltava o rótulo, só o conteúdo.
+- **Textos de ajuda** — "só tipos já cadastrados — sem opção de criar um novo por aqui" no
+  campo de tipo de ato (honesto sobre uma divergência real, ver abaixo) e placeholder da
+  Observação copiado do protótipo ("opcional — o conferente vê isso no card").
+- **Modal com 520px** (`sm:max-w-[520px]`) — o padrão do `DialogContent` é `sm:max-w-sm`
+  (~384px), bem mais estreito que o protótipo.
+
+**Duas divergências reais, mantidas conscientemente, não "corrigidas" às pressas**:
+- **Prioridade tem 2 níveis (Normal/Alta), não os 3 do protótipo** (Alta/Média/Baixa) — o
+  domínio do back só suporta 2 desde antes desta sessão (RF-18a, "marcar como
+  urgente"/"remover urgência" já era binário). Ampliar pra 3 é mudança de `enum Prioridade` em
+  toda a aplicação, não uma correção de modal — fica registrado, não silenciado.
+- **Tipo de ato não aceita nome livre** — o protótipo deixa digitar um tipo fora da lista
+  ("tipo fora da lista entra como novo e cai em exceções"); o back (`CriarProtocoloManual`/
+  `EditarProtocoloManual`/`SimularProtocoloManual`) só aceita `tipoAtoId: Guid` de um tipo já
+  cadastrado — diferente de escrevente, que resolve por nome com criação automática
+  (`ResolvedorDeEscreventePorNome`), tipo de ato nunca teve esse caminho pro fluxo manual.
+  Adicionar isso é mudança de arquitetura (o "tipo desconhecido" hoje só nasce via
+  `ImportarLote`), não front — fica como próximo passo explícito, não escondido atrás de um
+  "está tudo pronto".
+
+Verificado nos dois temas via Playwright: modal vazio e preenchido (sub-labels aparecendo nos
+dois seletores, prévia com eyebrow), editar mostrando "Excluir" no rodapé. Suíte permanente
+rodada de novo, verde (mesma falha pré-existente).
+
+## Card do quadro quebrava com prioridade Alta — achado pelo dono ao vivo, não pelos testes
+
+O dono mandou print mostrando o card de "263546" (prioridade Alta) com a linha do
+número/badges estourando a largura da coluna — layout visualmente quebrado, coisa que nenhum
+`verify-visual` anterior tinha pego (nenhum protocolo de teste tinha prioridade Alta na hora
+das verificações).
+
+Investigando (releitura direta do `Dispatch.dc.html`, não memória), achei a causa: o badge de
+prioridade Alta que eu tinha posto (`DistribuicaoProtocoloCard.tsx`) estava **na linha errada
+E com o rótulo errado**. Confirmado no protótipo (linhas ~370-379): a primeira linha do card é
+só número + chip de prazo (`justify-between`, sem espaço pra mais nada) — o indicador de
+prioridade alta fica na **terceira linha**, junto da meta de escrevente/equipe/etapa
+(`p.alta` ao lado de `p.meta`, `display:flex;gap:6px`), com o rótulo **"Alta"**, não "urgente"
+(que eu tinha inventado sem checar o protótipo). Mesmo padrão confirmado na lista completa da
+coluna (linhas ~1620-1631, `ListaCompletaColunaSheet.tsx`), que nem tinha indicador nenhum de
+prioridade antes — também corrigido, mesma posição/rótulo.
+
+Badge próprio (não o `Chip` compartilhado) pra bater exato com o protótipo: `10.5px`,
+`font-weight:600`, `border-bad-border`/`bg-bad-bg`/`text-bad-fg`, `rounded-full` — o `Chip` é
+`font-mono text-[11px]`, e não fazia sentido arrastar essa mudança de fonte pro badge só por
+causa deste caso (mesmo raciocínio já registrado antes sobre não mexer no `Chip` compartilhado
+por um pedido pontual).
+
+Verificado nos dois temas, marcando um protocolo real como Alta via
+`POST /protocolos/{id}/definir-prioridade` e conferindo os dois lugares (card do quadro, item
+da lista completa) — sem quebra de layout, badge na linha certa.

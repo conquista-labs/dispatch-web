@@ -1,4 +1,5 @@
 import { Loader2Icon } from 'lucide-react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { useVisaoDistribuicao } from '@/entities/protocolo'
@@ -6,12 +7,14 @@ import { useRedistribuirPool } from '@/features/protocolo/redistribuir-pool'
 import { ROUTES } from '@/shared/config/routes'
 import { Button } from '@/shared/ui/button'
 import { DistribuicaoBoard } from '@/widgets/distribuicao-board'
+import { ProtocoloManualDialog } from '@/widgets/protocolo-manual'
 
 // RF-13 a RF-18.
 export const DistribuicaoPage = () => {
   const { data: visao } = useVisaoDistribuicao()
   const redistribuir = useRedistribuirPool()
   const navigate = useNavigate()
+  const [novoProtocoloAberto, setNovoProtocoloAberto] = useState(false)
 
   const ativos = visao ? visao.pool.length + visao.atribuidos.length + visao.emConferencia.length : 0
   const vencidos = visao ? [...visao.pool, ...visao.atribuidos, ...visao.emConferencia].filter((p) => p.semaforo === 'Vermelho').length : 0
@@ -35,6 +38,9 @@ export const DistribuicaoPage = () => {
             {redistribuir.isPending && <Loader2Icon className="size-3.5 animate-spin" />}
             {redistribuir.isPending ? 'Redistribuindo…' : 'Redistribuir pool'}
           </Button>
+          <Button variant="outline" onClick={() => setNovoProtocoloAberto(true)}>
+            Novo protocolo
+          </Button>
           <Button onClick={() => navigate(ROUTES.importar)}>Importar relatório</Button>
         </div>
       </div>
@@ -42,6 +48,8 @@ export const DistribuicaoPage = () => {
       <div className="mt-4">
         <DistribuicaoBoard />
       </div>
+
+      <ProtocoloManualDialog aberto={novoProtocoloAberto} onFechar={() => setNovoProtocoloAberto(false)} />
     </div>
   )
 }

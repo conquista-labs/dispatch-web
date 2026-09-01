@@ -7,7 +7,7 @@ import type { TipoPrazo } from '@/entities/protocolo'
 import { useEditarEquipe } from '@/features/equipe/editar'
 import { SurfaceCard } from '@/shared/ui/surface-card'
 
-import { PillToggle } from './PillToggle'
+import { PillToggle } from '@/shared/ui/pill-toggle'
 
 const TIPOS_PRAZO = Object.keys(TIPO_PRAZO_LABEL) as TipoPrazo[]
 

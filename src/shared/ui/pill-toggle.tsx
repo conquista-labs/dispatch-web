@@ -7,9 +7,10 @@ type PillToggleProps = {
   redondo?: boolean
 }
 
-// Botão de seleção do construtor guiado de regra (RF-32) e dos prazos por equipe (RF-36) —
-// preenchido (bg/texto invertidos) quando selecionado, só borda quando não, mesmo tratamento
-// visual do protótipo pros dois usos (Dispatch.dc.html, builderSujeitoTipos/opcoesPre).
+// Botão de seleção do construtor guiado de regra (RF-32), dos prazos por equipe (RF-36) e do
+// modal de protocolo manual (RF-18f/g) — preenchido (bg/texto invertidos) quando selecionado,
+// só borda quando não, mesmo tratamento visual do protótipo pros usos (Dispatch.dc.html,
+// builderSujeitoTipos/opcoesPre/novo.etapas).
 export const PillToggle = ({ label, selecionado, onClick, redondo = false }: PillToggleProps) => (
   <button
     type="button"

@@ -7,7 +7,7 @@ import { Button } from '@/shared/ui/button'
 
 import { EquipeCard } from './EquipeCard'
 import { NovaEquipeDialog } from './NovaEquipeDialog'
-import { PillToggle } from './PillToggle'
+import { PillToggle } from '@/shared/ui/pill-toggle'
 
 // RF-35 a RF-38 — equipes, prazo por etapa e alocação de escreventes órfãos.
 export const AbaPrazos = () => {

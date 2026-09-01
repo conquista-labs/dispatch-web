@@ -7,7 +7,7 @@ import { fraseDaRegra, MOTIVO_ALCADA_LABEL, useRegrasAlcada, useTestarAlcada, ty
 import type { TipoAto } from '@/entities/tipoAto'
 import { cn } from '@/shared/lib/utils'
 
-import { PillToggle } from './PillToggle'
+import { PillToggle } from '@/shared/ui/pill-toggle'
 
 const SEM_EQUIPE = '__sem-equipe__'
 
