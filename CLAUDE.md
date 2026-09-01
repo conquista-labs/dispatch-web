@@ -936,3 +936,76 @@ resposta, lista expandida da coluna abrindo e navegando pro detalhe, filtro de P
 Prazo isolados e combinados em Distribuição, filtro de Equipe em Minha fila com assert de
 contagem reduzindo de verdade. Regressão permanente (`auth`/`session-isolation`/`cursor`/
 `login`) e os 239 testes do back confirmados verdes depois da correção de autorização.
+
+## Motor de alçada v3 — redesign da aba Alçada (Camadas/Matriz/Testar)
+
+Fecha o lado front do Motor v3 (ver `../dispatch-api/CLAUDE.md`, mesma seção, pro algoritmo e
+pra divergência achada entre o protótipo interativo e o documento de requisitos formal). A aba
+Alçada de Central de Regras virou 3 sub-abas, reaproveitando o construtor guiado (RF-32) já
+existente, agora estendido com alvo de grupo e permissão de reserva.
+
+- **`AbaAlcada.tsx`** — virou só o contêiner: cabeçalho + pills das 3 sub-abas (`Camadas`/
+  `Matriz`/`Testar`, mesmo padrão de pill-tabs de `DistribuicaoBoard`) + o construtor guiado
+  (compartilhado pelas 3, um único botão "Nova regra" no cabeçalho). `Builder.alvoTipo` ganhou
+  `'grupo'`, `Builder.permissao` ganhou `'Reserva'` (agora é o mesmo `PermissaoRegra` do back).
+  `abrirBuilderParaCamada(camada)` pré-seleciona sujeito/alvo a partir dos botões "Nova regra de
+  X" de cada camada, na aba Camadas — mesmo espírito do protótipo, cada camada com seu atalho.
+- **`AbaAlcadaCamadas.tsx`** (novo) — as regras existentes, agora agrupadas em 3 seções fixas
+  (Base por nível / Ajuste por equipe / Exceção por pessoa) em vez de lista única achatada.
+  `camadaDe(regra)` replica a mesma classificação do back (`ResolvedorAlcada.CamadaDe`) só pra
+  agrupar a leitura — não decide alçada nenhuma, é dado que já veio resolvido do back. Reaproveita
+  o card de regra (frase/origem/ativar/remover) sem mudança. "O que cada um alcança hoje" (RF-34)
+  migrou pra cá sem alteração.
+- **`AbaAlcadaMatriz.tsx`** (novo) — grade grupo/tipo × pessoa, sem endpoint novo: cruza `GET
+  /conferentes/alcance` (já devolve `tiposPermitidosIds`) com `GET /tipos-ato` (nome + grupo) no
+  próprio front. Linha de grupo expande/colapsa pra mostrar os tipos individuais. **Divergência
+  deliberada do protótipo**: lá, um clique num grupo "cheio" cria uma regra de **negação**
+  escondida (bloqueia o grupo inteiro mesmo vindo de outra fonte, tipo nível); aqui, cada clique
+  só cria ou remove a regra atômica que a própria matriz criou (`sujeitoConferenteId` + `Permite`
+  + `alvoGrupo`/`alvoTipoAtoId`) — se o alcance vier de outro lugar (nível, alçada plena), a
+  matriz não inventa um bloqueio silencioso; quem quer negar usa o construtor guiado, onde
+  "Nega" é uma escolha explícita, não um efeito colateral de clicar numa célula verde. Motivo:
+  o back só aceita um alvo por regra (sem array como o protótipo), então "desligar uma pessoa
+  de um grupo cheio" não tem uma única regra óbvia pra remover quando o alcance dela vem de uma
+  regra de nível compartilhada com outras pessoas — inventar uma negação ali seria arriscado sem
+  confirmação explícita do usuário.
+- **`AbaAlcadaTestar.tsx`** (novo) — consome o `POST /regras-alcada/testar` novo do back
+  (`useTestarAlcada`, `entities/regraAlcada`). Réplica do layout do protótipo: seletores de
+  etapa/equipe/tipo, veredito colorido (verde/vermelho), duas colunas "Podem conferir"/"Barrados
+  e por quê", cada uma com a trilha por camada (`fraseDaRegra` reaproveitado pra cada passo).
+  **Sem a seção "SAÍDAS"** do protótipo (sugestões automáticas de ajuste tipo "desativar essa
+  regra") — o back não calcula isso, e inventar no front contrariaria a regra de não inventar
+  dado que o servidor não manda.
+- **`entities/regraAlcada`** — `PermissaoRegra` ganha `'Reserva'`; `RegraAlcada`/
+  `CriarRegraAlcadaRequest` ganham `alvoGrupo`; `fraseDaRegra` ganha um molde de frase próprio
+  pra Reserva ("Só X confere Y", sem o pode/não pode) e o branch de grupo ("conferir atos de
+  Transmissões"), mesma fonte usada pelo card de regra e pela trilha do simulador. Novos tipos
+  `MotivoAlcada`/`PassoTrilha`/`AvaliacaoAlcada`/`TestarAlcadaRequest`/`TestarAlcadaResponse` +
+  `MOTIVO_ALCADA_LABEL` (rótulo por dimensão — o nome próprio que completa a frase, tipo
+  "Testamento fora da alçada", é montado por quem consome, não pelo enum em si).
+- **`entities/protocolo`** — `AlcadaConferente` (painel de detalhe) virou um alias de
+  `AvaliacaoAlcada` (`entities/regraAlcada`) em vez de um tipo próprio com `regraEtapaId`/
+  `regraTipoId` separados — o motor v3 já não tem essa distinção. Primeiro cruzamento de import
+  nessa direção entre os dois (regraAlcada já importava de protocolo pro lado de `Etapa`) —
+  `import type` nos dois sentidos, sem problema de ciclo real (tipo é apagado em tempo de
+  build). `PainelDetalheProtocolo.tsx` ganhou o texto de `motivo` (`MOTIVO_ALCADA_LABEL`) ao
+  lado de quem está barrado, de graça — antes só mostrava "barrado" sem dizer por quê.
+
+**Achado no meio da verificação, não é bug de código**: a Matriz ficou com as colunas de
+conferente todas coladas (cabeçalho "AglaConfConfMarcMariMathNubySuel" sem espaço nenhum) na
+primeira rodada de screenshot — o dev server do Vite (rodando desde muito antes desses arquivos
+existirem) não tinha recompilado o CSS do Tailwind pras classes de largura novas (`w-11`,
+`w-[220px]`) ainda, mesmo com HMR ativo. `document.styleSheets` no browser confirmou a regra
+ausente; reiniciar `npm run dev` resolveu na hora. Lição: se uma classe Tailwind nova (largura/
+grid arbitrária, principalmente) parecer "não fazer nada" num dev server de sessão longa,
+reiniciar o Vite antes de desconfiar do código.
+
+Verificado nos dois temas via `verify-visual` (`e2e/alcada-v3.spec.ts`, novo): as 3 sub-abas
+com dado real (regra de nível, regra de equipe, exceção pessoal, reserva e grupo criadas via
+API pra este teste, removidas depois), frase de reserva ("Só Marcio Santos confere Divórcio Com
+Partilha") e de grupo renderizando certo na aba Camadas, matriz expandindo grupo e mostrando
+tipo individual, simulador "Testar" com um caso reservado mostrando a trilha completa (Reserva
+→ Base por nível → Exceção por pessoa pra quem tem, "reservado a outra pessoa" pra todo mundo
+mais) — bateu exatamente com o que `POST /regras-alcada/testar` devolveu, conferido também via
+`curl` direto antes de confiar no render. Regressão permanente (`auth`/`session-isolation`/
+`cursor`/`login`) verde depois da mudança.

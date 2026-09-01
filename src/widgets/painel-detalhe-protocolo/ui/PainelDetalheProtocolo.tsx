@@ -2,7 +2,7 @@ import { NIVEL_LABEL, useConferentes } from '@/entities/conferente'
 import { useEquipes } from '@/entities/equipe'
 import { useEscreventes } from '@/entities/escrevente'
 import { ETAPA_LABEL, prazoChip, TIPO_PRAZO_LABEL, useDetalheProtocolo, type StatusProtocolo } from '@/entities/protocolo'
-import { fraseDaRegra, useRegrasAlcada } from '@/entities/regraAlcada'
+import { fraseDaRegra, MOTIVO_ALCADA_LABEL, useRegrasAlcada } from '@/entities/regraAlcada'
 import { useTiposAto } from '@/entities/tipoAto'
 import { useAtribuirAoMenosCarregado } from '@/features/protocolo/atribuir-ao-menos-carregado'
 import { useDevolverAoPool } from '@/features/protocolo/devolver-ao-pool'
@@ -175,7 +175,8 @@ export const PainelDetalheProtocolo = ({ protocoloId, onFechar }: PainelDetalheP
                     >
                       <span className="text-[12.5px] text-text-5">{conferente?.nome ?? '—'}</span>
                       <span className={cn('text-right text-[11px]', a.elegivel ? 'text-ok-fg' : 'text-bad-fg')}>
-                        {conferente ? `Analista ${NIVEL_LABEL[conferente.nivel]}` : ''} · {a.elegivel ? 'pode conferir' : 'barrado'}
+                        {conferente ? `Analista ${NIVEL_LABEL[conferente.nivel]}` : ''} ·{' '}
+                        {a.elegivel ? 'pode conferir' : (a.motivo ? MOTIVO_ALCADA_LABEL[a.motivo] : 'barrado')}
                       </span>
                     </div>
                   )

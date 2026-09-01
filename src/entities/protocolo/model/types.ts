@@ -1,3 +1,5 @@
+import type { AvaliacaoAlcada } from '@/entities/regraAlcada'
+
 // Espelha Dispatch.Domain (Etapa, StatusProtocolo, FaixaSemaforo) e os DTOs de resposta em
 // Dispatch.Api/Endpoints/{Distribuicao,MinhaFila}Endpoints.cs — não inventar campo aqui sem
 // conferir o C# primeiro (ver skill new-entity).
@@ -49,14 +51,12 @@ export type VisaoDistribuicao = {
 }
 
 // AlcadaConferenteResponse (Api) — "quem pode conferir este ato especificamente" (RF-18a).
-// RegraEtapaId/RegraTipoId nulos não significam "sem alçada" (pode ser padrão aberto) — só
-// `elegivel` decide isso; as duas regras servem só pra mostrar "por qual regra" quando existir.
-export type AlcadaConferente = {
-  conferenteId: string
-  elegivel: boolean
-  regraEtapaId: string | null
-  regraTipoId: string | null
-}
+// Motor v3: uma decisão só por candidato (não mais regraEtapaId/regraTipoId separados) — regraId
+// nulo não significa "sem alçada" (pode ser padrão aberto), só `elegivel` decide isso; `motivo`
+// e `trilha` só vêm preenchidos quando faz sentido explicar o "por quê" de um bloqueio. Mesmo
+// formato de `AvaliacaoAlcada` (entities/regraAlcada), reaproveitado aqui pelo painel de
+// detalhe do protocolo.
+export type AlcadaConferente = AvaliacaoAlcada
 
 // DetalheProtocoloResponse (Api) — painel de detalhe (RF-18a/b), aberto ao clicar em qualquer
 // card de protocolo em Distribuição.

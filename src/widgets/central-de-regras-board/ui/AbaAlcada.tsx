@@ -5,28 +5,32 @@ import type { Nivel } from '@/entities/conferente'
 import { useEquipes } from '@/entities/equipe'
 import { ETAPA_LABEL } from '@/entities/protocolo'
 import type { Etapa } from '@/entities/protocolo'
-import { fraseDaRegra, PERMISSAO_LABEL, useRegrasAlcada } from '@/entities/regraAlcada'
+import { PERMISSAO_LABEL, useRegrasAlcada } from '@/entities/regraAlcada'
 import type { PermissaoRegra } from '@/entities/regraAlcada'
-import { useTiposAto } from '@/entities/tipoAto'
-import { useAlterarStatusRegraAlcada } from '@/features/regra-alcada/alterar-status'
+import { GRUPO_LABEL, useTiposAto } from '@/entities/tipoAto'
+import type { GrupoTipoAto } from '@/entities/tipoAto'
 import { useCriarRegraAlcada } from '@/features/regra-alcada/criar'
-import { useRemoverRegraAlcada } from '@/features/regra-alcada/remover'
 import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/ui/button'
 import { SurfaceCard } from '@/shared/ui/surface-card'
 
+import { AbaAlcadaCamadas, type Camada } from './AbaAlcadaCamadas'
+import { AbaAlcadaMatriz } from './AbaAlcadaMatriz'
+import { AbaAlcadaTestar } from './AbaAlcadaTestar'
 import { NovoTipoAtoDialog } from './NovoTipoAtoDialog'
 import { PillToggle } from './PillToggle'
 
 const NIVEIS: Nivel[] = ['Junior', 'Pleno', 'Senior']
 const ETAPAS: Etapa[] = ['PreConferencia', 'PosConferencia']
-
-type SujeitoTipo = 'nivel' | 'pessoa'
-type AlvoTipo = 'tipo' | 'etapa' | 'equipe' | 'todos'
+const GRUPOS: GrupoTipoAto[] = ['Transmissoes', 'Sucessoes', 'Familia', 'Garantias', 'Notariais']
 
 // Sentinela pra "sem equipe" dentro de alvoSelecionados (que só guarda string) — o back
 // representa isso com AlvoEquipeId nulo (RF-29a: "sem equipe" é alvo válido, não ausência).
 const SEM_EQUIPE = '__sem-equipe__'
+
+type SujeitoTipo = 'nivel' | 'pessoa'
+type AlvoTipo = 'tipo' | 'etapa' | 'equipe' | 'todos' | 'grupo'
+type SubAba = 'camadas' | 'matriz' | 'testar'
 
 type Builder = {
   sujeitoTipo: SujeitoTipo
@@ -46,8 +50,16 @@ const builderVazio = (primeiroConferenteId: string): Builder => ({
   alvoSelecionados: [],
 })
 
-// RF-31 a RF-34 — regras de alçada: construtor guiado (RF-32), lista com ativar/desativar/
-// remover (RF-33) e painel do que cada um alcança hoje (RF-34).
+// Pré-seleção do construtor a partir dos botões "Nova regra de X" de cada camada (aba
+// Camadas) — mesmo espírito do protótipo (cada camada tem seu próprio atalho de criação).
+const builderParaCamada = (camada: Camada, primeiroConferenteId: string): Builder => ({
+  ...builderVazio(primeiroConferenteId),
+  sujeitoTipo: camada === 'nivel' ? 'nivel' : 'pessoa',
+  alvoTipo: camada === 'equipe' ? 'equipe' : 'tipo',
+})
+
+// RF-31 a RF-34 — motor v3: 3 sub-abas (Camadas/Matriz/Testar), mesmo construtor guiado
+// compartilhado entre elas (RF-32), agora com alvo de grupo e permissão de reserva.
 export const AbaAlcada = () => {
   const { data: regras } = useRegrasAlcada()
   const { data: conferentes } = useConferentes()
@@ -56,9 +68,8 @@ export const AbaAlcada = () => {
   const { data: alcance } = useAlcance()
 
   const criar = useCriarRegraAlcada()
-  const alterarStatus = useAlterarStatusRegraAlcada()
-  const remover = useRemoverRegraAlcada()
 
+  const [subAba, setSubAba] = useState<SubAba>('camadas')
   const [builderAberto, setBuilderAberto] = useState(false)
   const [builder, setBuilder] = useState<Builder>(builderVazio(''))
 
@@ -69,10 +80,14 @@ export const AbaAlcada = () => {
   const nomePorConferenteId = new Map(conferentes.map((c) => [c.id, c.nome]))
   const nomePorTipoAtoId = new Map(tiposAto.map((t) => [t.id, t.nome]))
   const nomePorEquipeId = new Map(equipes.map((e) => [e.id, e.nome]))
-  const alcancePorConferenteId = new Map(alcance.map((a) => [a.conferenteId, a]))
 
   const abrirBuilder = () => {
     setBuilder(builderVazio(conferentes[0]?.id ?? ''))
+    setBuilderAberto(true)
+  }
+
+  const abrirBuilderParaCamada = (camada: Camada) => {
+    setBuilder(builderParaCamada(camada, conferentes[0]?.id ?? ''))
     setBuilderAberto(true)
   }
 
@@ -88,7 +103,9 @@ export const AbaAlcada = () => {
           ? `fazer ${builder.alvoSelecionados.map((e) => ETAPA_LABEL[e as Etapa]).join(' e ')}`
           : builder.alvoTipo === 'equipe'
             ? `conferir atos ${builder.alvoSelecionados.map((v) => (v === SEM_EQUIPE ? 'de escreventes sem equipe' : `da equipe ${nomePorEquipeId.get(v) ?? v}`)).join(' e ')}`
-            : `conferir ${builder.alvoSelecionados.map((id) => nomePorTipoAtoId.get(id) ?? id).join(', ')}`
+            : builder.alvoTipo === 'grupo'
+              ? `conferir atos de ${builder.alvoSelecionados.map((g) => GRUPO_LABEL[g as GrupoTipoAto]).join(' e ')}`
+              : `conferir ${builder.alvoSelecionados.map((id) => nomePorTipoAtoId.get(id) ?? id).join(', ')}`
 
   const podeCriar =
     (builder.alvoTipo === 'todos' || builder.alvoSelecionados.length > 0) &&
@@ -104,7 +121,7 @@ export const AbaAlcada = () => {
     }
 
     // Protótipo permite selecionar vários alvos numa tacada só; o back só aceita um alvo por
-    // regra (RF-31: alvo é XOR etapa/tipo/equipe/todos-os-atos) — cria uma regra por alvo
+    // regra (RF-31: alvo é XOR etapa/tipo/equipe/grupo/todos) — cria uma regra por alvo
     // selecionado pra preservar a mesma UX sem inventar um conceito de "regra composta" que
     // não existe no domínio.
     await Promise.all(
@@ -116,7 +133,9 @@ export const AbaAlcada = () => {
             ? { alvoEtapa: valor as Etapa }
             : builder.alvoTipo === 'equipe'
               ? { alvoEhEquipe: true, alvoEquipeId: valor === SEM_EQUIPE ? null : valor }
-              : { alvoTipoAtoId: valor }),
+              : builder.alvoTipo === 'grupo'
+                ? { alvoGrupo: valor as GrupoTipoAto }
+                : { alvoTipoAtoId: valor }),
         }),
       ),
     )
@@ -128,18 +147,24 @@ export const AbaAlcada = () => {
       ? ETAPAS.map((e) => ({ valor: e, label: ETAPA_LABEL[e] }))
       : builder.alvoTipo === 'equipe'
         ? [...equipes.map((e) => ({ valor: e.id, label: e.nome })), { valor: SEM_EQUIPE, label: 'sem equipe' }]
-        : builder.alvoTipo === 'todos'
-          ? []
-          : tiposAto.map((t) => ({ valor: t.id, label: t.nome }))
-
-  const totalTipos = tiposAto.length
+        : builder.alvoTipo === 'grupo'
+          ? GRUPOS.map((g) => ({ valor: g, label: GRUPO_LABEL[g] }))
+          : builder.alvoTipo === 'todos'
+            ? []
+            : tiposAto.map((t) => ({ valor: t.id, label: t.nome }))
 
   return (
     <div>
       <div className="mt-5 mb-1 flex items-baseline justify-between gap-3">
-        <h2 className="m-0 text-[15px] font-semibold tracking-[-0.01em]">Regras de alçada</h2>
+        <div>
+          <h2 className="m-0 text-[15px] font-semibold tracking-[-0.01em]">Regras de alçada</h2>
+          <p className="m-0 mt-0.5 max-w-[74ch] text-[12.5px] text-muted-foreground text-pretty">
+            Quem pode conferir o quê. As regras são lidas em três camadas — a de baixo vence a de cima. Quem está barrado nem recebe o protocolo, e se
+            ninguém sobrar o ato vai para exceções com o motivo.
+          </p>
+        </div>
         {!builderAberto && (
-          <div className="flex gap-1.5">
+          <div className="flex flex-none gap-1.5">
             <NovoTipoAtoDialog />
             <Button variant="outline" size="sm" onClick={abrirBuilder}>
               Nova regra
@@ -147,26 +172,30 @@ export const AbaAlcada = () => {
           </div>
         )}
       </div>
-      <p className="m-0 mb-2.5 max-w-[74ch] text-[12.5px] text-muted-foreground text-pretty">
-        Quem pode conferir o quê, por nível ou por pessoa. O motor consulta estas frases antes de distribuir — quem está barrado nem recebe o protocolo, e
-        se ninguém sobrar o ato vai para exceções com o motivo.
-      </p>
 
-      <div className="mb-4 flex flex-wrap items-center gap-1.5">
-        <span className="mr-0.5 text-[11.5px] font-medium text-text-2">Catálogo de tipos de ato ({tiposAto.length})</span>
-        {tiposAto.map((t) => (
-          <span
-            key={t.id}
-            className={cn('rounded-full border border-border bg-secondary px-2 py-0.5 text-[11.5px] text-text-3', !t.ativo && 'opacity-50')}
+      <div className="my-3.5 inline-flex gap-0.5 rounded-lg bg-secondary p-0.75">
+        {(
+          [
+            ['camadas', 'Camadas'],
+            ['matriz', 'Matriz'],
+            ['testar', 'Testar'],
+          ] as const
+        ).map(([valor, label]) => (
+          <button
+            key={valor}
+            onClick={() => setSubAba(valor)}
+            className={cn(
+              'rounded-md px-3 py-1.5 text-[13px] font-medium text-muted-foreground',
+              subAba === valor && 'bg-card text-foreground shadow-sm',
+            )}
           >
-            {t.nome}
-          </span>
+            {label}
+          </button>
         ))}
-        {tiposAto.length === 0 && <span className="text-[12.5px] text-muted-foreground">nenhum tipo cadastrado ainda</span>}
       </div>
 
       {builderAberto && (
-        <SurfaceCard className="mb-2 border-foreground p-4">
+        <SurfaceCard className="mb-3.5 border-foreground p-4">
           <div className="text-[14.5px] font-semibold tracking-[-0.01em]">
             {quemTexto} {PERMISSAO_LABEL[builder.permissao]} {alvoTexto}
           </div>
@@ -212,7 +241,7 @@ export const AbaAlcada = () => {
 
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <span className="w-[60px] flex-none text-[11.5px] font-medium text-text-2">Permissão</span>
-            {(['Permite', 'Nega'] as const).map((permissao) => (
+            {(['Permite', 'Nega', 'Reserva'] as const).map((permissao) => (
               <PillToggle
                 key={permissao}
                 label={PERMISSAO_LABEL[permissao]}
@@ -220,17 +249,19 @@ export const AbaAlcada = () => {
                 onClick={() => setBuilder((b) => ({ ...b, permissao }))}
               />
             ))}
-            {(['tipo', 'etapa', 'equipe', 'todos'] as const).map((tipo) => (
+            {(['grupo', 'tipo', 'etapa', 'equipe', 'todos'] as const).map((tipo) => (
               <PillToggle
                 key={tipo}
                 label={
-                  tipo === 'tipo'
-                    ? 'conferir os atos…'
-                    : tipo === 'etapa'
-                      ? 'fazer a etapa…'
-                      : tipo === 'equipe'
-                        ? 'conferir atos da equipe…'
-                        : 'conferir todos os atos'
+                  tipo === 'grupo'
+                    ? 'conferir atos de…'
+                    : tipo === 'tipo'
+                      ? 'conferir os atos…'
+                      : tipo === 'etapa'
+                        ? 'fazer a etapa…'
+                        : tipo === 'equipe'
+                          ? 'conferir atos da equipe…'
+                          : 'conferir todos os atos'
                 }
                 selecionado={builder.alvoTipo === tipo}
                 onClick={() => setBuilder((b) => ({ ...b, alvoTipo: tipo, alvoSelecionados: [] }))}
@@ -269,65 +300,20 @@ export const AbaAlcada = () => {
         </SurfaceCard>
       )}
 
-      <div className="flex flex-col gap-1.5">
-        {regras.map((regra) => (
-          <SurfaceCard key={regra.id} className={cn('flex flex-wrap items-center justify-between gap-3.5 p-3', !regra.ativa && 'opacity-55')}>
-            <div className="min-w-0 flex-1">
-              <div className="text-[13.5px] font-medium text-pretty">
-                {fraseDaRegra(regra, {
-                  nomeConferente: (id) => nomePorConferenteId.get(id) ?? '—',
-                  nomeTipoAto: (id) => nomePorTipoAtoId.get(id) ?? '—',
-                  nomeEquipe: (id) => nomePorEquipeId.get(id) ?? '—',
-                })}
-              </div>
-              <div className="mt-1 font-mono text-[10.5px] text-muted-foreground">{regra.origem === 'Manual' ? 'definida por você' : 'aprendida'}</div>
-            </div>
-            <div className="flex flex-none gap-1.5">
-              <button
-                onClick={() => alterarStatus.mutate({ regraId: regra.id, ativa: !regra.ativa })}
-                disabled={alterarStatus.isPending}
-                className={cn(
-                  'rounded-full border px-2.5 py-1 text-xs font-medium',
-                  regra.ativa ? 'border-ok-border bg-ok-bg text-ok-fg' : 'border-border bg-card text-text-2',
-                )}
-              >
-                {regra.ativa ? 'Ativa' : 'Inativa'}
-              </button>
-              <Button variant="outline" size="sm" onClick={() => remover.mutate(regra.id)} disabled={remover.isPending}>
-                Remover
-              </Button>
-            </div>
-          </SurfaceCard>
-        ))}
-        {regras.length === 0 && !builderAberto && <p className="text-[13px] text-muted-foreground">Nenhuma regra criada ainda.</p>}
-      </div>
-
-      <h2 className="mt-6.5 mb-2.5 text-[15px] font-semibold tracking-[-0.01em]">O que cada um alcança hoje</h2>
-      <SurfaceCard className="p-4">
-        {conferentes.map((c) => {
-          const a = alcancePorConferenteId.get(c.id)
-          const qtd = a?.tiposPermitidosIds.length ?? 0
-          const etapasLabel = a && a.etapasPermitidas.length > 0 ? a.etapasPermitidas.map((e) => ETAPA_LABEL[e]).join(' e ') : 'nenhuma etapa liberada'
-          const largura = totalTipos > 0 ? Math.round((qtd / totalTipos) * 100) : 0
-          return (
-            // RNF-10: nome não trunca — items-start (não center) porque o nome agora pode
-            // quebrar em mais de uma linha, e os outros campos da linha (barra, contagem,
-            // etapas) ganham mt-1 pra ficar alinhados com a primeira linha do nome, não com o
-            // meio de um bloco que pode ter 1 ou 2 linhas.
-            <div key={c.id} className={cn('flex items-start gap-3 py-1.5', !c.ativo && 'opacity-50')}>
-              <span className="w-[130px] flex-none text-[13px] text-pretty">{c.nome}</span>
-              <span className="mt-1 w-[110px] flex-none text-[11.5px] text-text-2">Analista {NIVEL_LABEL[c.nivel]}</span>
-              <div className="mt-1.5 h-2 flex-1 overflow-hidden rounded-full bg-secondary">
-                <div className="h-2 rounded-full bg-foreground" style={{ width: `${largura}%` }} />
-              </div>
-              <span className="mt-1 w-[52px] flex-none text-right font-mono text-[12.5px] font-medium">
-                {qtd}/{totalTipos}
-              </span>
-              <span className="mt-1 w-[150px] flex-none text-right text-[11.5px] text-muted-foreground">{etapasLabel}</span>
-            </div>
-          )
-        })}
-      </SurfaceCard>
+      {subAba === 'camadas' && (
+        <AbaAlcadaCamadas
+          regras={regras}
+          conferentes={conferentes}
+          alcance={alcance}
+          totalTipos={tiposAto.length}
+          nomePorConferenteId={nomePorConferenteId}
+          nomePorTipoAtoId={nomePorTipoAtoId}
+          nomePorEquipeId={nomePorEquipeId}
+          onAbrirBuilderParaCamada={abrirBuilderParaCamada}
+        />
+      )}
+      {subAba === 'matriz' && <AbaAlcadaMatriz conferentes={conferentes} tiposAto={tiposAto} alcance={alcance} />}
+      {subAba === 'testar' && <AbaAlcadaTestar conferentes={conferentes} tiposAto={tiposAto} equipes={equipes} />}
     </div>
   )
 }
