@@ -17,7 +17,6 @@ import { SurfaceCard } from '@/shared/ui/surface-card'
 import { AbaAlcadaCamadas, type Camada } from './AbaAlcadaCamadas'
 import { AbaAlcadaMatriz } from './AbaAlcadaMatriz'
 import { AbaAlcadaTestar } from './AbaAlcadaTestar'
-import { NovoTipoAtoDialog } from './NovoTipoAtoDialog'
 import { PillToggle } from './PillToggle'
 
 const NIVEIS: Nivel[] = ['Junior', 'Pleno', 'Senior']
@@ -164,12 +163,9 @@ export const AbaAlcada = () => {
           </p>
         </div>
         {!builderAberto && (
-          <div className="flex flex-none gap-1.5">
-            <NovoTipoAtoDialog />
-            <Button variant="outline" size="sm" onClick={abrirBuilder}>
-              Nova regra
-            </Button>
-          </div>
+          <Button variant="outline" size="sm" className="flex-none" onClick={abrirBuilder}>
+            Nova regra
+          </Button>
         )}
       </div>
 
