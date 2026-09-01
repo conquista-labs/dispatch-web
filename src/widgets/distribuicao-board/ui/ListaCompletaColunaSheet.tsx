@@ -49,12 +49,13 @@ export const ListaCompletaColunaSheet = ({ aberto, onFechar, nome, protocolos, r
                   <span className="font-mono text-[12px] font-medium">{protocolo.numero}</span>
                   <Chip tom={chip.tom}>{chip.label}</Chip>
                 </div>
-                <div className="mt-1 text-[11.5px] text-pretty text-text-2">
-                  {info.tipoAtoNome ?? '—'} · {ETAPA_LABEL[protocolo.etapa]}
-                </div>
-                <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                  <span className="text-pretty text-[11px] text-muted-foreground">{info.escreventeNome ?? '—'}</span>
-                  <Chip tom={info.equipeNome ? 'neutro' : 'vencido'}>{info.equipeNome ?? 'sem equipe'}</Chip>
+                <div className="mt-1 overflow-hidden text-ellipsis whitespace-nowrap text-[13px] text-text-5">{info.tipoAtoNome ?? '—'}</div>
+                <div
+                  className="mt-0.5 overflow-hidden text-ellipsis whitespace-nowrap text-[11.5px] text-muted-foreground"
+                  title={`${info.escreventeNome ?? '—'} · ${info.equipeNome ?? 'sem equipe'} · ${ETAPA_LABEL[protocolo.etapa]}`}
+                >
+                  {info.escreventeNome ?? '—'} ·{' '}
+                  <span className={info.equipeNome ? undefined : 'text-bad-fg'}>{info.equipeNome ?? 'sem equipe'}</span> · {ETAPA_LABEL[protocolo.etapa]}
                 </div>
               </button>
             )

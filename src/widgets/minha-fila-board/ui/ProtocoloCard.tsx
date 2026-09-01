@@ -40,7 +40,7 @@ export const ProtocoloCard = ({ protocolo, now, info, acaoLabel, onAcao, acaoDes
         <Chip tom={info.equipeNome ? 'neutro' : 'vencido'}>{info.equipeNome ?? 'sem equipe'}</Chip>
         <Chip tom="neutro">{ETAPA_LABEL[protocolo.etapa]}</Chip>
       </div>
-      <div className="mt-1 text-[12px] text-pretty text-muted-foreground">{info.escreventeNome ?? '—'}</div>
+      <div className="mt-1 text-[11.5px] text-pretty text-muted-foreground">{info.escreventeNome ?? '—'}</div>
 
       <ObservacaoField protocoloId={protocolo.id} observacao={protocolo.observacao} somenteLeitura={somenteLeitura} />
 

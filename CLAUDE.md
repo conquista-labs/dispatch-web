@@ -1066,3 +1066,47 @@ Regressão permanente (`fila-conferentes`/`conferentes`/`auth`/`session-isolatio
   `tipoAtoNome: null` — agora resolve de verdade via `useTiposAto()` (já buscado pro filtro,
   só não era usado pro card ainda). `ListaCompletaPoolSheet` ganhou a prop `resolverInfo`
   pra repassar adiante. Verificado nos dois temas.
+
+**`DistribuicaoProtocoloCard.tsx`/`ListaCompletaColunaSheet.tsx` compactados, mesmo pedido**:
+a linha de escrevente+equipe usava um `Chip` cheio pra equipe (fundo+borda), numa linha
+própria, separada da etapa — o protótipo mostra tudo isso como texto corrido numa linha só
+("Escrevente · Equipe · Etapa"), sem pill. Trocado `Chip` por `<span>` com `text-bad-fg`
+condicional (equipe nula = vermelho, igual antes, só sem o fundo/borda da pill) e a etapa
+juntou na mesma linha pra variant "conferente" (na variant "status" a etapa não aparecia nessa
+linha mesmo antes — quem mostra lá é o nome do dono, numa linha própria, isso não mudou).
+Verificado nos dois temas e nas duas abas (Por conferente/Por status).
+
+**Segunda rodada de fidelidade no mesmo card, a pedido do dono ("nome do escrevente muito
+grande, dá pra truncar")** — desta vez fui direto no markup do `Dispatch.dc.html` em vez de
+comparar só visualmente (`p.tipo`/`p.meta`, linhas ~375-378 e ~1621-1624 do arquivo), porque a
+essa altura eyeballing screenshot já tinha errado uma vez. Achados **confirmados no CSS
+inline do protótipo, não aproximados**:
+- `p.meta` (a linha "escrevente · equipe · etapa") é `overflow:hidden;text-overflow:ellipsis;
+  white-space:nowrap` — uma linha só, truncada com reticências — **não** `text-wrap:pretty`
+  como eu tinha usado. Isso é o que fazia o card "crescer" quando o nome do escrevente era
+  longo: a linha quebrava em 2-3 linhas em vez de truncar. Corrigido em
+  `DistribuicaoProtocoloCard.tsx` e no item da lista de `ListaCompletaColunaSheet.tsx`
+  (mesmo padrão no protótipo, linha ~1624) — os dois ganharam `overflow-hidden text-ellipsis
+  whitespace-nowrap` + `title` com o texto completo (tooltip nativo do browser), preservando
+  o acesso ao nome inteiro sem inventar um componente de tooltip novo pra isso.
+- **Divergência deliberada de RNF-10 aqui, registrada**: RNF-10 pede nome sem truncar "em tela
+  cuja função é distinguir registros parecidos" (catálogo, listas) — mas esta linha é dado
+  auxiliar dentro de um card operacional (RF-13), não uma lista cujo propósito é
+  desambiguar registros; o próprio protótipo aprovado trunca aqui. `title` cobre o caso de
+  precisar ver o nome completo sem reabrir a decisão de RNF-10 nos lugares onde ela
+  efetivamente se aplica (Conferentes, Tipos de ato — nenhum dos dois mudou).
+- `p.tipo` tinha tamanho/cor errados por aproximação: protótipo usa `font-size:12.5px;
+  color:var(--text-5)` em Distribuição (eu tinha `11.5px`/`text-text-2`) e `font-size:13px;
+  color:var(--text-5)` em Minha fila (essa already batia). Corrigido nos dois cards + no item
+  da lista completa (`13px`, também truncado no protótipo, `overflow-hidden text-ellipsis
+  whitespace-nowrap` lá também). Escrevente de Minha fila (`ProtocoloCard.tsx`) tinha
+  `12px`; protótipo usa `11.5px` — corrigido. **Não truncado** em Minha fila: o protótipo não
+  tem `overflow`/`ellipsis` na linha do escrevente lá (`p.escrevLabel`, sozinho, sem juntar
+  com equipe/etapa que já são pills separadas) — só Distribuição junta os 3 campos numa
+  string só e trunca.
+- **Não mexido de propósito**: o `Chip` compartilhado (`shared/ui/chip.tsx`, `font-mono
+  text-[11px]`) usado nas pills de prazo/equipe/etapa em todo o app — o protótipo usa
+  `10.5px` sem mono pras pills de equipe/etapa especificamente, mas mudar o componente
+  compartilhado afetaria dezenas de usos já verificados (prazo em toda tela, "urgente",
+  etc.); risco desproporcional ao pedido, que era especificamente sobre o nome do
+  escrevente. Fica registrado como gap conhecido, não esquecido.

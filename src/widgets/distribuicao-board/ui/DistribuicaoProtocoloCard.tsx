@@ -59,12 +59,12 @@ export const DistribuicaoProtocoloCard = ({ protocolo, now, donoNome, info, vari
   // porque o prazo dele já passou — a decisão já foi tomada, o semáforo deixou de importar).
   const tom = emConferencia || concluido ? undefined : chip.tom
 
-  // Aba "Por status": protótipo mostra o dono (ou "sem dono"), nunca a etapa, nessa linha, e
-  // completa com "· aprovado"/"· não aprovado" quando concluído. "Por conferente": a coluna já
-  // é o dono, então essa linha mostra a etapa (aproximação da linha "escrevente · equipe ·
-  // andamento · prazo" do protótipo — sem escrevente/equipe no DTO hoje, ver CLAUDE.md).
+  // Aba "Por status": protótipo mostra o dono (ou "sem dono") nessa linha, e completa com
+  // "· aprovado"/"· não aprovado" quando concluído — a coluna já é o dono na aba "Por
+  // conferente", que não repete essa linha (a etapa entra na linha de escrevente/equipe logo
+  // abaixo, ver `linhaEscreventeEquipe`).
   const sufixoConcluido = concluido ? ` · ${STATUS_CONCLUIDO_LABEL[protocolo.status].toLowerCase()}` : ''
-  const meta = variant === 'status' ? `${donoNome ?? 'sem dono'}${sufixoConcluido}` : ETAPA_LABEL[protocolo.etapa]
+  const meta = variant === 'status' ? `${donoNome ?? 'sem dono'}${sufixoConcluido}` : null
 
   return (
     <SurfaceCard
@@ -92,16 +92,25 @@ export const DistribuicaoProtocoloCard = ({ protocolo, now, donoNome, info, vari
             <Chip tom={chip.tom}>{chip.label}</Chip>
           ))}
       </div>
-      {/* RF-14: tipo de ato + escrevente, com a equipe como etiqueta própria — vermelha quando
-          o escrevente não tem equipe definida (RNF-10: nomes sem truncar). */}
-      <div className="mt-1.5 text-[11.5px] text-pretty text-text-2">{info.tipoAtoNome ?? '—'}</div>
-      <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
-        <span className="text-pretty text-[11.5px] text-muted-foreground">{info.escreventeNome ?? '—'}</span>
-        <Chip tom={info.equipeNome ? 'neutro' : 'vencido'}>{info.equipeNome ?? 'sem equipe'}</Chip>
+      {/* RF-14: tipo de ato (font-size/cor batendo com `p.tipo` do protótipo — 12.5px,
+          var(--text-5)), depois "escrevente · equipe · etapa" numa linha só, truncada com
+          reticências igual `p.meta` no protótipo (font-size 11.5px, var(--muted),
+          overflow/ellipsis/nowrap — confirmado direto no Dispatch.dc.html, não é aproximação).
+          `title` guarda o texto completo (RNF-10 via tooltip nativo, já que aqui é uma linha
+          densa combinando 3 campos, não uma lista cujo propósito é distinguir registros). A
+          equipe fica em vermelho quando o escrevente não tem equipe definida. */}
+      <div className="mt-1.5 text-[12.5px] text-text-5">{info.tipoAtoNome ?? '—'}</div>
+      <div
+        className="mt-0.5 overflow-hidden text-ellipsis whitespace-nowrap text-[11.5px] text-muted-foreground"
+        title={`${info.escreventeNome ?? '—'} · ${info.equipeNome ?? 'sem equipe'}${variant === 'conferente' ? ` · ${ETAPA_LABEL[protocolo.etapa]}` : ''}`}
+      >
+        {info.escreventeNome ?? '—'} ·{' '}
+        <span className={info.equipeNome ? undefined : 'text-bad-fg'}>{info.equipeNome ?? 'sem equipe'}</span>
+        {variant === 'conferente' && <> · {ETAPA_LABEL[protocolo.etapa]}</>}
       </div>
       {/* RNF-10: sem truncar — na variante "status" isso é o nome do dono do protocolo, dois
           donos com nome parecido não podem ficar indistinguíveis aqui. */}
-      <div className="mt-1.5 text-[11.5px] text-pretty text-muted-foreground">{meta}</div>
+      {meta && <div className="mt-1.5 text-[11.5px] text-pretty text-muted-foreground">{meta}</div>}
 
       <ObservacaoField protocoloId={protocolo.id} observacao={protocolo.observacao} somenteLeitura />
     </SurfaceCard>
