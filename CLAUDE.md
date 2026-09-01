@@ -819,6 +819,39 @@ um `h-auto` sem o modificador não teria sido substituído (grupos de classe com
 diferente não colidem no `twMerge`, os dois ficariam na `className` final e a ordem de quem
 vence no CSS gerado ficaria imprevisível).
 
+## Motor de alçada v2 — equipe, alçada plena, grupo de tipo (só o construtor, não a tela nova)
+
+Fecha o lado front da revisão grande do motor de alçada (ver `../dispatch-api/CLAUDE.md`,
+"Motor de alçada v2"). Escopo combinado com o dono: só o necessário pra criar as regras novas
+pela UI que já existe — a reformulação visual grande da aba Alçada do protótipo v2 (3 sub-abas
+novas: Camadas/Matriz/Testar) fica de fora, é projeto à parte.
+
+- **`entities/regraAlcada`** — `RegraAlcada`/`CriarRegraAlcadaRequest` ganham `alvoEhEquipe`,
+  `alvoEquipeId` (`string | null` — nulo é "sem equipe" como alvo válido, RF-29a) e
+  `alvoTodosOsAtos` (alçada plena, RF-29b). `fraseDaRegra` ganha `nomeEquipe` nos lookups e os
+  textos "conferir atos da equipe X" / "conferir atos de escreventes sem equipe" / "conferir
+  todos os atos" — os três call sites (`AbaAlcada`, `AbaRegrasEmVigor`,
+  `PainelDetalheProtocolo`) já buscavam `useEquipes()` ou ganharam a busca pra montar o lookup.
+- **`entities/tipoAto`** — `TipoAto`/`TipoAtoComUso` ganham `grupo: GrupoTipoAto | null` (5
+  valores fixos: Transmissões/Sucessões/Família/Garantias/Notariais — mesmo enum do back, sem
+  entidade própria). `GRUPO_LABEL` novo em `lib/rotulos.ts`.
+- **`features/tipoAto/definir-grupo`** (novo, mesmo molde de `definir-peso`).
+- **`widgets/central-de-regras-board/ui/AbaAlcada.tsx`** — o construtor guiado ganha mais duas
+  opções de alvo (`'equipe' | 'todos'`, ao lado de `'tipo' | 'etapa'`): "equipe" reaproveita
+  `useEquipes()` (já buscado por outras abas) + uma opção "sem equipe" (sentinela
+  `SEM_EQUIPE`, traduzida pra `null` só na hora de montar o request — `alvoSelecionados` é
+  `string[]`, não aceita `null` direto); "todos" não tem segunda etapa de seleção, cria a regra
+  direto no clique de "Criar regra".
+- **`widgets/central-de-regras-board/ui/TipoAtoRow.tsx`** — ganha um `Select` de grupo (5
+  opções + "sem grupo"), mesmo padrão de commit imediato dos outros campos da linha (peso,
+  ativo/inativo).
+
+Verificado ponta a ponta contra uma cópia real dos dados de produção (mesma clonagem usada do
+lado do back): criar regra de equipe = "sem equipe" e regra de alçada plena pelo construtor,
+confirmando a frase gerada e o painel "O que cada um alcança hoje" refletindo a lista fechada
+certa (Analista Júnior com 1/3 tipos, batendo com o bug relatado em produção); definir grupo
+"Notariais" num tipo de ato e confirmar que persiste. Nos dois temas.
+
 ## Índice de confiança real da sugestão (RF-39)
 
 Fecha a simplificação consciente documentada desde a construção da Central de Regras — ver

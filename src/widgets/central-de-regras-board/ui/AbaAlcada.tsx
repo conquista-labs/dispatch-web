@@ -2,6 +2,7 @@ import { useState } from 'react'
 
 import { NIVEL_LABEL, useAlcance, useConferentes } from '@/entities/conferente'
 import type { Nivel } from '@/entities/conferente'
+import { useEquipes } from '@/entities/equipe'
 import { ETAPA_LABEL } from '@/entities/protocolo'
 import type { Etapa } from '@/entities/protocolo'
 import { fraseDaRegra, PERMISSAO_LABEL, useRegrasAlcada } from '@/entities/regraAlcada'
@@ -21,7 +22,11 @@ const NIVEIS: Nivel[] = ['Junior', 'Pleno', 'Senior']
 const ETAPAS: Etapa[] = ['PreConferencia', 'PosConferencia']
 
 type SujeitoTipo = 'nivel' | 'pessoa'
-type AlvoTipo = 'tipo' | 'etapa'
+type AlvoTipo = 'tipo' | 'etapa' | 'equipe' | 'todos'
+
+// Sentinela pra "sem equipe" dentro de alvoSelecionados (que só guarda string) — o back
+// representa isso com AlvoEquipeId nulo (RF-29a: "sem equipe" é alvo válido, não ausência).
+const SEM_EQUIPE = '__sem-equipe__'
 
 type Builder = {
   sujeitoTipo: SujeitoTipo
@@ -47,6 +52,7 @@ export const AbaAlcada = () => {
   const { data: regras } = useRegrasAlcada()
   const { data: conferentes } = useConferentes()
   const { data: tiposAto } = useTiposAto()
+  const { data: equipes } = useEquipes()
   const { data: alcance } = useAlcance()
 
   const criar = useCriarRegraAlcada()
@@ -56,12 +62,13 @@ export const AbaAlcada = () => {
   const [builderAberto, setBuilderAberto] = useState(false)
   const [builder, setBuilder] = useState<Builder>(builderVazio(''))
 
-  if (!regras || !conferentes || !tiposAto || !alcance) {
+  if (!regras || !conferentes || !tiposAto || !equipes || !alcance) {
     return <p className="text-[13.5px] text-muted-foreground">Carregando…</p>
   }
 
   const nomePorConferenteId = new Map(conferentes.map((c) => [c.id, c.nome]))
   const nomePorTipoAtoId = new Map(tiposAto.map((t) => [t.id, t.nome]))
+  const nomePorEquipeId = new Map(equipes.map((e) => [e.id, e.nome]))
   const alcancePorConferenteId = new Map(alcance.map((a) => [a.conferenteId, a]))
 
   const abrirBuilder = () => {
@@ -73,33 +80,57 @@ export const AbaAlcada = () => {
     builder.sujeitoTipo === 'nivel' ? `Nível ${NIVEL_LABEL[builder.sujeitoNivel]}` : (nomePorConferenteId.get(builder.sujeitoConferenteId) ?? '…')
 
   const alvoTexto =
-    builder.alvoSelecionados.length === 0
-      ? '…'
-      : builder.alvoTipo === 'etapa'
-        ? `fazer ${builder.alvoSelecionados.map((e) => ETAPA_LABEL[e as Etapa]).join(' e ')}`
-        : `conferir ${builder.alvoSelecionados.map((id) => nomePorTipoAtoId.get(id) ?? id).join(', ')}`
+    builder.alvoTipo === 'todos'
+      ? 'conferir todos os atos'
+      : builder.alvoSelecionados.length === 0
+        ? '…'
+        : builder.alvoTipo === 'etapa'
+          ? `fazer ${builder.alvoSelecionados.map((e) => ETAPA_LABEL[e as Etapa]).join(' e ')}`
+          : builder.alvoTipo === 'equipe'
+            ? `conferir atos ${builder.alvoSelecionados.map((v) => (v === SEM_EQUIPE ? 'de escreventes sem equipe' : `da equipe ${nomePorEquipeId.get(v) ?? v}`)).join(' e ')}`
+            : `conferir ${builder.alvoSelecionados.map((id) => nomePorTipoAtoId.get(id) ?? id).join(', ')}`
 
-  const podeCriar = builder.alvoSelecionados.length > 0 && (builder.sujeitoTipo === 'nivel' || builder.sujeitoConferenteId !== '')
+  const podeCriar =
+    (builder.alvoTipo === 'todos' || builder.alvoSelecionados.length > 0) &&
+    (builder.sujeitoTipo === 'nivel' || builder.sujeitoConferenteId !== '')
 
   const handleCriarRegra = async () => {
     const sujeito = builder.sujeitoTipo === 'nivel' ? { sujeitoNivel: builder.sujeitoNivel } : { sujeitoConferenteId: builder.sujeitoConferenteId }
 
+    if (builder.alvoTipo === 'todos') {
+      await criar.mutateAsync({ ...sujeito, permissao: builder.permissao, alvoTodosOsAtos: true })
+      setBuilderAberto(false)
+      return
+    }
+
     // Protótipo permite selecionar vários alvos numa tacada só; o back só aceita um alvo por
-    // regra (RF-31: alvo é XOR etapa/tipo) — cria uma regra por alvo selecionado pra preservar
-    // a mesma UX sem inventar um conceito de "regra composta" que não existe no domínio.
+    // regra (RF-31: alvo é XOR etapa/tipo/equipe/todos-os-atos) — cria uma regra por alvo
+    // selecionado pra preservar a mesma UX sem inventar um conceito de "regra composta" que
+    // não existe no domínio.
     await Promise.all(
       builder.alvoSelecionados.map((valor) =>
         criar.mutateAsync({
           ...sujeito,
           permissao: builder.permissao,
-          ...(builder.alvoTipo === 'etapa' ? { alvoEtapa: valor as Etapa } : { alvoTipoAtoId: valor }),
+          ...(builder.alvoTipo === 'etapa'
+            ? { alvoEtapa: valor as Etapa }
+            : builder.alvoTipo === 'equipe'
+              ? { alvoEhEquipe: true, alvoEquipeId: valor === SEM_EQUIPE ? null : valor }
+              : { alvoTipoAtoId: valor }),
         }),
       ),
     )
     setBuilderAberto(false)
   }
 
-  const alvoOpcoes = builder.alvoTipo === 'etapa' ? ETAPAS.map((e) => ({ valor: e, label: ETAPA_LABEL[e] })) : tiposAto.map((t) => ({ valor: t.id, label: t.nome }))
+  const alvoOpcoes =
+    builder.alvoTipo === 'etapa'
+      ? ETAPAS.map((e) => ({ valor: e, label: ETAPA_LABEL[e] }))
+      : builder.alvoTipo === 'equipe'
+        ? [...equipes.map((e) => ({ valor: e.id, label: e.nome })), { valor: SEM_EQUIPE, label: 'sem equipe' }]
+        : builder.alvoTipo === 'todos'
+          ? []
+          : tiposAto.map((t) => ({ valor: t.id, label: t.nome }))
 
   const totalTipos = tiposAto.length
 
@@ -189,10 +220,18 @@ export const AbaAlcada = () => {
                 onClick={() => setBuilder((b) => ({ ...b, permissao }))}
               />
             ))}
-            {(['tipo', 'etapa'] as const).map((tipo) => (
+            {(['tipo', 'etapa', 'equipe', 'todos'] as const).map((tipo) => (
               <PillToggle
                 key={tipo}
-                label={tipo === 'tipo' ? 'conferir os atos…' : 'fazer a etapa…'}
+                label={
+                  tipo === 'tipo'
+                    ? 'conferir os atos…'
+                    : tipo === 'etapa'
+                      ? 'fazer a etapa…'
+                      : tipo === 'equipe'
+                        ? 'conferir atos da equipe…'
+                        : 'conferir todos os atos'
+                }
                 selecionado={builder.alvoTipo === tipo}
                 onClick={() => setBuilder((b) => ({ ...b, alvoTipo: tipo, alvoSelecionados: [] }))}
               />
@@ -234,7 +273,13 @@ export const AbaAlcada = () => {
         {regras.map((regra) => (
           <SurfaceCard key={regra.id} className={cn('flex flex-wrap items-center justify-between gap-3.5 p-3', !regra.ativa && 'opacity-55')}>
             <div className="min-w-0 flex-1">
-              <div className="text-[13.5px] font-medium text-pretty">{fraseDaRegra(regra, { nomeConferente: (id) => nomePorConferenteId.get(id) ?? '—', nomeTipoAto: (id) => nomePorTipoAtoId.get(id) ?? '—' })}</div>
+              <div className="text-[13.5px] font-medium text-pretty">
+                {fraseDaRegra(regra, {
+                  nomeConferente: (id) => nomePorConferenteId.get(id) ?? '—',
+                  nomeTipoAto: (id) => nomePorTipoAtoId.get(id) ?? '—',
+                  nomeEquipe: (id) => nomePorEquipeId.get(id) ?? '—',
+                })}
+              </div>
               <div className="mt-1 font-mono text-[10.5px] text-muted-foreground">{regra.origem === 'Manual' ? 'definida por você' : 'aprendida'}</div>
             </div>
             <div className="flex flex-none gap-1.5">

@@ -67,6 +67,7 @@ export const PainelDetalheProtocolo = ({ protocoloId, onFechar }: PainelDetalheP
 
   const nomePorConferenteId = new Map((conferentes ?? []).map((c) => [c.id, c.nome]))
   const nomePorTipoAtoId = new Map((tiposAto ?? []).map((t) => [t.id, t.nome]))
+  const nomePorEquipeId = new Map((equipes ?? []).map((e) => [e.id, e.nome]))
   const escreventePorId = new Map((escreventes ?? []).map((e) => [e.id, e]))
   const equipePorId = new Map((equipes ?? []).map((e) => [e.id, e]))
 
@@ -84,7 +85,13 @@ export const PainelDetalheProtocolo = ({ protocoloId, onFechar }: PainelDetalheP
         { k: 'Prazo', v: detalhe.prazo ? TIPO_PRAZO_LABEL[detalhe.prazo] : '—' },
         {
           k: 'Regra aplicada',
-          v: regraAplicada ? fraseDaRegra(regraAplicada, { nomeConferente: (id) => nomePorConferenteId.get(id) ?? '—', nomeTipoAto: (id) => nomePorTipoAtoId.get(id) ?? '—' }) : 'padrão aberto',
+          v: regraAplicada
+            ? fraseDaRegra(regraAplicada, {
+                nomeConferente: (id) => nomePorConferenteId.get(id) ?? '—',
+                nomeTipoAto: (id) => nomePorTipoAtoId.get(id) ?? '—',
+                nomeEquipe: (id) => nomePorEquipeId.get(id) ?? '—',
+              })
+            : 'padrão aberto',
         },
         { k: 'Vencimento', v: detalhe.vencimentoEm ? formatDataHora(detalhe.vencimentoEm) : '—' },
         { k: 'Prioridade', v: detalhe.prioridade === 'Alta' ? 'Alta' : 'Normal' },

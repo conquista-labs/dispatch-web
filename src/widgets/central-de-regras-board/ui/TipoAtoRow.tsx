@@ -2,17 +2,23 @@ import { isAxiosError } from 'axios'
 import { MinusIcon, PlusIcon } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
-import type { TipoAtoComUso } from '@/entities/tipoAto'
+import type { GrupoTipoAto, TipoAtoComUso } from '@/entities/tipoAto'
+import { GRUPO_LABEL } from '@/entities/tipoAto'
 import { useAlterarStatusTipoAto } from '@/features/tipoAto/alterar-status'
+import { useDefinirGrupoTipoAto } from '@/features/tipoAto/definir-grupo'
 import { useDefinirPesoTipoAto } from '@/features/tipoAto/definir-peso'
 import { useRemoverTipoAto } from '@/features/tipoAto/remover'
 import { useRenomearTipoAto } from '@/features/tipoAto/renomear'
 import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/ui/button'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { SurfaceCard } from '@/shared/ui/surface-card'
 
 const PESO_MIN = 1
 const PESO_MAX = 5
+
+const SEM_GRUPO = '__sem-grupo__'
+const GRUPOS: GrupoTipoAto[] = ['Transmissoes', 'Sucessoes', 'Familia', 'Garantias', 'Notariais']
 
 type TipoAtoRowProps = {
   tipo: TipoAtoComUso
@@ -29,6 +35,7 @@ export const TipoAtoRow = ({ tipo }: TipoAtoRowProps) => {
   const renomear = useRenomearTipoAto()
   const alterarStatus = useAlterarStatusTipoAto()
   const definirPeso = useDefinirPesoTipoAto()
+  const definirGrupo = useDefinirGrupoTipoAto()
   const remover = useRemoverTipoAto()
 
   useEffect(() => setNome(tipo.nome), [tipo.nome])
@@ -105,6 +112,23 @@ export const TipoAtoRow = ({ tipo }: TipoAtoRowProps) => {
           </button>
         </div>
       </div>
+
+      <Select
+        value={tipo.grupo ?? SEM_GRUPO}
+        onValueChange={(valor) => definirGrupo.mutate({ tipoAtoId: tipo.id, grupo: valor === SEM_GRUPO ? null : (valor as GrupoTipoAto) })}
+      >
+        <SelectTrigger size="sm" className="h-7 flex-none text-[11.5px]">
+          <SelectValue placeholder="Grupo" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value={SEM_GRUPO}>sem grupo</SelectItem>
+          {GRUPOS.map((grupo) => (
+            <SelectItem key={grupo} value={grupo}>
+              {GRUPO_LABEL[grupo]}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
 
       <button
         onClick={() => alterarStatus.mutate({ tipoAtoId: tipo.id, ativo: !tipo.ativo })}

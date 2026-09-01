@@ -42,11 +42,16 @@ export const AbaRegrasEmVigor = ({ onIrParaAlcada, onIrParaTipos, onIrParaPrazos
 
   const nomePorConferenteId = new Map(conferentes.map((c) => [c.id, c.nome]))
   const nomePorTipoAtoId = new Map(tiposAto.map((t) => [t.id, t.nome]))
+  const nomePorEquipeId = new Map(equipes.map((e) => [e.id, e.nome]))
 
   const alcadaItens: ItemVigor[] = regras
     .filter((r) => r.ativa)
     .map((r) => ({
-      frase: fraseDaRegra(r, { nomeConferente: (id) => nomePorConferenteId.get(id) ?? '—', nomeTipoAto: (id) => nomePorTipoAtoId.get(id) ?? '—' }),
+      frase: fraseDaRegra(r, {
+        nomeConferente: (id) => nomePorConferenteId.get(id) ?? '—',
+        nomeTipoAto: (id) => nomePorTipoAtoId.get(id) ?? '—',
+        nomeEquipe: (id) => nomePorEquipeId.get(id) ?? '—',
+      }),
       detalhe: r.origem === 'Manual' ? 'definida por você' : 'aprendida pelo sistema',
     }))
 
