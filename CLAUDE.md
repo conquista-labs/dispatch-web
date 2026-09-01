@@ -991,6 +991,26 @@ existente, agora estendido com alvo de grupo e permissão de reserva.
   build). `PainelDetalheProtocolo.tsx` ganhou o texto de `motivo` (`MOTIVO_ALCADA_LABEL`) ao
   lado de quem está barrado, de graça — antes só mostrava "barrado" sem dizer por quê.
 
+**Duas rodadas de ajuste de fidelidade depois do primeiro corte, a pedido do dono**:
+- Removido o botão "Novo tipo de ato" do cabeçalho da aba Alçada (sobrou do corte anterior,
+  antes de "Tipos de ato" virar aba própria) — o protótipo só tem "Nova regra" ali; "Tipos de
+  ato" já tem seu próprio diálogo de criação, então não perdeu funcionalidade nenhuma.
+- **`SeletorUnico.tsx`/`SeletorMultiplo.tsx`** (novos, `central-de-regras-board/ui/`) — o
+  construtor guiado (RF-32) tinha duas paredes de pills que não escalavam bem (até 24 tipos de
+  ato de uma vez, ou um pill por conferente): "Quem" (o nível/pessoa específico) e o valor do
+  alvo (tipos/etapas/equipes/grupos) viraram dropdowns com busca, padronizando com dois padrões
+  que já existiam em outros cantos do app — `SeletorConferente` (fila-conferentes: Popover +
+  trigger + indicador de seleção único) e `FiltroEixo` (widgets/filtro-protocolos: Popover +
+  busca + checkbox múltiplo). Isso não veio do `Dispatch.dc.html` — **busquei o texto exato
+  dos prints que o dono mandou (`buscar conferente ou nível…`, `escolher o que…`) no arquivo
+  inteiro e não achei nada**; o construtor lá continua sendo pills. É uma melhoria de
+  consistência interna do próprio app (reaproveitar um padrão já validado em duas telas
+  diferentes), não fidelidade a uma tela nova do protótipo — documentado aqui pra não passar a
+  impressão de que foi confirmado contra o `.dc.html`, que não foi. "Permissão" (pode/não
+  pode/reserva) também virou o mesmo tipo de dropdown, a pedido explícito do dono ("pra ficar
+  padronizado ali") — os pills de tipo de alvo (grupo/tipo/etapa/equipe/todos) continuam pills,
+  só o valor final de cada eixo é que virou dropdown.
+
 **Achado no meio da verificação, não é bug de código**: a Matriz ficou com as colunas de
 conferente todas coladas (cabeçalho "AglaConfConfMarcMariMathNubySuel" sem espaço nenhum) na
 primeira rodada de screenshot — o dev server do Vite (rodando desde muito antes desses arquivos

@@ -18,6 +18,8 @@ import { AbaAlcadaCamadas, type Camada } from './AbaAlcadaCamadas'
 import { AbaAlcadaMatriz } from './AbaAlcadaMatriz'
 import { AbaAlcadaTestar } from './AbaAlcadaTestar'
 import { PillToggle } from './PillToggle'
+import { SeletorMultiplo } from './SeletorMultiplo'
+import { SeletorUnico } from './SeletorUnico'
 
 const NIVEIS: Nivel[] = ['Junior', 'Pleno', 'Senior']
 const ETAPAS: Etapa[] = ['PreConferencia', 'PosConferencia']
@@ -213,38 +215,32 @@ export const AbaAlcada = () => {
               />
             ))}
           </div>
-          <div className="mt-1.5 flex flex-wrap gap-1.5 pl-[68px]">
-            {builder.sujeitoTipo === 'nivel'
-              ? NIVEIS.map((nivel) => (
-                  <PillToggle
-                    key={nivel}
-                    redondo
-                    label={NIVEL_LABEL[nivel]}
-                    selecionado={builder.sujeitoNivel === nivel}
-                    onClick={() => setBuilder((b) => ({ ...b, sujeitoNivel: nivel }))}
-                  />
-                ))
-              : conferentes.map((c) => (
-                  <PillToggle
-                    key={c.id}
-                    redondo
-                    label={c.nome}
-                    selecionado={builder.sujeitoConferenteId === c.id}
-                    onClick={() => setBuilder((b) => ({ ...b, sujeitoConferenteId: c.id }))}
-                  />
-                ))}
+          <div className="mt-1.5 pl-[68px]">
+            {builder.sujeitoTipo === 'nivel' ? (
+              <SeletorUnico
+                valor={builder.sujeitoNivel}
+                opcoes={NIVEIS.map((nivel) => ({ valor: nivel, label: NIVEL_LABEL[nivel] }))}
+                onSelecionar={(nivel) => setBuilder((b) => ({ ...b, sujeitoNivel: nivel }))}
+                placeholder="buscar conferente ou nível…"
+              />
+            ) : (
+              <SeletorUnico
+                valor={builder.sujeitoConferenteId}
+                opcoes={conferentes.map((c) => ({ valor: c.id, label: c.nome }))}
+                onSelecionar={(id) => setBuilder((b) => ({ ...b, sujeitoConferenteId: id }))}
+                placeholder="buscar conferente ou nível…"
+              />
+            )}
           </div>
 
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <span className="w-[60px] flex-none text-[11.5px] font-medium text-text-2">Permissão</span>
-            {(['Permite', 'Nega', 'Reserva'] as const).map((permissao) => (
-              <PillToggle
-                key={permissao}
-                label={PERMISSAO_LABEL[permissao]}
-                selecionado={builder.permissao === permissao}
-                onClick={() => setBuilder((b) => ({ ...b, permissao }))}
-              />
-            ))}
+            <SeletorUnico
+              valor={builder.permissao}
+              opcoes={(['Permite', 'Nega', 'Reserva'] as const).map((permissao) => ({ valor: permissao, label: PERMISSAO_LABEL[permissao] }))}
+              onSelecionar={(permissao) => setBuilder((b) => ({ ...b, permissao }))}
+              placeholder="buscar permissão…"
+            />
             {(['grupo', 'tipo', 'etapa', 'equipe', 'todos'] as const).map((tipo) => (
               <PillToggle
                 key={tipo}
@@ -264,24 +260,21 @@ export const AbaAlcada = () => {
               />
             ))}
           </div>
-          <div className="mt-1.5 flex flex-wrap gap-1.5 pl-[68px]">
-            {alvoOpcoes.map((opcao) => (
-              <PillToggle
-                key={opcao.valor}
-                redondo
-                label={opcao.label}
-                selecionado={builder.alvoSelecionados.includes(opcao.valor)}
-                onClick={() =>
+          {builder.alvoTipo !== 'todos' && (
+            <div className="mt-1.5 pl-[68px]">
+              <SeletorMultiplo
+                selecionados={builder.alvoSelecionados}
+                opcoes={alvoOpcoes}
+                onAlternar={(valor) =>
                   setBuilder((b) => ({
                     ...b,
-                    alvoSelecionados: b.alvoSelecionados.includes(opcao.valor)
-                      ? b.alvoSelecionados.filter((v) => v !== opcao.valor)
-                      : [...b.alvoSelecionados, opcao.valor],
+                    alvoSelecionados: b.alvoSelecionados.includes(valor) ? b.alvoSelecionados.filter((v) => v !== valor) : [...b.alvoSelecionados, valor],
                   }))
                 }
+                placeholder="buscar tipo de ato, equipe, grupo…"
               />
-            ))}
-          </div>
+            </div>
+          )}
 
           <div className="mt-3.5 flex gap-1.5">
             {podeCriar && (
