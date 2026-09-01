@@ -1049,3 +1049,20 @@ Verificado nos dois temas: pool com 16 itens, 3 visíveis + "+13 protocolos", Sh
 a lista completa ordenada (mais vencido no topo) e "Pegar este" funcionando de dentro do Sheet.
 Regressão permanente (`fila-conferentes`/`conferentes`/`auth`/`session-isolation`/`cursor`/
 `login`) verde.
+
+**Ajustes a pedido do dono, mesma rodada**:
+- Limite de truncamento subiu de 3 pra 5 em `ProtocoloColuna.tsx` (variant "conferente", usada
+  por "Pool aberto"/colunas de Distribuição) e `MAX_POOL_VISIVEL` de `MinhaFilaBoard.tsx`/
+  `FilaDoConferenteBoard.tsx`.
+- **Achado real comparando ao vivo com o protótipo**: o card de Minha fila (`ProtocoloCard.tsx`)
+  não mostrava tipo de ato/escrevente/equipe — a "simplificação consciente" documentada desde a
+  construção de Minha fila ("RF-14 é só de Distribuição") ficou **desatualizada**: o protótipo
+  v2 passou a mostrar isso ali também (tipo de ato, chips de equipe+etapa lado a lado, nome do
+  escrevente), achado só ao navegar o protótipo ao vivo lado a lado com o app, não por suposição.
+  `ProtocoloCard` ganhou `info: InfoProtocolo` (mesmo tipo já usado em Distribuição) — layout
+  muda um pouco do de lá: aqui a etapa também vira `Chip` (não texto solto), lado a lado com o
+  chip de equipe, já que o protótipo mostra os dois como pills na mesma linha aqui.
+  `resolverInfoProtocolo` em `MinhaFilaBoard`/`FilaDoConferenteBoard` deixou de sempre devolver
+  `tipoAtoNome: null` — agora resolve de verdade via `useTiposAto()` (já buscado pro filtro,
+  só não era usado pro card ainda). `ListaCompletaPoolSheet` ganhou a prop `resolverInfo`
+  pra repassar adiante. Verificado nos dois temas.

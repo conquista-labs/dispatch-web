@@ -10,7 +10,7 @@ import { ConcluidosHojeList, EmConferenciaCard, ListaCompletaPoolSheet, Protocol
 
 // Mesmo limite de MinhaFilaBoard/ProtocoloColuna (Distribuição) — truncar em 3 e abrir a
 // lista completa num Sheet quando tiver mais.
-const MAX_POOL_VISIVEL = 3
+const MAX_POOL_VISIVEL = 5
 
 const LEGENDA = [
   { label: 'no prazo', className: 'bg-ok-bg border-ok-border-2' },
@@ -41,10 +41,11 @@ export const FilaDoConferenteBoard = ({ conferenteId }: FilaDoConferenteBoardPro
   // se beneficia de filtrar por equipe/tipo/prioridade/prazo.
   const escreventePorId = new Map((escreventes ?? []).map((e) => [e.id, e]))
   const nomePorEquipeId = new Map((equipes ?? []).map((e) => [e.id, e.nome]))
+  const nomePorTipoAtoId = new Map((tiposAto ?? []).map((t) => [t.id, t.nome]))
   const resolverInfoProtocolo = (protocolo: ProtocoloResumo): InfoProtocolo => {
     const escrevente = escreventePorId.get(protocolo.escreventeId)
     return {
-      tipoAtoNome: null,
+      tipoAtoNome: protocolo.tipoAtoId ? (nomePorTipoAtoId.get(protocolo.tipoAtoId) ?? null) : null,
       escreventeNome: escrevente?.nome ?? null,
       equipeId: escrevente?.equipeId ?? null,
       equipeNome: escrevente?.equipeId ? (nomePorEquipeId.get(escrevente.equipeId) ?? null) : null,
@@ -92,7 +93,7 @@ export const FilaDoConferenteBoard = ({ conferenteId }: FilaDoConferenteBoardPro
           </div>
           <div className="flex flex-col gap-2">
             {filaFiltrada.poolDisponivel.slice(0, MAX_POOL_VISIVEL).map((protocolo) => (
-              <ProtocoloCard key={protocolo.id} protocolo={protocolo} now={now} somenteLeitura />
+              <ProtocoloCard key={protocolo.id} protocolo={protocolo} now={now} info={resolverInfoProtocolo(protocolo)} somenteLeitura />
             ))}
             {filaFiltrada.poolDisponivel.length > MAX_POOL_VISIVEL && (
               <button
@@ -114,6 +115,7 @@ export const FilaDoConferenteBoard = ({ conferenteId }: FilaDoConferenteBoardPro
             onFechar={() => setListaCompletaAberta(false)}
             protocolos={filaFiltrada.poolDisponivel}
             now={now}
+            resolverInfo={resolverInfoProtocolo}
             somenteLeitura
           />
         </div>
@@ -125,7 +127,7 @@ export const FilaDoConferenteBoard = ({ conferenteId }: FilaDoConferenteBoardPro
           </div>
           <div className="flex flex-col gap-2">
             {filaFiltrada.atribuidos.map((protocolo) => (
-              <ProtocoloCard key={protocolo.id} protocolo={protocolo} now={now} somenteLeitura />
+              <ProtocoloCard key={protocolo.id} protocolo={protocolo} now={now} info={resolverInfoProtocolo(protocolo)} somenteLeitura />
             ))}
             {filaFiltrada.atribuidos.length === 0 && (
               <div className="rounded-[10px] border border-dashed border-border p-4 text-center text-xs text-muted-foreground">

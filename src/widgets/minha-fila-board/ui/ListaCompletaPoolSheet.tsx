@@ -1,4 +1,4 @@
-import type { ProtocoloResumo } from '@/entities/protocolo'
+import type { InfoProtocolo, ProtocoloResumo } from '@/entities/protocolo'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/shared/ui/sheet'
 
 import { ProtocoloCard } from './ProtocoloCard'
@@ -8,6 +8,7 @@ type ListaCompletaPoolSheetProps = {
   onFechar: () => void
   protocolos: ProtocoloResumo[]
   now: number
+  resolverInfo: (protocolo: ProtocoloResumo) => InfoProtocolo
   somenteLeitura?: boolean
   acaoLabel?: string
   onAcao?: (protocoloId: string) => void
@@ -23,6 +24,7 @@ export const ListaCompletaPoolSheet = ({
   onFechar,
   protocolos,
   now,
+  resolverInfo,
   somenteLeitura,
   acaoLabel,
   onAcao,
@@ -40,6 +42,7 @@ export const ListaCompletaPoolSheet = ({
             key={protocolo.id}
             protocolo={protocolo}
             now={now}
+            info={resolverInfo(protocolo)}
             somenteLeitura={somenteLeitura}
             acaoLabel={acaoLabel}
             onAcao={onAcao ? () => onAcao(protocolo.id) : undefined}

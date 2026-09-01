@@ -17,7 +17,7 @@ import { ProtocoloCard } from './ProtocoloCard'
 
 // Mesmo limite da coluna "Pool aberto" de Distribuição (ver ProtocoloColuna.tsx, variant
 // "conferente") — truncar em 3 e abrir a lista completa num Sheet quando tiver mais.
-const MAX_POOL_VISIVEL = 3
+const MAX_POOL_VISIVEL = 5
 
 const LEGENDA = [
   { label: 'no prazo', className: 'bg-ok-bg border-ok-border-2' },
@@ -41,15 +41,16 @@ export const MinhaFilaBoard = () => {
   const concluir = useConcluirConferencia()
   const [listaCompletaAberta, setListaCompletaAberta] = useState(false)
 
-  // RF-24f: mesmos 4 eixos de Distribuição, aplicados nas três colunas ao mesmo tempo. O
-  // card de Minha fila não mostra tipo/escrevente/equipe (RF-14 é só de Distribuição — ver
-  // CLAUDE.md), mas o filtro ainda precisa desse dado pra filtrar por ele.
+  // RF-19/RF-24: protótipo v2 passou a mostrar tipo de ato/escrevente/equipe no card daqui
+  // também (antes só Distribuição mostrava) — mesmo padrão de "back manda o fato cru, front
+  // resolve o nome" já usado lá.
   const escreventePorId = new Map((escreventes ?? []).map((e) => [e.id, e]))
   const nomePorEquipeId = new Map((equipes ?? []).map((e) => [e.id, e.nome]))
+  const nomePorTipoAtoId = new Map((tiposAto ?? []).map((t) => [t.id, t.nome]))
   const resolverInfoProtocolo = (protocolo: ProtocoloResumo): InfoProtocolo => {
     const escrevente = escreventePorId.get(protocolo.escreventeId)
     return {
-      tipoAtoNome: null,
+      tipoAtoNome: protocolo.tipoAtoId ? (nomePorTipoAtoId.get(protocolo.tipoAtoId) ?? null) : null,
       escreventeNome: escrevente?.nome ?? null,
       equipeId: escrevente?.equipeId ?? null,
       equipeNome: escrevente?.equipeId ? (nomePorEquipeId.get(escrevente.equipeId) ?? null) : null,
@@ -104,6 +105,7 @@ export const MinhaFilaBoard = () => {
                 key={protocolo.id}
                 protocolo={protocolo}
                 now={now}
+                info={resolverInfoProtocolo(protocolo)}
                 acaoLabel="Pegar este"
                 onAcao={() => pegar.mutate(protocolo.id)}
                 acaoDesabilitada={pegar.isPending}
@@ -129,6 +131,7 @@ export const MinhaFilaBoard = () => {
             onFechar={() => setListaCompletaAberta(false)}
             protocolos={filaFiltrada.poolDisponivel}
             now={now}
+            resolverInfo={resolverInfoProtocolo}
             acaoLabel="Pegar este"
             onAcao={(protocoloId) => pegar.mutate(protocoloId)}
             acaoDesabilitada={pegar.isPending}
@@ -146,6 +149,7 @@ export const MinhaFilaBoard = () => {
                 key={protocolo.id}
                 protocolo={protocolo}
                 now={now}
+                info={resolverInfoProtocolo(protocolo)}
                 acaoLabel="Iniciar conferência"
                 acaoVariante="default"
                 onAcao={() => iniciar.mutate(protocolo.id)}

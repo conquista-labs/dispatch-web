@@ -1,4 +1,4 @@
-import { prazoChip, type ProtocoloResumo } from '@/entities/protocolo'
+import { prazoChip, type InfoProtocolo, type ProtocoloResumo } from '@/entities/protocolo'
 import { ObservacaoField } from '@/features/protocolo/definir-observacao'
 import { Button } from '@/shared/ui/button'
 import { Chip } from '@/shared/ui/chip'
@@ -12,6 +12,9 @@ const ETAPA_LABEL: Record<ProtocoloResumo['etapa'], string> = {
 type ProtocoloCardProps = {
   protocolo: ProtocoloResumo
   now: number
+  /** RF-19/RF-24: tipo de ato/escrevente/equipe do card — protótipo v2 passou a mostrar isso
+   * aqui também, não só em Distribuição. */
+  info: InfoProtocolo
   acaoLabel?: string
   onAcao?: () => void
   acaoDesabilitada?: boolean
@@ -23,7 +26,7 @@ type ProtocoloCardProps = {
 
 // Card do pool disponível / atribuídos a você (RF-19) — mesmo layout dos dois, só muda o
 // botão de ação ("Pegar este" / "Iniciar conferência").
-export const ProtocoloCard = ({ protocolo, now, acaoLabel, onAcao, acaoDesabilitada, acaoVariante = 'outline', somenteLeitura }: ProtocoloCardProps) => {
+export const ProtocoloCard = ({ protocolo, now, info, acaoLabel, onAcao, acaoDesabilitada, acaoVariante = 'outline', somenteLeitura }: ProtocoloCardProps) => {
   const chip = prazoChip(protocolo.semaforo, protocolo.vencimentoEm, now)
 
   return (
@@ -32,7 +35,12 @@ export const ProtocoloCard = ({ protocolo, now, acaoLabel, onAcao, acaoDesabilit
         <span className="font-mono text-[12.5px] font-medium">{protocolo.numero}</span>
         <Chip tom={chip.tom}>{chip.label}</Chip>
       </div>
-      <div className="mt-1.5 text-[13px] text-text-5">{ETAPA_LABEL[protocolo.etapa]}</div>
+      <div className="mt-1.5 text-[13px] text-pretty text-text-5">{info.tipoAtoNome ?? '—'}</div>
+      <div className="mt-1 flex flex-wrap items-center gap-1.5">
+        <Chip tom={info.equipeNome ? 'neutro' : 'vencido'}>{info.equipeNome ?? 'sem equipe'}</Chip>
+        <Chip tom="neutro">{ETAPA_LABEL[protocolo.etapa]}</Chip>
+      </div>
+      <div className="mt-1 text-[12px] text-pretty text-muted-foreground">{info.escreventeNome ?? '—'}</div>
 
       <ObservacaoField protocoloId={protocolo.id} observacao={protocolo.observacao} somenteLeitura={somenteLeitura} />
 

@@ -39,7 +39,7 @@ export const ProtocoloColuna = ({
   variant = 'conferente',
   onAbrirDetalhe,
 }: ProtocoloColunaProps) => {
-  const maxVisiveis = variant === 'conferente' ? 3 : 4
+  const maxVisiveis = variant === 'conferente' ? 5 : 4
   const visiveis = protocolos.slice(0, maxVisiveis)
   const restantes = Math.max(0, protocolos.length - maxVisiveis)
   const [listaCompletaAberta, setListaCompletaAberta] = useState(false)
