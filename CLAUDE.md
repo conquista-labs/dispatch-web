@@ -1213,3 +1213,43 @@ conta `conferente-visual@cartorio.com`) continua falhando por motivo **pré-exis
 documentado no próprio arquivo de teste**: essa conta não tem nenhum protocolo concluído no
 banco local (confirmado via `GET /dashboard` direto, `desempenho: []` em qualquer período) —
 não é regressão desta mudança.
+
+## "Concluídos hoje" de Minha fila — card divergia bastante do protótipo (achado pelo dono)
+
+O dono relatou "fonte estranha em alguns lugares do Minha fila". Investigando ao vivo (não por
+memória de sessão anterior) achei o card de `ConcluidosHojeList.tsx` bem mais divergente do
+protótipo do que só tipografia — releitura direta do markup (`Dispatch.dc.html`, `feitosCards`,
+linhas ~833-861):
+
+- **Faltava a linha de tipo de ato.** O card só mostrava número/status na primeira linha e ia
+  direto pra ação — sem `info`/`resolverInfo` nenhum passado pro componente. Ganhou
+  `nomePorTipoAtoId: Map<string, string>` (mesmo padrão de "back manda o fato cru, front
+  resolve o nome" já usado no resto do app), numa segunda linha junto da duração.
+- **O texto "estranho" era a causa raiz real**: `janela de correção encerrada` estava em
+  `font-mono text-[10.5px]`, sozinho, sem contexto — no protótipo esse texto (`janelaLabel`)
+  só existe dentro do estado "ainda dá pra corrigir", sempre prefixado por `"MARCOU ERRADO? · "`
+  (um rótulo eyebrow, maiúsculo, mono — o mesmo padrão já usado em "OBSERVAÇÃO" no painel de
+  detalhe). Sem o prefixo, virava uma frase solta numa fonte tabular, o que de fato lê estranho
+  — e quebrava em 2 linhas feio no card estreito. **Pior ainda**: no estado "janela encerrada,
+  ainda não pediu reabertura", o protótipo **não mostra nenhum texto** — só o botão fantasma
+  "Pedir reabertura à distribuidora" sozinho. O app antigo mostrava "janela de correção
+  encerrada" nesse estado também, um texto que o protótipo aprovado nunca exibe ali.
+- **Faltava o indicador "resultado já corrigido uma vez"** (`p.corrigido`) — o campo
+  `corrigidoEm` já vinha da API (`ProtocoloConcluidoResumo`), só não era lido pelo componente.
+- **Status virou pill de verdade** (`Chip` com `tom="ok"`/`tom="vencido"`) — antes era só texto
+  colorido sem fundo/borda; o protótipo usa uma pill cheia (`bg`+`border`+`color`) igual o resto
+  do app já faz pra prazo/urgente.
+- **Ações reorganizadas de linha única (`justify-between`, texto+botão lado a lado) pra
+  empilhadas** — protótipo sempre põe o rótulo/aviso numa linha e o botão cheio (`width:100%`)
+  embaixo, nos três estados (pedido pendente, ainda corrige, janela encerrada).
+
+**Não mexido nesta rodada, gap separado e maior**: RF-24e (clicar no card abre o painel de
+detalhe do protocolo) simplesmente não existe em nenhuma coluna de Minha fila — nem esta nem as
+outras três. Precisaria wire-up de `PainelDetalheProtocolo` no board inteiro, escopo bem maior
+que o pedido original ("fonte estranha"); registrado aqui como próximo passo, não esquecido.
+
+Verificado nos dois temas, e nos três estados reais (janela aberta criando um protocolo e
+concluindo na hora; janela encerrada com os concluídos já existentes no banco local) — dado
+criado via o mesmo fluxo real de Minha fila (pegar/iniciar/concluir), não mock. Suíte
+permanente + `e2e/minha-fila.spec.ts`/`dashboard.spec.ts` rodadas depois, nada quebrou (mesma
+falha pré-existente e documentada de antes, não relacionada).
