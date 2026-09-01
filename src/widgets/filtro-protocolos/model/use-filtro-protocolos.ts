@@ -4,7 +4,6 @@ import {
   contagemFiltrosAtivos,
   filtroVazio,
   protocoloPassaNoFiltro,
-  type FaixaSemaforo,
   type FiltroProtocolo,
   type InfoProtocolo,
   type Prioridade,
@@ -20,15 +19,13 @@ type UseFiltroProtocolosArgs = {
   resolverInfo: (protocolo: ProtocoloResumo) => InfoProtocolo
   equipes: { id: string; nome: string }[]
   tiposAto: { id: string; nome: string }[]
+  now: number
 }
-
-const FAIXAS: FaixaSemaforo[] = ['Verde', 'Amarelo', 'Laranja', 'Vermelho']
-const FAIXA_LABEL: Record<FaixaSemaforo, string> = { Verde: 'no prazo', Amarelo: 'atenção', Laranja: 'crítico', Vermelho: 'vencido' }
 
 // RF-18e/RF-24f: filtro 100% client-side ("os filtros... não alteram dado nenhum — só o
 // recorte exibido") — recebe a lista que a tela já buscou inteira, nenhuma chamada nova.
 // Reaproveitado por Distribuição e Minha fila (as duas telas que o requisito pede).
-export const useFiltroProtocolos = ({ protocolos, resolverInfo, equipes, tiposAto }: UseFiltroProtocolosArgs) => {
+export const useFiltroProtocolos = ({ protocolos, resolverInfo, equipes, tiposAto, now }: UseFiltroProtocolosArgs) => {
   const [filtro, setFiltro] = useState<FiltroProtocolo>(filtroVazio())
 
   const infoPorProtocoloId = new Map(protocolos.map((p) => [p.id, resolverInfo(p)]))
@@ -37,7 +34,7 @@ export const useFiltroProtocolos = ({ protocolos, resolverInfo, equipes, tiposAt
   // aplicando isso com `.filter(passaNoFiltro)` em cada lista própria dele.
   const passaNoFiltro = (protocolo: ProtocoloResumo) => {
     const info = infoPorProtocoloId.get(protocolo.id) ?? resolverInfo(protocolo)
-    return protocoloPassaNoFiltro(protocolo, info, filtro)
+    return protocoloPassaNoFiltro(protocolo, info, filtro, now)
   }
 
   // Contagem sempre contra o conjunto completo não filtrado — "a gestão sabe o tamanho do
@@ -45,7 +42,8 @@ export const useFiltroProtocolos = ({ protocolos, resolverInfo, equipes, tiposAt
   const contarEquipe = (id: string | null) => protocolos.filter((p) => infoPorProtocoloId.get(p.id)!.equipeId === id).length
   const contarTipoAto = (id: string) => protocolos.filter((p) => p.tipoAtoId === id).length
   const contarPrioridade = (prioridade: Prioridade) => protocolos.filter((p) => p.prioridade === prioridade).length
-  const contarFaixa = (faixa: FaixaSemaforo) => protocolos.filter((p) => p.semaforo === faixa).length
+  const contarUrgente = () =>
+    protocolos.filter((p) => p.prioridade === 'Alta' || (p.vencimentoEm != null && new Date(p.vencimentoEm).getTime() - now < 4 * 60 * 60 * 1000)).length
 
   const contagens = {
     equipes: [
@@ -57,7 +55,7 @@ export const useFiltroProtocolos = ({ protocolos, resolverInfo, equipes, tiposAt
       { valor: 'Alta' as const, label: 'alta', contagem: contarPrioridade('Alta') },
       { valor: 'Normal' as const, label: 'normal', contagem: contarPrioridade('Normal') },
     ],
-    faixasSemaforo: FAIXAS.map((f): OpcaoContagem<FaixaSemaforo> => ({ valor: f, label: FAIXA_LABEL[f], contagem: contarFaixa(f) })),
+    urgente: contarUrgente(),
   }
 
   const alternarEquipe = (id: string | null) =>
@@ -72,11 +70,9 @@ export const useFiltroProtocolos = ({ protocolos, resolverInfo, equipes, tiposAt
       prioridades: atual.prioridades.includes(prioridade) ? atual.prioridades.filter((v) => v !== prioridade) : [...atual.prioridades, prioridade],
     }))
 
-  const alternarFaixaSemaforo = (faixa: FaixaSemaforo) =>
-    setFiltro((atual) => ({
-      ...atual,
-      faixasSemaforo: atual.faixasSemaforo.includes(faixa) ? atual.faixasSemaforo.filter((v) => v !== faixa) : [...atual.faixasSemaforo, faixa],
-    }))
+  const alternarUrgente = () => setFiltro((atual) => ({ ...atual, urgente: !atual.urgente }))
+  const setTexto = (texto: string) => setFiltro((atual) => ({ ...atual, texto }))
+  const setData = (data: string | null) => setFiltro((atual) => ({ ...atual, data }))
 
   return {
     filtro,
@@ -86,7 +82,9 @@ export const useFiltroProtocolos = ({ protocolos, resolverInfo, equipes, tiposAt
     alternarEquipe,
     alternarTipoAto,
     alternarPrioridade,
-    alternarFaixaSemaforo,
+    alternarUrgente,
+    setTexto,
+    setData,
     limpar: () => setFiltro(filtroVazio()),
   }
 }

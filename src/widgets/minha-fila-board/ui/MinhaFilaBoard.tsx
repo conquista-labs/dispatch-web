@@ -62,6 +62,7 @@ export const MinhaFilaBoard = () => {
     resolverInfo: resolverInfoProtocolo,
     equipes: equipes ?? [],
     tiposAto: tiposAto ?? [],
+    now,
   })
 
   if (isLoading || !fila) {
@@ -80,17 +81,17 @@ export const MinhaFilaBoard = () => {
     <div>
       {erro && <p className="mb-3 text-[13px] text-bad-fg">Não foi possível concluir a ação. Tente de novo.</p>}
 
-      <div className="flex flex-wrap items-center justify-between gap-3.5">
-        <div className="flex flex-wrap items-center gap-3.5">
-          <span className="font-mono text-[11.5px] text-muted-foreground">Prazo do ato</span>
-          {LEGENDA.map((item) => (
-            <span key={item.label} className="flex items-center gap-1.5 text-[11.5px] text-text-3">
-              <span className={`block size-2.5 flex-none rounded-[3px] border ${item.className}`} />
-              {item.label}
-            </span>
-          ))}
-        </div>
-        <BarraDeFiltros {...filtroProtocolos} />
+      <div className="flex flex-wrap items-center gap-3.5">
+        <span className="font-mono text-[11.5px] text-muted-foreground">Prazo do ato</span>
+        {LEGENDA.map((item) => (
+          <span key={item.label} className="flex items-center gap-1.5 text-[11.5px] text-text-3">
+            <span className={`block size-2.5 flex-none rounded-[3px] border ${item.className}`} />
+            {item.label}
+          </span>
+        ))}
+      </div>
+      <div className="mt-3.5">
+        <BarraDeFiltros {...filtroProtocolos} subtitulo="aplicados às três colunas da sua fila" />
       </div>
 
       <div className="mt-4 flex items-start gap-3">

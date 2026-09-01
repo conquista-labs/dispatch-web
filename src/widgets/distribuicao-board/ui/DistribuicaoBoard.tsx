@@ -71,6 +71,7 @@ export const DistribuicaoBoard = () => {
     resolverInfo: resolverInfoProtocolo,
     equipes: equipes ?? [],
     tiposAto: tiposAto ?? [],
+    now,
   })
 
   if (isLoading || !visao || !conferentes || !escreventes || !equipes || !tiposAto) {
@@ -116,17 +117,17 @@ export const DistribuicaoBoard = () => {
         ))}
       </div>
 
-      <div className="mt-3.5 flex flex-wrap items-center justify-between gap-3.5">
-        <div className="flex flex-wrap items-center gap-3.5">
-          <span className="font-mono text-[11.5px] text-muted-foreground">Prazo do ato</span>
-          {LEGENDA.map((item) => (
-            <span key={item.label} className="flex items-center gap-1.5 text-[11.5px] text-text-3">
-              <span className={`block size-2.5 flex-none rounded-[3px] border ${item.className}`} />
-              {item.label}
-            </span>
-          ))}
-        </div>
-        <BarraDeFiltros {...filtroProtocolos} />
+      <div className="mt-3.5 flex flex-wrap items-center gap-3.5">
+        <span className="font-mono text-[11.5px] text-muted-foreground">Prazo do ato</span>
+        {LEGENDA.map((item) => (
+          <span key={item.label} className="flex items-center gap-1.5 text-[11.5px] text-text-3">
+            <span className={`block size-2.5 flex-none rounded-[3px] border ${item.className}`} />
+            {item.label}
+          </span>
+        ))}
+      </div>
+      <div className="mt-3.5">
+        <BarraDeFiltros {...filtroProtocolos} subtitulo="aplicados às três visões do quadro" />
       </div>
 
       <div className="mt-4">

@@ -1110,3 +1110,64 @@ inline do protótipo, não aproximados**:
   compartilhado afetaria dezenas de usos já verificados (prazo em toda tela, "urgente",
   etc.); risco desproporcional ao pedido, que era especificamente sobre o nome do
   escrevente. Fica registrado como gap conhecido, não esquecido.
+
+## Painel de Filtros (RF-18e/RF-24f) redesenhado — protótipo reexportado com fluxo novo
+
+O dono reexportou `dispatch-prototype/` (todos os 6 arquivos, `Sep 1 10:30`) e avisou "tem um
+fluxo novo, dá uma olhada". Achado ao ler o `Dispatch.dc.html` de novo do zero (não só
+screenshot): um componente novo, `Combo.dc.html` (não existia antes) — um seletor com busca
+reutilizável (gatilho compacto, popover com busca ignorando acento, lista rolável com marcação,
+contagem de opções, "Limpar" na multisseleção) — é literalmente RNF-11 implementado como
+componente de verdade pela primeira vez, não só descrito em texto. Os 4 eixos de filtro de
+Distribuição e Minha fila (RF-18e/RF-24f), que antes eram uma barra fixa inline sempre visível,
+viraram um painel deslizante ("Filtros", com badge de contagem) — cada eixo um `Combo`. Junto
+disso, dois campos novos direto no toolbar, fora do painel: busca livre (protocolo, tipo,
+escrevente, equipe, observação) e filtro por dia do vencimento — nenhum dos dois existia antes.
+Confirmado lendo `passaFiltro`/`grupoFiltros`/`painelGrupos` (~linhas 2716-2761, 3352-3373,
+3504-3512 do `Dispatch.dc.html`) e navegando o protótipo ao vivo (`file://`) — não só o markup.
+
+**Achado extra, corrigindo uma decisão anterior**: o eixo "Prazo" já existia no app, mas como
+multisseleção das 4 faixas do semáforo (Verde/Amarelo/Laranja/Vermelho) — uma leitura de
+`filtros.ts` documentava isso como decisão consciente ("o exemplo do requisito é uma
+combinação, não um eixo"). Lendo `passaFiltro` de verdade (`f.urgentes`) ficou claro que o
+protótipo trata "Prazo" como **um único alternador**: "só urgentes e vencendo em 4h"
+(prioridade Alta OU vence em menos de 4h a partir de agora) — exatamente o texto literal do
+RF-18e, não uma combinação de exemplo. `FiltroProtocolo.faixasSemaforo: FaixaSemaforo[]` virou
+`urgente: boolean`; `protocoloPassaNoFiltro` ganhou parâmetro `now` só pra esse cálculo.
+
+**Implementação**:
+- `entities/protocolo/lib/filtros.ts` — `FiltroProtocolo` ganhou `texto`, `data` (chave
+  `"yyyy-mm-dd"` do dia local do vencimento) e trocou `faixasSemaforo` por `urgente`.
+  `contagemFiltrosAtivos` continua só os 4 eixos combináveis (equipe/tipo/prioridade/urgente) —
+  `texto`/`data` não contam no badge, igual o protótipo (`contaGestao`/`contaFila` também não
+  somam `busca`/`data`).
+- `widgets/filtro-protocolos/ui/FiltroEixo.tsx` — reescrito de dropdown-com-badge-de-eixo pra
+  um `Combo` de verdade: todo eixo agora tem busca (ignora acento, mesma normalização NFD do
+  `Combo.dc.html`), o rótulo do gatilho reflete a seleção ("todos" / nome único / "N
+  selecionados"), rodapé com contagem de opções e "Limpar".
+- `widgets/filtro-protocolos/ui/PainelFiltros.tsx` (novo) — o `Sheet` com os 4 grupos
+  (Equipe do escrevente/Tipo de ato/Prioridade/Prazo), cada um rótulo+contagem "N de M" acima
+  de um `FiltroEixo`. **"Prazo" também é um `FiltroEixo`** (uma única opção dentro), não um
+  checkbox solto — o protótipo trata os 4 grupos de forma uniforme (`painelGrupos` mapeia
+  todos pelo mesmo `dc-import Combo`), então replicado igual mesmo parecendo redundante pra um
+  grupo de 1 opção só.
+- `widgets/filtro-protocolos/ui/BarraDeFiltros.tsx` — virou o toolbar inteiro: busca livre +
+  `DatePicker` + botão "Filtros" (com badge, abre o `PainelFiltros`). Antes só continha os
+  dropdowns dos eixos.
+- `shared/ui/date-picker.tsx` (novo) — `Popover`+`Calendar` nullable com "Limpar", mesmo
+  padrão visual do `DateTimePicker` já existente (JetBrains Mono nos dias, letra maiúscula de
+  dia da semana) mas sem hora. **Divergência deliberada do protótipo**: lá o campo de data é um
+  `<input type="date">` nativo do browser (confirmado ao vivo, mostra `mm/dd/yyyy` do Chrome)
+  — isso contraria RNF-07 ("nenhum controle nativo... select, data, hora"), então segui o
+  requisito formal em vez do atalho do protótipo, mesmo padrão já adotado pro `DateTimePicker`
+  no fluxo de importação.
+- `DistribuicaoBoard.tsx`/`MinhaFilaBoard.tsx`/`FilaDoConferenteBoard.tsx` — a legenda "Prazo do
+  ato" e o `BarraDeFiltros` deixaram de dividir a mesma linha (`justify-between`) e viraram duas
+  linhas empilhadas, igual o protótipo (linha da legenda, depois linha de busca+data+Filtros).
+  `useFiltroProtocolos` passou a receber `now` (as 3 telas já tinham via `useNow()`).
+
+Verificado nos dois temas via Playwright (`file://` do protótipo lado a lado com o app rodando
+localmente): toolbar, painel aberto, busca dentro de um eixo (accent-insensitive confirmado —
+"venda" acha "Venda e Compra"), badge de contagem (ignora busca livre/data, só eixos), busca
+livre combinada com eixo marcado, `DatePicker`. Suíte permanente (`auth`, `session-isolation`,
+`cursor`, `login`, `fila-conferentes`, `conferentes`) verde depois da mudança.
