@@ -4,7 +4,7 @@ import { useConferentes } from '@/entities/conferente'
 import { useEquipes } from '@/entities/equipe'
 import { useEscreventes } from '@/entities/escrevente'
 import { usePedidosReaberturaPendentes } from '@/entities/pedidoReabertura'
-import { useVisaoDistribuicao, type InfoProtocolo, type ProtocoloResumo } from '@/entities/protocolo'
+import { criarResolverInfoProtocolo, useVisaoDistribuicao } from '@/entities/protocolo'
 import { useTiposAto } from '@/entities/tipoAto'
 import { cn } from '@/shared/lib/utils'
 import { useNow } from '@/shared/lib/use-now'
@@ -41,22 +41,12 @@ export const DistribuicaoBoard = () => {
   const now = useNow()
 
   // RF-14: tipo de ato/escrevente/equipe do card — back manda só os ids (EscreventeId,
-  // TipoAtoId), o front resolve o nome cruzando com GET /escreventes, /equipes e /tipos-ato,
-  // mesmo padrão já usado no painel de detalhe do protocolo. Um resolver só (em vez de três
-  // props separadas) pra não espalhar prop de mais pelos componentes que só repassam adiante
-  // (ProtocoloColuna/ExcecaoCard não usam o valor, só entregam pro card).
-  const nomePorTipoAtoId = new Map((tiposAto ?? []).map((t) => [t.id, t.nome]))
-  const escreventePorId = new Map((escreventes ?? []).map((e) => [e.id, e]))
-  const nomePorEquipeId = new Map((equipes ?? []).map((e) => [e.id, e.nome]))
-  const resolverInfoProtocolo = (protocolo: ProtocoloResumo): InfoProtocolo => {
-    const escrevente = escreventePorId.get(protocolo.escreventeId)
-    return {
-      tipoAtoNome: protocolo.tipoAtoId ? (nomePorTipoAtoId.get(protocolo.tipoAtoId) ?? null) : null,
-      escreventeNome: escrevente?.nome ?? null,
-      equipeId: escrevente?.equipeId ?? null,
-      equipeNome: escrevente?.equipeId ? (nomePorEquipeId.get(escrevente.equipeId) ?? null) : null,
-    }
-  }
+  // TipoAtoId), o front resolve o nome cruzando com GET /escreventes, /equipes e /tipos-ato.
+  // Um resolver só (em vez de três props separadas) pra não espalhar prop de mais pelos
+  // componentes que só repassam adiante (ProtocoloColuna/ExcecaoCard não usam o valor, só
+  // entregam pro card). Extraído pra `entities/protocolo` — mesma lógica que já se repetia em
+  // MinhaFilaBoard/FilaDoConferenteBoard/PainelDetalheProtocolo.
+  const { resolverInfo: resolverInfoProtocolo } = criarResolverInfoProtocolo(escreventes, equipes, tiposAto)
 
   // RF-18e: os filtros afetam as três visões (abas) ao mesmo tempo — um estado só, aplicado
   // em cada lista antes de repassar pras abas. A contagem por opção usa a união de tudo (as 5

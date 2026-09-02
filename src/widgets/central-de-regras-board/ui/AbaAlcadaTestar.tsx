@@ -2,14 +2,17 @@ import { useState } from 'react'
 
 import { NIVEL_LABEL, type Conferente } from '@/entities/conferente'
 import type { Equipe } from '@/entities/equipe'
-import { ETAPA_LABEL, type Etapa } from '@/entities/protocolo'
+import { ETAPA_LABEL, PRIORIDADE_LABEL, type Etapa, type Prioridade } from '@/entities/protocolo'
 import { fraseDaRegra, MOTIVO_ALCADA_LABEL, useRegrasAlcada, useTestarAlcada, type AvaliacaoAlcada } from '@/entities/regraAlcada'
 import type { TipoAto } from '@/entities/tipoAto'
 import { cn } from '@/shared/lib/utils'
 
+import { criarNomesDaCentralDeRegras } from '../lib/nomes'
+import { SEM_EQUIPE } from '../lib/sem-equipe'
+import { Carregando } from '@/shared/ui/carregando'
 import { PillToggle } from '@/shared/ui/pill-toggle'
 
-const SEM_EQUIPE = '__sem-equipe__'
+const PRIORIDADES: Prioridade[] = ['Alta', 'Normal', 'Baixa']
 
 type AbaAlcadaTestarProps = {
   conferentes: Conferente[]
@@ -26,17 +29,16 @@ export const AbaAlcadaTestar = ({ conferentes, tiposAto, equipes }: AbaAlcadaTes
   const [etapa, setEtapa] = useState<Etapa>('PosConferencia')
   const [equipeSelecionada, setEquipeSelecionada] = useState<string>(SEM_EQUIPE)
   const [tipoAtoId, setTipoAtoId] = useState<string | null>(tiposAto[0]?.id ?? null)
+  const [prioridade, setPrioridade] = useState<Prioridade>('Normal')
 
-  const caso = tipoAtoId ? { etapa, tipoAtoId, equipeId: equipeSelecionada === SEM_EQUIPE ? null : equipeSelecionada } : null
+  const caso = tipoAtoId ? { etapa, tipoAtoId, equipeId: equipeSelecionada === SEM_EQUIPE ? null : equipeSelecionada, prioridade } : null
   const { data: resultado } = useTestarAlcada(caso)
 
   if (!regras) {
-    return <p className="text-[13.5px] text-muted-foreground">Carregando…</p>
+    return <Carregando />
   }
 
-  const nomePorConferenteId = new Map(conferentes.map((c) => [c.id, c.nome]))
-  const nomePorTipoAtoId = new Map(tiposAto.map((t) => [t.id, t.nome]))
-  const nomePorEquipeId = new Map(equipes.map((e) => [e.id, e.nome]))
+  const { nomePorConferenteId, nomePorTipoAtoId, nomePorEquipeId } = criarNomesDaCentralDeRegras(conferentes, tiposAto, equipes)
   const regraPorId = new Map(regras.map((r) => [r.id, r]))
   const nivelPorConferenteId = new Map(conferentes.map((c) => [c.id, c.nivel]))
 
@@ -89,6 +91,16 @@ export const AbaAlcadaTestar = ({ conferentes, tiposAto, equipes }: AbaAlcadaTes
             ))}
           </div>
         </div>
+        {/* RF-34: o destino (pool/atribuído/exceção) depende de urgência, não só de quem tem
+            alçada — sem esse campo o simulador não tinha como bater com o motor de verdade. */}
+        <div className="mt-2.5 flex flex-wrap items-start gap-2">
+          <span className="w-16 flex-none pt-1 text-[11.5px] font-medium text-text-2">Prioridade</span>
+          <div className="flex flex-wrap gap-1.5">
+            {PRIORIDADES.map((p) => (
+              <PillToggle key={p} redondo label={PRIORIDADE_LABEL[p]} selecionado={prioridade === p} onClick={() => setPrioridade(p)} />
+            ))}
+          </div>
+        </div>
       </div>
 
       {resultado && (
@@ -99,7 +111,11 @@ export const AbaAlcadaTestar = ({ conferentes, tiposAto, equipes }: AbaAlcadaTes
                 {habilitados.length > 0 ? `${habilitados.length} pessoa(s) podem conferir` : 'Ninguém pode conferir'}
               </span>
               <span className="text-[12px] text-text-2">
-                {habilitados.length === 0 ? 'iria para a fila de exceções' : habilitados.length === 1 ? `só ${nomePorConferenteId.get(habilitados[0].conferenteId)?.split(' ')[0]}` : 'pool aberto'}
+                {resultado.destino === 'Excecao'
+                  ? 'iria para a fila de exceções'
+                  : resultado.destino === 'EnviadoParaPool'
+                    ? 'pool aberto'
+                    : `atribuído a ${nomePorConferenteId.get(resultado.conferenteId ?? '')?.split(' ')[0] ?? '—'}`}
               </span>
             </div>
             <div className="mt-1 font-mono text-[11.5px] text-text-2">

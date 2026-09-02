@@ -14,6 +14,16 @@ import { PassoPrevia } from './PassoPrevia'
 
 type Passo = 'dados' | 'revisao' | 'distribuicao' | 'concluido'
 
+// handleContinuar e handleConfirmar montavam o mesmo payload de linhas, cada um com sua
+// própria cópia do `.map(...)` — achado numa auditoria de qualidade.
+const paraRequestLinhas = (linhas: ReturnType<typeof parseCsv>) =>
+  linhas.map((linha) => ({
+    protocolo: linha.protocolo ?? '',
+    tipoAto: linha.tipoAto ?? '',
+    escrevente: linha.escrevente ?? '',
+    dataHoraAndamento: dataHoraParaIso(linha.dataHoraAndamento ?? ''),
+  }))
+
 const PASSOS: { valor: Passo; label: string }[] = [
   { valor: 'dados', label: 'Dados' },
   { valor: 'revisao', label: 'Revisão' },
@@ -62,12 +72,7 @@ export const ImportarLoteWizard = () => {
 
   const handleContinuar = ({ etapa, linhaDeCorte, texto }: { etapa: Etapa; linhaDeCorte: string; texto: string }) => {
     const linhasCsv = parseCsv(texto)
-    const linhas = linhasCsv.map((linha) => ({
-      protocolo: linha.protocolo ?? '',
-      tipoAto: linha.tipoAto ?? '',
-      escrevente: linha.escrevente ?? '',
-      dataHoraAndamento: dataHoraParaIso(linha.dataHoraAndamento ?? ''),
-    }))
+    const linhas = paraRequestLinhas(linhasCsv)
 
     preVisualizar.mutate(
       { etapa, linhaDeCorte, linhas },
@@ -83,12 +88,7 @@ export const ImportarLoteWizard = () => {
 
   const handleConfirmar = () => {
     if (!pedido) return
-    const linhas = pedido.linhas.map((linha) => ({
-      protocolo: linha.protocolo ?? '',
-      tipoAto: linha.tipoAto ?? '',
-      escrevente: linha.escrevente ?? '',
-      dataHoraAndamento: dataHoraParaIso(linha.dataHoraAndamento ?? ''),
-    }))
+    const linhas = paraRequestLinhas(pedido.linhas)
 
     confirmar.mutate(
       { etapa: pedido.etapa, linhaDeCorte: pedido.linhaDeCorte, linhas },

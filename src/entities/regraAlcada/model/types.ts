@@ -1,5 +1,5 @@
 import type { Nivel } from '@/entities/conferente'
-import type { Etapa } from '@/entities/protocolo'
+import type { Etapa, Prioridade } from '@/entities/protocolo'
 import type { GrupoTipoAto } from '@/entities/tipoAto'
 
 // Motor v3: Reserva é um 3º tipo de permissão — reserva um alvo pra um sujeito só, todo mundo
@@ -68,8 +68,15 @@ export type TestarAlcadaRequest = {
   etapa: Etapa
   tipoAtoId: string
   equipeId?: string | null
+  prioridade: Prioridade
 }
 
+// Destino real do motor de distribuição (RF-34) — antes desta correção, o front inferia isso
+// só pela contagem de elegíveis, o que dava errado sempre que a urgência importasse (ver
+// dispatch-api/CLAUDE.md e dispatch-web/CLAUDE.md, "Backlog de qualidade de código").
 export type TestarAlcadaResponse = {
   avaliacoes: AvaliacaoAlcada[]
+  destino: 'Atribuido' | 'EnviadoParaPool' | 'Excecao'
+  conferenteId: string | null
+  motivo: string | null
 }

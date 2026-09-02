@@ -4,11 +4,13 @@ import type { AlcanceDoConferente, Conferente } from '@/entities/conferente'
 import { useRegrasAlcada, type RegraAlcada } from '@/entities/regraAlcada'
 import { useCriarRegraAlcada } from '@/features/regra-alcada/criar'
 import { useRemoverRegraAlcada } from '@/features/regra-alcada/remover'
-import { GRUPO_LABEL, type GrupoTipoAto, type TipoAto } from '@/entities/tipoAto'
+import { GRUPO_LABEL, GRUPOS, type GrupoTipoAto, type TipoAto } from '@/entities/tipoAto'
 import { cn } from '@/shared/lib/utils'
+import { Carregando } from '@/shared/ui/carregando'
 import { Input } from '@/shared/ui/input'
 
-const GRUPOS: GrupoTipoAto[] = ['Transmissoes', 'Sucessoes', 'Familia', 'Garantias', 'Notariais']
+import { ESTADO_GRUPO, ESTADO_TIPO } from '../lib/alcance'
+import { CelulaAlcance } from './CelulaAlcance'
 
 type AbaAlcadaMatrizProps = {
   conferentes: Conferente[]
@@ -34,7 +36,7 @@ export const AbaAlcadaMatriz = ({ conferentes, tiposAto, alcance }: AbaAlcadaMat
   const [grupoAberto, setGrupoAberto] = useState<GrupoTipoAto | null>(null)
 
   if (!regras) {
-    return <p className="text-[13.5px] text-muted-foreground">Carregando…</p>
+    return <Carregando />
   }
 
   const alcancePorConferenteId = new Map(alcance.map((a) => [a.conferenteId, a]))
@@ -113,17 +115,14 @@ export const AbaAlcadaMatriz = ({ conferentes, tiposAto, alcance }: AbaAlcadaMat
                   const permitidos = alcancePorConferenteId.get(c.id)?.tiposPermitidosIds ?? []
                   const cobertosPelaPessoa = tiposDoGrupo.filter((t) => permitidos.includes(t.id)).length
                   const cheio = cobertosPelaPessoa === tiposDoGrupo.length
-                  const parcial = cobertosPelaPessoa > 0 && !cheio
+                  const status = cheio ? 'cheio' : cobertosPelaPessoa > 0 ? 'parcial' : 'vazio'
                   return (
-                    <button
+                    <CelulaAlcance
                       key={c.id}
-                      type="button"
-                      title={`${c.nome} · ${cobertosPelaPessoa}/${tiposDoGrupo.length} em ${GRUPO_LABEL[grupo]}`}
+                      estado={ESTADO_GRUPO[status]}
+                      titulo={`${c.nome} · ${cobertosPelaPessoa}/${tiposDoGrupo.length} em ${GRUPO_LABEL[grupo]}`}
                       onClick={() => alternaGrupo(c.id, grupo)}
-                      className={cn('w-11 flex-none py-1 text-center text-sm hover:bg-background', cheio ? 'text-foreground' : parcial ? 'text-warn-fg' : 'text-muted-foreground')}
-                    >
-                      {cheio ? '●' : parcial ? '◐' : '·'}
-                    </button>
+                    />
                   )
                 })}
                 <span
@@ -148,19 +147,14 @@ export const AbaAlcadaMatriz = ({ conferentes, tiposAto, alcance }: AbaAlcadaMat
                         const permitidos = alcancePorConferenteId.get(c.id)?.tiposPermitidosIds ?? []
                         const bloq = !permitidos.includes(tipo.id)
                         const excecao = !!regraDeTipo(c.id, tipo.id)
+                        const status = bloq ? 'bloqueado' : excecao ? 'excecao' : 'herdado'
                         return (
-                          <button
+                          <CelulaAlcance
                             key={c.id}
-                            type="button"
-                            title={bloq ? `${c.nome}: fora da alçada` : `${c.nome} pode conferir${excecao ? ' (exceção individual)' : ' (herdado do grupo)'}`}
+                            estado={ESTADO_TIPO[status]}
+                            titulo={bloq ? `${c.nome}: fora da alçada` : `${c.nome} pode conferir${excecao ? ' (exceção individual)' : ' (herdado do grupo)'}`}
                             onClick={() => alternaTipo(c.id, tipo.id)}
-                            className={cn(
-                              'w-11 flex-none py-1 text-center text-sm hover:bg-background',
-                              bloq ? 'text-muted-foreground' : excecao ? 'text-warn-fg' : 'text-foreground',
-                            )}
-                          >
-                            {bloq ? '·' : excecao ? '◆' : '●'}
-                          </button>
+                          />
                         )
                       })}
                       <span className={cn('w-20 flex-none text-right text-[11px]', comAlcada === 0 ? 'text-bad-fg' : comAlcada === 1 ? 'text-warn-fg' : 'text-muted-foreground')}>

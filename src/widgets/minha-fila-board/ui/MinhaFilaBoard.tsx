@@ -2,7 +2,7 @@ import { useState } from 'react'
 
 import { useEquipes } from '@/entities/equipe'
 import { useEscreventes } from '@/entities/escrevente'
-import { useConcluidosHoje, useMinhaFila, type InfoProtocolo, type ProtocoloResumo } from '@/entities/protocolo'
+import { criarResolverInfoProtocolo, useConcluidosHoje, useMinhaFila } from '@/entities/protocolo'
 import { useTiposAto } from '@/entities/tipoAto'
 import { useConcluirConferencia } from '@/features/minha-fila/concluir-conferencia'
 import { useIniciarConferencia } from '@/features/minha-fila/iniciar-conferencia'
@@ -10,14 +10,11 @@ import { usePegarProtocolo } from '@/features/minha-fila/pegar-protocolo'
 import { useNow } from '@/shared/lib/use-now'
 import { BarraDeFiltros, useFiltroProtocolos } from '@/widgets/filtro-protocolos'
 
+import { MAX_POOL_VISIVEL } from '../lib/constantes'
 import { ConcluidosHojeList } from './ConcluidosHojeList'
 import { EmConferenciaCard } from './EmConferenciaCard'
 import { ListaCompletaPoolSheet } from './ListaCompletaPoolSheet'
 import { ProtocoloCard } from './ProtocoloCard'
-
-// Mesmo limite da coluna "Pool aberto" de Distribuição (ver ProtocoloColuna.tsx, variant
-// "conferente") — truncar em 3 e abrir a lista completa num Sheet quando tiver mais.
-const MAX_POOL_VISIVEL = 5
 
 const LEGENDA = [
   { label: 'no prazo', className: 'bg-ok-bg border-ok-border-2' },
@@ -43,19 +40,9 @@ export const MinhaFilaBoard = () => {
 
   // RF-19/RF-24: protótipo v2 passou a mostrar tipo de ato/escrevente/equipe no card daqui
   // também (antes só Distribuição mostrava) — mesmo padrão de "back manda o fato cru, front
-  // resolve o nome" já usado lá.
-  const escreventePorId = new Map((escreventes ?? []).map((e) => [e.id, e]))
-  const nomePorEquipeId = new Map((equipes ?? []).map((e) => [e.id, e.nome]))
-  const nomePorTipoAtoId = new Map((tiposAto ?? []).map((t) => [t.id, t.nome]))
-  const resolverInfoProtocolo = (protocolo: ProtocoloResumo): InfoProtocolo => {
-    const escrevente = escreventePorId.get(protocolo.escreventeId)
-    return {
-      tipoAtoNome: protocolo.tipoAtoId ? (nomePorTipoAtoId.get(protocolo.tipoAtoId) ?? null) : null,
-      escreventeNome: escrevente?.nome ?? null,
-      equipeId: escrevente?.equipeId ?? null,
-      equipeNome: escrevente?.equipeId ? (nomePorEquipeId.get(escrevente.equipeId) ?? null) : null,
-    }
-  }
+  // resolve o nome" já usado lá. Extraído pra `entities/protocolo` — mesma lógica repetida em
+  // DistribuicaoBoard/FilaDoConferenteBoard/PainelDetalheProtocolo.
+  const { resolverInfo: resolverInfoProtocolo, nomePorTipoAtoId } = criarResolverInfoProtocolo(escreventes, equipes, tiposAto)
   const todosOsProtocolos = fila ? [...fila.poolDisponivel, ...fila.atribuidos, ...fila.emConferencia] : []
   const filtroProtocolos = useFiltroProtocolos({
     protocolos: todosOsProtocolos,

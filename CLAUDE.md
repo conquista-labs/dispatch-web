@@ -1497,3 +1497,112 @@ Suíte permanente rodada de novo depois — mesmas 8 falhas pré-existentes, nen
 as duas specs que já tocavam prioridade, `distribuicao-v2.spec.ts`/`correcao-reabertura.spec.ts`,
 já estavam na lista de falhas conhecidas antes desta mudança, por motivo não relacionado —
 conferido a razão exata de cada falha pra não confundir com uma regressão desta rodada).
+
+## Backlog de qualidade de código — auditoria, todos os itens corrigidos
+
+Pedido do dono: revisão de code smell / más práticas / componentes grandes demais no front.
+Feita com 2 agentes em paralelo (cluster de Central de Regras + demais widgets/boards) mais
+revisão direta dos arquivos construídos nesta sessão, todo achado conferido no código antes de
+entrar na lista. Corrigido em 6 fases, cada uma com `tsc -b`/`npm run build`/`verify-visual`
+(Playwright, screenshot lido) e a suíte e2e permanente rodada de novo — mesmas 8 falhas
+pré-existentes (dado desatualizado no Postgres local, não relacionado) do início ao fim de
+todas as fases, nenhuma regressão nova em nenhuma delas.
+
+### [corrigido] Bug real — regra de negócio recriada errada no front
+
+**`AbaAlcadaTestar.tsx`** (simulador "Testar" da aba Alçada, RF-34) mostrava um texto de
+destino ("iria para a fila de exceções" / "só {nome}" / "pool aberto") inferido só pela
+contagem de elegíveis. A regra real (`MotorDistribuicao.cs`, back) decide primeiro por
+`Urgente` (prioridade Alta ou prazo curto), não por contagem — o simulador podia mostrar "só
+Fulano" quando o real seria pool (não urgente, 1 elegível), ou "pool aberto" quando o real seria
+atribuído a uma pessoa só (urgente, vários elegíveis). Opção escolhida pelo dono: back ganhou
+um caso de uso que roda o motor de verdade sobre o caso hipotético (`SimularAlcada.cs`, ver
+`dispatch-api/CLAUDE.md`), front ganhou o campo de prioridade que faltava e passou a usar o
+destino real da resposta em vez de inferir. Verificado via Playwright: mesmo caso, só trocando
+a prioridade, muda de "pool aberto" (Baixa) pra "atribuído a {nome}" (Alta) — prova de que
+agora depende da regra real, não de contagem.
+
+### [corrigido] Correção pontual — erro silencioso em Exceções
+
+`ExcecaoCard.tsx` disparava `useAtribuirManualmente`/`useDescartarExcecao` sem tratamento de
+erro nenhum — se "Resolver"/"Descartar" falhasse, o clique não fazia nada visível. Ganhou o
+mesmo padrão de agregação de erro que `MinhaFilaBoard.tsx` já usava (`atribuir.error ??
+descartar.error`, mensagem genérica visível). Verificado forçando um 409 de e-mail duplicado
+no fluxo de conferentes (mesmo mecanismo de detecção de erro, ver duplicação abaixo).
+
+### [corrigido] Duplicação de lógica
+
+- **Resolver id→nome duplicado em 4 arquivos** → `criarResolverInfoProtocolo()` novo em
+  `entities/protocolo/lib/resolver-info-protocolo.ts` (não é hook — sem `use`, não chama nada
+  do React por dentro), usado em `DistribuicaoBoard`/`MinhaFilaBoard`/`FilaDoConferenteBoard`/
+  `PainelDetalheProtocolo`.
+- **Mesma duplicação no cluster de Central de Regras** → `criarNomesDaCentralDeRegras()` novo em
+  `widgets/central-de-regras-board/lib/nomes.ts`, usado em `AbaAlcada`/`AbaAlcadaTestar`/
+  `AbaRegrasEmVigor`.
+- **`Carregando…` duplicado 7x** → `shared/ui/carregando.tsx` novo (`<Carregando />`, prop
+  `className` opcional pra manter o espaçamento que cada chamador já tinha — sem mudar layout
+  de ninguém), usado nas 7 abas do cluster mais em `PainelDetalheProtocolo.tsx` (achado extra na
+  hora de mexer no arquivo).
+- **`GRUPOS` hardcoded 3x** → `entities/tipoAto` passou a exportar `GRUPOS =
+  Object.keys(GRUPO_LABEL) as GrupoTipoAto[]`, mesmo padrão de `TIPOS_PRAZO` já usado ao lado.
+- **Rótulos dessincronizados** → `ExcecaoCard.tsx` e `AbaPorConferente.tsx` passaram a importar
+  `ETAPA_LABEL`/`NIVEL_LABEL` de `entities/protocolo`/`entities/conferente` em vez de manter
+  cópia local.
+- **Boilerplate de diálogo** → extraído só o que era genuinamente idêntico
+  (`ehConflito409(error)`, novo em `shared/lib/conflito-409.ts`); reset-ao-abrir e campos do
+  formulário continuam próprios de cada diálogo — são formatos diferentes demais (5 campos vs.
+  2) pra um hook único valer a pena, decisão consciente de não abstrair demais.
+- **`ImportarLoteWizard.tsx`** → `paraRequestLinhas()` extraída, usada por
+  `handleContinuar`/`handleConfirmar`.
+- **`MAX_POOL_VISIVEL`** → `widgets/minha-fila-board/lib/constantes.ts`, reexportado no barrel,
+  `FilaDoConferenteBoard` importa de lá em vez de ter cópia própria. **`SEM_EQUIPE`** →
+  `widgets/central-de-regras-board/lib/sem-equipe.ts`, com o comentário RF-29a preservado junto
+  da definição única.
+
+### [corrigido] Componentes grandes demais / mistura de responsabilidades
+
+- **`AbaAlcada.tsx`** (308 → ~95 linhas) — estado do builder + textos derivados +
+  `handleCriarRegra` viraram o hook `useAlcadaBuilder()` (`widgets/central-de-regras-board/
+  model/use-alcada-builder.ts`); o card do builder virou `<AlcadaBuilderCard />`. `AbaAlcada.tsx`
+  ficou só o shell da sub-aba (fetch + as 3 visões).
+- **`PainelDetalheProtocolo.tsx`** (331 linhas, maior arquivo do app) — lista de alçada virou
+  `<ListaAlcada />`, o bloco de botões de ação condicionais virou `<AcoesDeStatus />` (mutations
+  movidas pra dentro do próprio sub-componente, não ficam mais no pai), `avisoExclusao` virou a
+  função nomeada `avisoDeExclusao()`. As duas extrações moram no mesmo arquivo (mais simples que
+  criar arquivo novo pra cada uma).
+- **`RecuperarSenhaPage.tsx`** (268 linhas) — dividida em `PassoIdentificacao.tsx`/
+  `PassoCodigo.tsx`/`PassoSenha.tsx`/`PassoOk.tsx` (`pages/recuperar-senha/ui/`), seguindo o
+  padrão já usado em `widgets/importar-lote-wizard`. `PassoCodigo` ganhou o timer de 30s como
+  estado próprio (não fica mais no shell). As 3 regras de senha viraram `avaliarRegrasSenha()`
+  em `pages/recuperar-senha/lib/regras-senha.ts`, reaproveitada pelo shell (pra saber se pode
+  avançar) e por `PassoSenha` (pra desenhar o checklist) sem duplicar a regra em dois lugares.
+- **`AbaAlcadaMatriz.tsx`** — indicador de cobertura da linha de grupo e da linha de tipo virou
+  `<CelulaAlcance estado={...} />` compartilhado (`widgets/central-de-regras-board/ui/
+  CelulaAlcance.tsx`), com o mapeamento estado→{glifo,cor} em `lib/alcance.ts` (dois `Record`
+  separados, `ESTADO_GRUPO`/`ESTADO_TIPO` — são espaços de estado diferentes, cobertura do
+  grupo inteiro vs. origem da permissão num tipo, não fazia sentido forçar um union só).
+
+### [corrigido] If/ternário aninhado
+
+- **`RecuperarSenhaPage.tsx`** — o `if` dentro de `if` numa IIFE virou a função nomeada
+  `mensagemDeErro()`, fora do componente, com `if`s sequenciais (guard clauses) em vez de
+  aninhamento. `pronto`/`botaoLabel` (ternário de 4 ramos) viraram `Record<Passo, boolean>`/
+  `Record<Passo, string>`, mesmo padrão que `TEXTOS` já usava no mesmo arquivo.
+- **`PainelDetalheProtocolo.tsx`** — `avisoExclusao` (ternário aninhado dentro de template
+  string) virou `avisoDeExclusao()`, função com `if`s sequenciais.
+- **`AbaAlcadaMatriz.tsx`** — resolvido junto da extração de `<CelulaAlcance />`: cada linha
+  agora decide um `status` (uma única variável, um `Record` de lookup) em vez de dois ternários
+  paralelos (um pra cor, outro pro glifo) checando a mesma condição duas vezes.
+
+### Verificado e descartado (não é problema)
+
+- Contadores/porcentagens de carga (`ConferenteCard.tsx`, `ConferentesBoard.tsx`,
+  `PainelDetalheProtocolo.tsx` "Atribuir ao menos carregado") só exibem `cargaAtual` vindo do
+  back ou disparam mutation — nenhuma decisão de atribuição é tomada no front.
+- `prazoChip` (`entities/protocolo/lib/prazo-chip.ts`) só traduz o `FaixaSemaforo` que já vem
+  pronto do back pra cor/texto — não recalcula limiar nenhum, só o texto de contagem ao vivo
+  (que precisa ser client-side por natureza, entre um refetch e outro).
+- O limiar de 4h do filtro "urgente" (`entities/protocolo/lib/filtros.ts:23`) é o texto literal
+  do RF-18d ("prioridade alta ou menos de 4h pro vencimento"), confirmado contra o protótipo —
+  é um conceito diferente do semáforo (que já vem calculado do back) e existe no front porque
+  depende do relógio local entre um refetch e outro, não porque reinventa uma regra do back.

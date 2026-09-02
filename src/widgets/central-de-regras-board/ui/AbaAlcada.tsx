@@ -1,66 +1,26 @@
 import { useState } from 'react'
 
-import { NIVEL_LABEL, useAlcance, useConferentes } from '@/entities/conferente'
-import type { Nivel } from '@/entities/conferente'
+import { useAlcance, useConferentes } from '@/entities/conferente'
 import { useEquipes } from '@/entities/equipe'
-import { ETAPA_LABEL } from '@/entities/protocolo'
-import type { Etapa } from '@/entities/protocolo'
-import { PERMISSAO_LABEL, useRegrasAlcada } from '@/entities/regraAlcada'
-import type { PermissaoRegra } from '@/entities/regraAlcada'
-import { GRUPO_LABEL, useTiposAto } from '@/entities/tipoAto'
-import type { GrupoTipoAto } from '@/entities/tipoAto'
-import { useCriarRegraAlcada } from '@/features/regra-alcada/criar'
+import { useRegrasAlcada } from '@/entities/regraAlcada'
+import { useTiposAto } from '@/entities/tipoAto'
 import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/ui/button'
-import { SurfaceCard } from '@/shared/ui/surface-card'
+import { Carregando } from '@/shared/ui/carregando'
 
-import { AbaAlcadaCamadas, type Camada } from './AbaAlcadaCamadas'
+import { criarNomesDaCentralDeRegras } from '../lib/nomes'
+import { useAlcadaBuilder } from '../model/use-alcada-builder'
+import { AbaAlcadaCamadas } from './AbaAlcadaCamadas'
 import { AbaAlcadaMatriz } from './AbaAlcadaMatriz'
 import { AbaAlcadaTestar } from './AbaAlcadaTestar'
-import { PillToggle } from '@/shared/ui/pill-toggle'
-import { SeletorMultiplo } from './SeletorMultiplo'
-import { SeletorUnico } from '@/shared/ui/seletor-unico'
+import { AlcadaBuilderCard } from './AlcadaBuilderCard'
 
-const NIVEIS: Nivel[] = ['Junior', 'Pleno', 'Senior']
-const ETAPAS: Etapa[] = ['PreConferencia', 'PosConferencia']
-const GRUPOS: GrupoTipoAto[] = ['Transmissoes', 'Sucessoes', 'Familia', 'Garantias', 'Notariais']
-
-// Sentinela pra "sem equipe" dentro de alvoSelecionados (que só guarda string) — o back
-// representa isso com AlvoEquipeId nulo (RF-29a: "sem equipe" é alvo válido, não ausência).
-const SEM_EQUIPE = '__sem-equipe__'
-
-type SujeitoTipo = 'nivel' | 'pessoa'
-type AlvoTipo = 'tipo' | 'etapa' | 'equipe' | 'todos' | 'grupo'
 type SubAba = 'camadas' | 'matriz' | 'testar'
 
-type Builder = {
-  sujeitoTipo: SujeitoTipo
-  sujeitoNivel: Nivel
-  sujeitoConferenteId: string
-  permissao: PermissaoRegra
-  alvoTipo: AlvoTipo
-  alvoSelecionados: string[]
-}
-
-const builderVazio = (primeiroConferenteId: string): Builder => ({
-  sujeitoTipo: 'nivel',
-  sujeitoNivel: 'Junior',
-  sujeitoConferenteId: primeiroConferenteId,
-  permissao: 'Permite',
-  alvoTipo: 'tipo',
-  alvoSelecionados: [],
-})
-
-// Pré-seleção do construtor a partir dos botões "Nova regra de X" de cada camada (aba
-// Camadas) — mesmo espírito do protótipo (cada camada tem seu próprio atalho de criação).
-const builderParaCamada = (camada: Camada, primeiroConferenteId: string): Builder => ({
-  ...builderVazio(primeiroConferenteId),
-  sujeitoTipo: camada === 'nivel' ? 'nivel' : 'pessoa',
-  alvoTipo: camada === 'equipe' ? 'equipe' : 'tipo',
-})
-
 // RF-31 a RF-34 — motor v3: 3 sub-abas (Camadas/Matriz/Testar), mesmo construtor guiado
-// compartilhado entre elas (RF-32), agora com alvo de grupo e permissão de reserva.
+// compartilhado entre elas (RF-32), agora com alvo de grupo e permissão de reserva. O
+// construtor em si (estado + JSX) mora em useAlcadaBuilder/AlcadaBuilderCard — extraído numa
+// auditoria de qualidade, esta função virou só o shell da sub-aba (fetch + as 3 visões).
 export const AbaAlcada = () => {
   const { data: regras } = useRegrasAlcada()
   const { data: conferentes } = useConferentes()
@@ -68,91 +28,25 @@ export const AbaAlcada = () => {
   const { data: equipes } = useEquipes()
   const { data: alcance } = useAlcance()
 
-  const criar = useCriarRegraAlcada()
-
   const [subAba, setSubAba] = useState<SubAba>('camadas')
-  const [builderAberto, setBuilderAberto] = useState(false)
-  const [builder, setBuilder] = useState<Builder>(builderVazio(''))
+
+  // Maps/hook calculados com fallback `?? []` e chamados incondicionalmente ANTES do `return`
+  // de carregamento abaixo — regra dos hooks (useAlcadaBuilder chama useState/useMutation por
+  // dentro, não pode ficar atrás de um `if` condicionado a dado que ainda pode não ter
+  // chegado).
+  const { nomePorConferenteId, nomePorTipoAtoId, nomePorEquipeId } = criarNomesDaCentralDeRegras(conferentes ?? [], tiposAto ?? [], equipes ?? [])
+  const builder = useAlcadaBuilder({
+    conferentes: conferentes ?? [],
+    equipes: equipes ?? [],
+    tiposAto: tiposAto ?? [],
+    nomePorConferenteId,
+    nomePorTipoAtoId,
+    nomePorEquipeId,
+  })
 
   if (!regras || !conferentes || !tiposAto || !equipes || !alcance) {
-    return <p className="text-[13.5px] text-muted-foreground">Carregando…</p>
+    return <Carregando />
   }
-
-  const nomePorConferenteId = new Map(conferentes.map((c) => [c.id, c.nome]))
-  const nomePorTipoAtoId = new Map(tiposAto.map((t) => [t.id, t.nome]))
-  const nomePorEquipeId = new Map(equipes.map((e) => [e.id, e.nome]))
-
-  const abrirBuilder = () => {
-    setBuilder(builderVazio(conferentes[0]?.id ?? ''))
-    setBuilderAberto(true)
-  }
-
-  const abrirBuilderParaCamada = (camada: Camada) => {
-    setBuilder(builderParaCamada(camada, conferentes[0]?.id ?? ''))
-    setBuilderAberto(true)
-  }
-
-  const quemTexto =
-    builder.sujeitoTipo === 'nivel' ? `Nível ${NIVEL_LABEL[builder.sujeitoNivel]}` : (nomePorConferenteId.get(builder.sujeitoConferenteId) ?? '…')
-
-  const alvoTexto =
-    builder.alvoTipo === 'todos'
-      ? 'conferir todos os atos'
-      : builder.alvoSelecionados.length === 0
-        ? '…'
-        : builder.alvoTipo === 'etapa'
-          ? `fazer ${builder.alvoSelecionados.map((e) => ETAPA_LABEL[e as Etapa]).join(' e ')}`
-          : builder.alvoTipo === 'equipe'
-            ? `conferir atos ${builder.alvoSelecionados.map((v) => (v === SEM_EQUIPE ? 'de escreventes sem equipe' : `da equipe ${nomePorEquipeId.get(v) ?? v}`)).join(' e ')}`
-            : builder.alvoTipo === 'grupo'
-              ? `conferir atos de ${builder.alvoSelecionados.map((g) => GRUPO_LABEL[g as GrupoTipoAto]).join(' e ')}`
-              : `conferir ${builder.alvoSelecionados.map((id) => nomePorTipoAtoId.get(id) ?? id).join(', ')}`
-
-  const podeCriar =
-    (builder.alvoTipo === 'todos' || builder.alvoSelecionados.length > 0) &&
-    (builder.sujeitoTipo === 'nivel' || builder.sujeitoConferenteId !== '')
-
-  const handleCriarRegra = async () => {
-    const sujeito = builder.sujeitoTipo === 'nivel' ? { sujeitoNivel: builder.sujeitoNivel } : { sujeitoConferenteId: builder.sujeitoConferenteId }
-
-    if (builder.alvoTipo === 'todos') {
-      await criar.mutateAsync({ ...sujeito, permissao: builder.permissao, alvoTodosOsAtos: true })
-      setBuilderAberto(false)
-      return
-    }
-
-    // Protótipo permite selecionar vários alvos numa tacada só; o back só aceita um alvo por
-    // regra (RF-31: alvo é XOR etapa/tipo/equipe/grupo/todos) — cria uma regra por alvo
-    // selecionado pra preservar a mesma UX sem inventar um conceito de "regra composta" que
-    // não existe no domínio.
-    await Promise.all(
-      builder.alvoSelecionados.map((valor) =>
-        criar.mutateAsync({
-          ...sujeito,
-          permissao: builder.permissao,
-          ...(builder.alvoTipo === 'etapa'
-            ? { alvoEtapa: valor as Etapa }
-            : builder.alvoTipo === 'equipe'
-              ? { alvoEhEquipe: true, alvoEquipeId: valor === SEM_EQUIPE ? null : valor }
-              : builder.alvoTipo === 'grupo'
-                ? { alvoGrupo: valor as GrupoTipoAto }
-                : { alvoTipoAtoId: valor }),
-        }),
-      ),
-    )
-    setBuilderAberto(false)
-  }
-
-  const alvoOpcoes =
-    builder.alvoTipo === 'etapa'
-      ? ETAPAS.map((e) => ({ valor: e, label: ETAPA_LABEL[e] }))
-      : builder.alvoTipo === 'equipe'
-        ? [...equipes.map((e) => ({ valor: e.id, label: e.nome })), { valor: SEM_EQUIPE, label: 'sem equipe' }]
-        : builder.alvoTipo === 'grupo'
-          ? GRUPOS.map((g) => ({ valor: g, label: GRUPO_LABEL[g] }))
-          : builder.alvoTipo === 'todos'
-            ? []
-            : tiposAto.map((t) => ({ valor: t.id, label: t.nome }))
 
   return (
     <div>
@@ -164,8 +58,8 @@ export const AbaAlcada = () => {
             ninguém sobrar o ato vai para exceções com o motivo.
           </p>
         </div>
-        {!builderAberto && (
-          <Button variant="outline" size="sm" className="flex-none" onClick={abrirBuilder}>
+        {!builder.aberto && (
+          <Button variant="outline" size="sm" className="flex-none" onClick={builder.abrir}>
             Nova regra
           </Button>
         )}
@@ -192,102 +86,7 @@ export const AbaAlcada = () => {
         ))}
       </div>
 
-      {builderAberto && (
-        <SurfaceCard className="mb-3.5 border-foreground p-4">
-          <div className="text-[14.5px] font-semibold tracking-[-0.01em]">
-            {quemTexto} {PERMISSAO_LABEL[builder.permissao]} {alvoTexto}
-          </div>
-
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <span className="w-[60px] flex-none text-[11.5px] font-medium text-text-2">Quem</span>
-            {(['nivel', 'pessoa'] as const).map((tipo) => (
-              <PillToggle
-                key={tipo}
-                label={tipo === 'nivel' ? 'Por nível' : 'Por pessoa'}
-                selecionado={builder.sujeitoTipo === tipo}
-                onClick={() =>
-                  setBuilder((b) => ({
-                    ...b,
-                    sujeitoTipo: tipo,
-                    sujeitoConferenteId: tipo === 'pessoa' ? (conferentes[0]?.id ?? '') : b.sujeitoConferenteId,
-                  }))
-                }
-              />
-            ))}
-          </div>
-          <div className="mt-1.5 pl-[68px]">
-            {builder.sujeitoTipo === 'nivel' ? (
-              <SeletorUnico
-                valor={builder.sujeitoNivel}
-                opcoes={NIVEIS.map((nivel) => ({ valor: nivel, label: NIVEL_LABEL[nivel] }))}
-                onSelecionar={(nivel) => setBuilder((b) => ({ ...b, sujeitoNivel: nivel }))}
-                placeholder="buscar conferente ou nível…"
-              />
-            ) : (
-              <SeletorUnico
-                valor={builder.sujeitoConferenteId}
-                opcoes={conferentes.map((c) => ({ valor: c.id, label: c.nome }))}
-                onSelecionar={(id) => setBuilder((b) => ({ ...b, sujeitoConferenteId: id }))}
-                placeholder="buscar conferente ou nível…"
-              />
-            )}
-          </div>
-
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <span className="w-[60px] flex-none text-[11.5px] font-medium text-text-2">Permissão</span>
-            <SeletorUnico
-              valor={builder.permissao}
-              opcoes={(['Permite', 'Nega', 'Reserva'] as const).map((permissao) => ({ valor: permissao, label: PERMISSAO_LABEL[permissao] }))}
-              onSelecionar={(permissao) => setBuilder((b) => ({ ...b, permissao }))}
-              placeholder="buscar permissão…"
-            />
-            {(['grupo', 'tipo', 'etapa', 'equipe', 'todos'] as const).map((tipo) => (
-              <PillToggle
-                key={tipo}
-                label={
-                  tipo === 'grupo'
-                    ? 'conferir atos de…'
-                    : tipo === 'tipo'
-                      ? 'conferir os atos…'
-                      : tipo === 'etapa'
-                        ? 'fazer a etapa…'
-                        : tipo === 'equipe'
-                          ? 'conferir atos da equipe…'
-                          : 'conferir todos os atos'
-                }
-                selecionado={builder.alvoTipo === tipo}
-                onClick={() => setBuilder((b) => ({ ...b, alvoTipo: tipo, alvoSelecionados: [] }))}
-              />
-            ))}
-          </div>
-          {builder.alvoTipo !== 'todos' && (
-            <div className="mt-1.5 pl-[68px]">
-              <SeletorMultiplo
-                selecionados={builder.alvoSelecionados}
-                opcoes={alvoOpcoes}
-                onAlternar={(valor) =>
-                  setBuilder((b) => ({
-                    ...b,
-                    alvoSelecionados: b.alvoSelecionados.includes(valor) ? b.alvoSelecionados.filter((v) => v !== valor) : [...b.alvoSelecionados, valor],
-                  }))
-                }
-                placeholder="buscar tipo de ato, equipe, grupo…"
-              />
-            </div>
-          )}
-
-          <div className="mt-3.5 flex gap-1.5">
-            {podeCriar && (
-              <Button size="sm" onClick={handleCriarRegra} disabled={criar.isPending}>
-                Criar regra
-              </Button>
-            )}
-            <Button variant="outline" size="sm" onClick={() => setBuilderAberto(false)}>
-              Cancelar
-            </Button>
-          </div>
-        </SurfaceCard>
-      )}
+      <AlcadaBuilderCard builder={builder} conferentes={conferentes} />
 
       {subAba === 'camadas' && (
         <AbaAlcadaCamadas
@@ -298,7 +97,7 @@ export const AbaAlcada = () => {
           nomePorConferenteId={nomePorConferenteId}
           nomePorTipoAtoId={nomePorTipoAtoId}
           nomePorEquipeId={nomePorEquipeId}
-          onAbrirBuilderParaCamada={abrirBuilderParaCamada}
+          onAbrirBuilderParaCamada={builder.abrirParaCamada}
         />
       )}
       {subAba === 'matriz' && <AbaAlcadaMatriz conferentes={conferentes} tiposAto={tiposAto} alcance={alcance} />}

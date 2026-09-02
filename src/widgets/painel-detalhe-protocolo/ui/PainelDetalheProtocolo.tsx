@@ -1,10 +1,20 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
 
-import { NIVEL_LABEL, useConferentes } from '@/entities/conferente'
+import { NIVEL_LABEL, useConferentes, type Conferente } from '@/entities/conferente'
 import { useEquipes } from '@/entities/equipe'
 import { useEscreventes } from '@/entities/escrevente'
-import { ETAPA_LABEL, PRIORIDADE_LABEL, prazoChip, TIPO_PRAZO_LABEL, useDetalheProtocolo, type StatusProtocolo } from '@/entities/protocolo'
+import {
+  criarResolverInfoProtocolo,
+  ETAPA_LABEL,
+  PRIORIDADE_LABEL,
+  prazoChip,
+  TIPO_PRAZO_LABEL,
+  useDetalheProtocolo,
+  type AlcadaConferente,
+  type DetalheProtocolo,
+  type StatusProtocolo,
+} from '@/entities/protocolo'
 import { fraseDaRegra, MOTIVO_ALCADA_LABEL, useRegrasAlcada } from '@/entities/regraAlcada'
 import { useTiposAto } from '@/entities/tipoAto'
 import { useAtribuirAoMenosCarregado } from '@/features/protocolo/atribuir-ao-menos-carregado'
@@ -28,6 +38,7 @@ import {
   AlertDialogTitle,
 } from '@/shared/ui/alert-dialog'
 import { Button } from '@/shared/ui/button'
+import { Carregando } from '@/shared/ui/carregando'
 import { Chip } from '@/shared/ui/chip'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/shared/ui/sheet'
 import { ProtocoloManualDialog } from '@/widgets/protocolo-manual'
@@ -61,6 +72,20 @@ const STATUS_TOM: Record<StatusProtocolo, NonNullable<React.ComponentProps<typeo
   Excluido: 'vencido',
 }
 
+// RF-18i: aviso condizente com o estado atual — em conferência interrompe quem está com o
+// ato, atribuído tira da fila de alguém; nos demais estados não tem ninguém pra avisar.
+// Extraída de um ternário aninhado dentro de template string (achado numa auditoria de
+// qualidade) — mesma lógica, só mais fácil de ler com `if`s sequenciais.
+const avisoDeExclusao = (detalhe: DetalheProtocolo | undefined, nomePorConferenteId: Map<string, string>): string | null => {
+  if (!detalhe) return null
+  if (detalhe.status === 'Conferindo') return 'Isso interrompe a conferência de quem está com esse ato agora.'
+  if (detalhe.status === 'Atribuido') {
+    const nomeDono = detalhe.donoId ? (nomePorConferenteId.get(detalhe.donoId) ?? 'quem está com ele') : 'quem está com ele'
+    return `Isso tira o ato da fila de ${nomeDono}.`
+  }
+  return null
+}
+
 // RF-18a/b — drawer lateral, aberto ao clicar em qualquer card de protocolo em Distribuição.
 // `Sheet` do shadcn (Radix Dialog por baixo) já resolve animação de entrada/saída, overlay e
 // fechar por Esc/clique fora — nenhuma dessas três coisas precisa de código próprio aqui.
@@ -80,10 +105,6 @@ export const PainelDetalheProtocolo = ({ protocoloId, onFechar }: PainelDetalheP
   const { data: equipes } = useEquipes({ enabled: estaAberto })
   const now = useNow()
 
-  const devolver = useDevolverAoPool()
-  const atribuirMenosCarregado = useAtribuirAoMenosCarregado()
-  const reabrirConferencia = useReabrirConferencia()
-  const definirPrioridade = useDefinirPrioridade()
   const excluir = useExcluirProtocolo()
   const restaurar = useRestaurarProtocolo()
   const [editarAberto, setEditarAberto] = useState(false)
@@ -91,14 +112,14 @@ export const PainelDetalheProtocolo = ({ protocoloId, onFechar }: PainelDetalheP
 
   const carregando = !detalhe || !conferentes || !tiposAto || !regras || !escreventes || !equipes
 
+  // Extraído pra `entities/protocolo` — mesma lógica repetida em
+  // DistribuicaoBoard/MinhaFilaBoard/FilaDoConferenteBoard. `nomePorConferenteId` fica fora do
+  // hook (não é escrevente/equipe/tipoAto).
   const nomePorConferenteId = new Map((conferentes ?? []).map((c) => [c.id, c.nome]))
-  const nomePorTipoAtoId = new Map((tiposAto ?? []).map((t) => [t.id, t.nome]))
-  const nomePorEquipeId = new Map((equipes ?? []).map((e) => [e.id, e.nome]))
-  const escreventePorId = new Map((escreventes ?? []).map((e) => [e.id, e]))
-  const equipePorId = new Map((equipes ?? []).map((e) => [e.id, e]))
+  const { escreventePorId, nomePorEquipeId, nomePorTipoAtoId } = criarResolverInfoProtocolo(escreventes, equipes, tiposAto)
 
   const escrevente = detalhe ? escreventePorId.get(detalhe.escreventeId) : undefined
-  const equipe = escrevente?.equipeId ? equipePorId.get(escrevente.equipeId) : undefined
+  const equipeNome = escrevente?.equipeId ? nomePorEquipeId.get(escrevente.equipeId) : undefined
   const regraAplicada = detalhe?.regraAplicadaId ? (regras ?? []).find((r) => r.id === detalhe.regraAplicadaId) : undefined
 
   const chip = detalhe ? prazoChip(detalhe.semaforo, detalhe.vencimentoEm, now) : null
@@ -107,7 +128,7 @@ export const PainelDetalheProtocolo = ({ protocoloId, onFechar }: PainelDetalheP
     ? [
         { k: 'Etapa', v: ETAPA_LABEL[detalhe.etapa] },
         { k: 'Escrevente', v: escrevente?.nome ?? '—' },
-        { k: 'Equipe', v: equipe?.nome ?? 'sem equipe' },
+        { k: 'Equipe', v: equipeNome ?? 'sem equipe' },
         { k: 'Prazo', v: detalhe.prazo ? TIPO_PRAZO_LABEL[detalhe.prazo] : '—' },
         {
           k: 'Regra aplicada',
@@ -125,23 +146,7 @@ export const PainelDetalheProtocolo = ({ protocoloId, onFechar }: PainelDetalheP
       ]
     : []
 
-  const podeDevolverAoPool = detalhe?.status === 'Atribuido'
-  const podeAtribuirAoMenosCarregado = detalhe?.status === 'Pool' || detalhe?.status === 'Excecao'
-  // RF-18a/RF-24c — ação direta, sem exigir um pedido explícito do conferente (esse fluxo
-  // vive na seção "Pedidos de reabertura" da aba Exceções).
-  const podeReabrirConferencia = detalhe?.status === 'Aprovado' || detalhe?.status === 'Reprovado'
-  // A importação nunca marca prioridade alta (não vem no relatório) — este botão é o único
-  // jeito real de um protocolo virar urgente. Não faz sentido depois de concluído/descartado.
-  const podeDefinirPrioridade = !!detalhe && !['Aprovado', 'Reprovado', 'Descartado'].includes(detalhe.status)
-
-  // RF-18i: aviso condizente com o estado atual — em conferência interrompe quem está com o
-  // ato, atribuído tira da fila de alguém; nos demais estados não tem ninguém pra avisar.
-  const avisoExclusao =
-    detalhe?.status === 'Conferindo'
-      ? 'Isso interrompe a conferência de quem está com esse ato agora.'
-      : detalhe?.status === 'Atribuido'
-        ? `Isso tira o ato da fila de ${detalhe.donoId ? (nomePorConferenteId.get(detalhe.donoId) ?? 'quem está com ele') : 'quem está com ele'}.`
-        : null
+  const avisoExclusao = avisoDeExclusao(detalhe, nomePorConferenteId)
 
   const handleExcluir = () => {
     if (!detalhe) return
@@ -178,7 +183,7 @@ export const PainelDetalheProtocolo = ({ protocoloId, onFechar }: PainelDetalheP
         </SheetHeader>
 
         <div className="px-5 py-4">
-          {carregando && <p className="text-[13.5px] text-muted-foreground">Carregando…</p>}
+          {carregando && <Carregando />}
 
           {!carregando && detalhe && chip && (
             <>
@@ -213,63 +218,12 @@ export const PainelDetalheProtocolo = ({ protocoloId, onFechar }: PainelDetalheP
               </div>
 
               <div className="mt-4.5 mb-2 font-mono text-[10.5px] tracking-[0.04em] text-muted-foreground">QUEM PODE CONFERIR ESTE ATO</div>
-              <div className="flex flex-col gap-1.5">
-                {detalhe.alcada.map((a) => {
-                  const conferente = (conferentes ?? []).find((c) => c.id === a.conferenteId)
-                  return (
-                    <div
-                      key={a.conferenteId}
-                      className={cn(
-                        'flex items-center justify-between gap-2.5 rounded-lg border px-2.5 py-1.5',
-                        a.elegivel ? 'border-ok-border bg-ok-bg' : 'border-bad-border-2 bg-bad-bg',
-                      )}
-                    >
-                      <span className="text-[12.5px] text-text-5">{conferente?.nome ?? '—'}</span>
-                      <span className={cn('text-right text-[11px]', a.elegivel ? 'text-ok-fg' : 'text-bad-fg')}>
-                        {conferente ? `Analista ${NIVEL_LABEL[conferente.nivel]}` : ''} ·{' '}
-                        {a.elegivel ? 'pode conferir' : (a.motivo ? MOTIVO_ALCADA_LABEL[a.motivo] : 'barrado')}
-                      </span>
-                    </div>
-                  )
-                })}
-                {detalhe.alcada.length === 0 && <p className="text-[12.5px] text-muted-foreground">Ninguém na escala hoje.</p>}
-              </div>
+              <ListaAlcada alcada={detalhe.alcada} conferentes={conferentes ?? []} />
 
               <div className="mt-4.5 mb-2 font-mono text-[10.5px] tracking-[0.04em] text-muted-foreground">OBSERVAÇÃO</div>
               <ObservacaoField protocoloId={detalhe.id} observacao={detalhe.observacao} />
 
-              {(podeDevolverAoPool || podeAtribuirAoMenosCarregado || podeReabrirConferencia || podeDefinirPrioridade) && (
-                <div className="mt-4.5 flex flex-wrap gap-1.5">
-                  {podeDevolverAoPool && (
-                    <Button variant="outline" size="sm" onClick={() => devolver.mutate(detalhe.id)} disabled={devolver.isPending}>
-                      Devolver ao pool
-                    </Button>
-                  )}
-                  {podeAtribuirAoMenosCarregado && (
-                    <Button variant="outline" size="sm" onClick={() => atribuirMenosCarregado.mutate(detalhe.id)} disabled={atribuirMenosCarregado.isPending}>
-                      Atribuir ao menos carregado
-                    </Button>
-                  )}
-                  {podeReabrirConferencia && (
-                    <Button variant="outline" size="sm" onClick={() => reabrirConferencia.mutate(detalhe.id)} disabled={reabrirConferencia.isPending}>
-                      Reabrir conferência
-                    </Button>
-                  )}
-                  {podeDefinirPrioridade && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        definirPrioridade.mutate({ protocoloId: detalhe.id, prioridade: detalhe.prioridade === 'Alta' ? 'Normal' : 'Alta' })
-                      }
-                      disabled={definirPrioridade.isPending}
-                    >
-                      {detalhe.prioridade === 'Alta' ? 'Remover urgência' : 'Marcar como urgente'}
-                    </Button>
-                  )}
-                </div>
-              )}
-              {atribuirMenosCarregado.isError && <p className="mt-2 text-[12.5px] text-bad-fg">Ninguém com alçada na escala agora.</p>}
+              <AcoesDeStatus detalhe={detalhe} />
 
               {/* RF-18g/i: separado das ações de status acima — editar/excluir valem pra
                   qualquer protocolo, não dependem do estado atual. */}
@@ -329,3 +283,88 @@ const LinhaDoTempo = ({ rotulo, quando }: { rotulo: string; quando: string | nul
     <span className={cn('flex-1 text-xs text-pretty', quando ? 'text-text-5' : 'text-muted-foreground')}>{quando ? formatDataHora(quando) : '—'}</span>
   </div>
 )
+
+// Extraído do corpo de PainelDetalheProtocolo (achado numa auditoria de qualidade — o
+// componente principal fazia resolução de nomes, metadados, linha do tempo, alçada, ações e o
+// diálogo de exclusão, tudo junto). "Ninguém na escala hoje" cobre tanto lista vazia quanto
+// nenhum candidato elegível ter sido avaliado.
+const ListaAlcada = ({ alcada, conferentes }: { alcada: AlcadaConferente[]; conferentes: Conferente[] }) => (
+  <div className="flex flex-col gap-1.5">
+    {alcada.map((a) => {
+      const conferente = conferentes.find((c) => c.id === a.conferenteId)
+      return (
+        <div
+          key={a.conferenteId}
+          className={cn(
+            'flex items-center justify-between gap-2.5 rounded-lg border px-2.5 py-1.5',
+            a.elegivel ? 'border-ok-border bg-ok-bg' : 'border-bad-border-2 bg-bad-bg',
+          )}
+        >
+          <span className="text-[12.5px] text-text-5">{conferente?.nome ?? '—'}</span>
+          <span className={cn('text-right text-[11px]', a.elegivel ? 'text-ok-fg' : 'text-bad-fg')}>
+            {conferente ? `Analista ${NIVEL_LABEL[conferente.nivel]}` : ''} ·{' '}
+            {a.elegivel ? 'pode conferir' : (a.motivo ? MOTIVO_ALCADA_LABEL[a.motivo] : 'barrado')}
+          </span>
+        </div>
+      )
+    })}
+    {alcada.length === 0 && <p className="text-[12.5px] text-muted-foreground">Ninguém na escala hoje.</p>}
+  </div>
+)
+
+// Idem — os 4 botões de ação dependentes de status (cada um só faz sentido pra alguns status),
+// mais o erro de "Atribuir ao menos carregado" (único que pode falhar de um jeito que vale a
+// pena explicar: sem ninguém com alçada na escala). Cada mutation mora aqui dentro, não no
+// componente pai — reduz o que PainelDetalheProtocolo precisa saber sobre essas 4 ações.
+const AcoesDeStatus = ({ detalhe }: { detalhe: DetalheProtocolo }) => {
+  const devolver = useDevolverAoPool()
+  const atribuirMenosCarregado = useAtribuirAoMenosCarregado()
+  const reabrirConferencia = useReabrirConferencia()
+  const definirPrioridade = useDefinirPrioridade()
+
+  const podeDevolverAoPool = detalhe.status === 'Atribuido'
+  const podeAtribuirAoMenosCarregado = detalhe.status === 'Pool' || detalhe.status === 'Excecao'
+  // RF-18a/RF-24c — ação direta, sem exigir um pedido explícito do conferente (esse fluxo
+  // vive na seção "Pedidos de reabertura" da aba Exceções).
+  const podeReabrirConferencia = detalhe.status === 'Aprovado' || detalhe.status === 'Reprovado'
+  // A importação nunca marca prioridade alta (não vem no relatório) — este botão é o único
+  // jeito real de um protocolo virar urgente. Não faz sentido depois de concluído/descartado.
+  const podeDefinirPrioridade = !['Aprovado', 'Reprovado', 'Descartado'].includes(detalhe.status)
+
+  if (!podeDevolverAoPool && !podeAtribuirAoMenosCarregado && !podeReabrirConferencia && !podeDefinirPrioridade) {
+    return null
+  }
+
+  return (
+    <>
+      <div className="mt-4.5 flex flex-wrap gap-1.5">
+        {podeDevolverAoPool && (
+          <Button variant="outline" size="sm" onClick={() => devolver.mutate(detalhe.id)} disabled={devolver.isPending}>
+            Devolver ao pool
+          </Button>
+        )}
+        {podeAtribuirAoMenosCarregado && (
+          <Button variant="outline" size="sm" onClick={() => atribuirMenosCarregado.mutate(detalhe.id)} disabled={atribuirMenosCarregado.isPending}>
+            Atribuir ao menos carregado
+          </Button>
+        )}
+        {podeReabrirConferencia && (
+          <Button variant="outline" size="sm" onClick={() => reabrirConferencia.mutate(detalhe.id)} disabled={reabrirConferencia.isPending}>
+            Reabrir conferência
+          </Button>
+        )}
+        {podeDefinirPrioridade && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => definirPrioridade.mutate({ protocoloId: detalhe.id, prioridade: detalhe.prioridade === 'Alta' ? 'Normal' : 'Alta' })}
+            disabled={definirPrioridade.isPending}
+          >
+            {detalhe.prioridade === 'Alta' ? 'Remover urgência' : 'Marcar como urgente'}
+          </Button>
+        )}
+      </div>
+      {atribuirMenosCarregado.isError && <p className="mt-2 text-[12.5px] text-bad-fg">Ninguém com alçada na escala agora.</p>}
+    </>
+  )
+}

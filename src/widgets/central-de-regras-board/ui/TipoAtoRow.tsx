@@ -3,7 +3,7 @@ import { MinusIcon, PlusIcon } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 import type { GrupoTipoAto, TipoAtoComUso } from '@/entities/tipoAto'
-import { GRUPO_LABEL } from '@/entities/tipoAto'
+import { GRUPO_LABEL, GRUPOS } from '@/entities/tipoAto'
 import { useAlterarStatusTipoAto } from '@/features/tipoAto/alterar-status'
 import { useDefinirGrupoTipoAto } from '@/features/tipoAto/definir-grupo'
 import { useDefinirPesoTipoAto } from '@/features/tipoAto/definir-peso'
@@ -18,8 +18,6 @@ const PESO_MIN = 1
 const PESO_MAX = 5
 
 const SEM_GRUPO = '__sem-grupo__'
-const GRUPOS: GrupoTipoAto[] = ['Transmissoes', 'Sucessoes', 'Familia', 'Garantias', 'Notariais']
-
 type TipoAtoRowProps = {
   tipo: TipoAtoComUso
 }

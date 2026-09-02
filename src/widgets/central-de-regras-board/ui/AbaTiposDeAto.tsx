@@ -1,4 +1,5 @@
 import { useTiposAtoComUso } from '@/entities/tipoAto'
+import { Carregando } from '@/shared/ui/carregando'
 
 import { NovoTipoAtoDialog } from './NovoTipoAtoDialog'
 import { TipoAtoRow } from './TipoAtoRow'
@@ -20,7 +21,7 @@ export const AbaTiposDeAto = () => {
         alguém reativar. Só é possível remover um tipo que não está em uso.
       </p>
 
-      {!tipos && <p className="text-[13.5px] text-muted-foreground">Carregando…</p>}
+      {!tipos && <Carregando />}
       {tipos && tipos.length === 0 && <p className="text-[13px] text-muted-foreground">Nenhum tipo de ato cadastrado ainda.</p>}
 
       <div className="flex flex-col gap-1.5">

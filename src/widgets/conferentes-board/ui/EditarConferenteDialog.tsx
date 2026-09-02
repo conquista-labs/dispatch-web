@@ -1,9 +1,9 @@
-import { isAxiosError } from 'axios'
 import { PencilIcon } from 'lucide-react'
 import { useState } from 'react'
 
 import type { Conferente } from '@/entities/conferente'
 import { useEditarPerfil } from '@/features/conferente/editar-perfil'
+import { ehConflito409 } from '@/shared/lib/conflito-409'
 import { Button } from '@/shared/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/shared/ui/dialog'
 import { Input } from '@/shared/ui/input'
@@ -36,7 +36,7 @@ export const EditarConferenteDialog = ({ conferente }: EditarConferenteDialogPro
     editarPerfil.mutate({ conferenteId: conferente.id, nome: nome.trim(), email: email.trim() }, { onSuccess: () => setAberto(false) })
   }
 
-  const emailDuplicado = isAxiosError(editarPerfil.error) && editarPerfil.error.response?.status === 409
+  const emailDuplicado = ehConflito409(editarPerfil.error)
   const valido = nome.trim().length > 0 && email.trim().length > 0
 
   return (

@@ -8,6 +8,7 @@ import { useDescartarSugestao } from '@/features/sugestao/descartar'
 import { useGerarSugestoes } from '@/features/sugestao/gerar'
 import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/ui/button'
+import { Carregando } from '@/shared/ui/carregando'
 import { Progress } from '@/shared/ui/progress'
 import { SurfaceCard } from '@/shared/ui/surface-card'
 
@@ -34,7 +35,7 @@ export const AbaAprendizado = () => {
   const descartar = useDescartarSugestao()
 
   if (!pendentes || !historico || !regras || !equipes || !escreventes || !tiposAto) {
-    return <p className="mt-5 text-[13.5px] text-muted-foreground">Carregando…</p>
+    return <Carregando className="mt-5" />
   }
 
   const lookups = {

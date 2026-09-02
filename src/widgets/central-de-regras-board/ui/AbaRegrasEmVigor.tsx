@@ -5,7 +5,10 @@ import { TIPO_PRAZO_LABEL } from '@/entities/protocolo'
 import { fraseDaRegra, useRegrasAlcada } from '@/entities/regraAlcada'
 import { useTiposAto } from '@/entities/tipoAto'
 import { Button } from '@/shared/ui/button'
+import { Carregando } from '@/shared/ui/carregando'
 import { SurfaceCard } from '@/shared/ui/surface-card'
+
+import { criarNomesDaCentralDeRegras } from '../lib/nomes'
 
 type ItemVigor = { frase: string; detalhe: string }
 type GrupoVigor = { nome: string; itens: ItemVigor[]; editarLabel?: string; onEditar?: () => void }
@@ -37,12 +40,10 @@ export const AbaRegrasEmVigor = ({ onIrParaAlcada, onIrParaTipos, onIrParaPrazos
   const { data: escreventes } = useEscreventes()
 
   if (!regras || !conferentes || !tiposAto || !equipes || !escreventes) {
-    return <p className="mt-5 text-[13.5px] text-muted-foreground">Carregando…</p>
+    return <Carregando className="mt-5" />
   }
 
-  const nomePorConferenteId = new Map(conferentes.map((c) => [c.id, c.nome]))
-  const nomePorTipoAtoId = new Map(tiposAto.map((t) => [t.id, t.nome]))
-  const nomePorEquipeId = new Map(equipes.map((e) => [e.id, e.nome]))
+  const { nomePorConferenteId, nomePorTipoAtoId, nomePorEquipeId } = criarNomesDaCentralDeRegras(conferentes, tiposAto, equipes)
 
   const alcadaItens: ItemVigor[] = regras
     .filter((r) => r.ativa)

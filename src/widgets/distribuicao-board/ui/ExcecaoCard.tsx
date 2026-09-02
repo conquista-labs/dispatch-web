@@ -1,18 +1,13 @@
 import { useState } from 'react'
 
 import type { Conferente } from '@/entities/conferente'
-import type { InfoProtocolo, ProtocoloResumo } from '@/entities/protocolo'
+import { ETAPA_LABEL, type InfoProtocolo, type ProtocoloResumo } from '@/entities/protocolo'
 import { useAtribuirManualmente } from '@/features/protocolo/atribuir-manualmente'
 import { useDescartarExcecao } from '@/features/protocolo/descartar-excecao'
 import { Button } from '@/shared/ui/button'
 import { Chip } from '@/shared/ui/chip'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { SurfaceCard } from '@/shared/ui/surface-card'
-
-const ETAPA_LABEL: Record<ProtocoloResumo['etapa'], string> = {
-  PreConferencia: 'Pré-conferência',
-  PosConferencia: 'Pós-conferência',
-}
 
 // RF-17: motivo vem como texto livre (MotorDistribuicao.Motivo — "tipo desconhecido" ou "ninguém
 // com alçada", ver dispatch-api/CLAUDE.md), sem uma tag separada como o protótipo simula. "tipo
@@ -36,6 +31,10 @@ export const ExcecaoCard = ({ protocolo, conferentes, info, onAbrirDetalhe }: Ex
   const [conferenteId, setConferenteId] = useState('')
   const atribuir = useAtribuirManualmente()
   const descartar = useDescartarExcecao()
+  // Achado numa auditoria de qualidade: as duas mutations disparavam sem tratamento de erro
+  // nenhum — se "Resolver"/"Descartar" falhasse, o clique não fazia nada visível. Mesmo padrão
+  // de agregação de erro já usado em MinhaFilaBoard.tsx.
+  const erro = atribuir.error ?? descartar.error
 
   const handleConfirmar = () => {
     if (!conferenteId) return
@@ -59,6 +58,7 @@ export const ExcecaoCard = ({ protocolo, conferentes, info, onAbrirDetalhe }: Ex
             <Chip tom={info.equipeNome ? 'neutro' : 'vencido'}>{info.equipeNome ?? 'sem equipe'}</Chip>
           </div>
           <div className="mt-1 text-[12.5px] leading-snug text-text-2">{protocolo.motivoExcecao}</div>
+          {erro && <div className="mt-1.5 text-[12.5px] text-bad-fg">Não foi possível concluir a ação. Tente de novo.</div>}
         </div>
 
         {!resolvendo && (

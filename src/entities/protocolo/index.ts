@@ -25,3 +25,4 @@ export type { SimularProtocoloManualParams } from './api/simular-protocolo-manua
 export { prazoChip } from './lib/prazo-chip'
 export { ETAPA_LABEL, FAIXA_SEMAFORO_LABEL, PRIORIDADE_LABEL, TIPO_PRAZO_LABEL } from './lib/rotulos'
 export { contagemFiltrosAtivos, filtroVazio, protocoloPassaNoFiltro, type FiltroProtocolo } from './lib/filtros'
+export { criarResolverInfoProtocolo } from './lib/resolver-info-protocolo'

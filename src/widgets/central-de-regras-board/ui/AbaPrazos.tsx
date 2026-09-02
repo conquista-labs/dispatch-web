@@ -4,6 +4,7 @@ import { useEquipes } from '@/entities/equipe'
 import { useEscreventes } from '@/entities/escrevente'
 import { useMoverParaEquipe } from '@/features/escrevente/mover-para-equipe'
 import { Button } from '@/shared/ui/button'
+import { Carregando } from '@/shared/ui/carregando'
 
 import { EquipeCard } from './EquipeCard'
 import { NovaEquipeDialog } from './NovaEquipeDialog'
@@ -18,7 +19,7 @@ export const AbaPrazos = () => {
   const [escreventeSelecionadoId, setEscreventeSelecionadoId] = useState<string | null>(null)
 
   if (!equipes || !escreventes) {
-    return <p className="mt-5 text-[13.5px] text-muted-foreground">Carregando…</p>
+    return <Carregando className="mt-5" />
   }
 
   // Derivado localmente em vez de um segundo GET (/escreventes/sem-equipe) — `escreventes` já

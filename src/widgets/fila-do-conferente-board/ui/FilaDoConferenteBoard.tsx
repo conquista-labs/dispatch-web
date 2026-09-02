@@ -2,15 +2,11 @@ import { useState } from 'react'
 
 import { useEquipes } from '@/entities/equipe'
 import { useEscreventes } from '@/entities/escrevente'
-import { useConcluidosHojeDoConferente, useFilaDoConferente, type InfoProtocolo, type ProtocoloResumo } from '@/entities/protocolo'
+import { criarResolverInfoProtocolo, useConcluidosHojeDoConferente, useFilaDoConferente } from '@/entities/protocolo'
 import { useTiposAto } from '@/entities/tipoAto'
 import { useNow } from '@/shared/lib/use-now'
 import { BarraDeFiltros, useFiltroProtocolos } from '@/widgets/filtro-protocolos'
-import { ConcluidosHojeList, EmConferenciaCard, ListaCompletaPoolSheet, ProtocoloCard } from '@/widgets/minha-fila-board'
-
-// Mesmo limite de MinhaFilaBoard/ProtocoloColuna (Distribuição) — truncar em 3 e abrir a
-// lista completa num Sheet quando tiver mais.
-const MAX_POOL_VISIVEL = 5
+import { ConcluidosHojeList, EmConferenciaCard, ListaCompletaPoolSheet, MAX_POOL_VISIVEL, ProtocoloCard } from '@/widgets/minha-fila-board'
 
 const LEGENDA = [
   { label: 'no prazo', className: 'bg-ok-bg border-ok-border-2' },
@@ -38,19 +34,9 @@ export const FilaDoConferenteBoard = ({ conferenteId }: FilaDoConferenteBoardPro
   const [listaCompletaAberta, setListaCompletaAberta] = useState(false)
 
   // RF-24f: mesmo filtro de Minha fila — a Distribuidora acompanhando a fila de alguém também
-  // se beneficia de filtrar por equipe/tipo/prioridade/prazo.
-  const escreventePorId = new Map((escreventes ?? []).map((e) => [e.id, e]))
-  const nomePorEquipeId = new Map((equipes ?? []).map((e) => [e.id, e.nome]))
-  const nomePorTipoAtoId = new Map((tiposAto ?? []).map((t) => [t.id, t.nome]))
-  const resolverInfoProtocolo = (protocolo: ProtocoloResumo): InfoProtocolo => {
-    const escrevente = escreventePorId.get(protocolo.escreventeId)
-    return {
-      tipoAtoNome: protocolo.tipoAtoId ? (nomePorTipoAtoId.get(protocolo.tipoAtoId) ?? null) : null,
-      escreventeNome: escrevente?.nome ?? null,
-      equipeId: escrevente?.equipeId ?? null,
-      equipeNome: escrevente?.equipeId ? (nomePorEquipeId.get(escrevente.equipeId) ?? null) : null,
-    }
-  }
+  // se beneficia de filtrar por equipe/tipo/prioridade/prazo. Extraído pra `entities/protocolo`
+  // — mesma lógica repetida em DistribuicaoBoard/MinhaFilaBoard/PainelDetalheProtocolo.
+  const { resolverInfo: resolverInfoProtocolo, nomePorTipoAtoId } = criarResolverInfoProtocolo(escreventes, equipes, tiposAto)
   const todosOsProtocolos = fila ? [...fila.poolDisponivel, ...fila.atribuidos, ...fila.emConferencia] : []
   const filtroProtocolos = useFiltroProtocolos({
     protocolos: todosOsProtocolos,

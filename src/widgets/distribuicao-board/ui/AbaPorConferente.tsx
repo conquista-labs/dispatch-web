@@ -1,13 +1,7 @@
-import type { Conferente } from '@/entities/conferente'
+import { NIVEL_LABEL, type Conferente } from '@/entities/conferente'
 import type { GrupoPorConferente, InfoProtocolo, ProtocoloResumo } from '@/entities/protocolo'
 
 import { ProtocoloColuna } from './ProtocoloColuna'
-
-const NIVEL_LABEL: Record<Conferente['nivel'], string> = {
-  Junior: 'Júnior',
-  Pleno: 'Pleno',
-  Senior: 'Sênior',
-}
 
 type AbaPorConferenteProps = {
   pool: ProtocoloResumo[]

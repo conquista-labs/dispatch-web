@@ -1,9 +1,9 @@
-import { isAxiosError } from 'axios'
 import { useState } from 'react'
 
 import type { Nivel } from '@/entities/conferente'
 import { NIVEL_LABEL } from '@/entities/conferente'
 import { useCadastrarConferente } from '@/features/conferente/cadastrar'
+import { ehConflito409 } from '@/shared/lib/conflito-409'
 import { Button } from '@/shared/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/shared/ui/dialog'
 import { Input } from '@/shared/ui/input'
@@ -36,7 +36,7 @@ export const NovoConferenteDialog = () => {
     )
   }
 
-  const emailDuplicado = isAxiosError(cadastrar.error) && cadastrar.error.response?.status === 409
+  const emailDuplicado = ehConflito409(cadastrar.error)
   const valido = form.nome.trim().length > 0 && form.email.trim().length > 0 && form.senha.length >= 6 && Number(form.jornadaHoras) > 0
 
   return (
