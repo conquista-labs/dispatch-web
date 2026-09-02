@@ -14,7 +14,10 @@ export type FaixaSemaforo = 'Verde' | 'Amarelo' | 'Laranja' | 'Vermelho'
 // TipoPrazo (Dispatch.Domain) — prazo bruto de uma Equipe, antes de virar vencimento.
 export type TipoPrazo = 'UmaHora' | 'D0' | 'D1' | 'D2'
 
-export type Prioridade = 'Normal' | 'Alta'
+// "Normal" é o valor gravado no banco pro nível do meio (Dispatch.Domain.Prioridade não foi
+// renomeado, pra não quebrar a leitura de protocolos já existentes) — o rótulo exibido
+// ("Média") é só do front, ver PRIORIDADE_LABEL em lib/rotulos.ts.
+export type Prioridade = 'Baixa' | 'Normal' | 'Alta'
 
 // ProtocoloResumo (Api) — DateTimeOffset do C# chega como string ISO 8601 (axios não faz
 // parse automático pra Date), TimeSpan chega como string "hh:mm:ss[.fffffff]".

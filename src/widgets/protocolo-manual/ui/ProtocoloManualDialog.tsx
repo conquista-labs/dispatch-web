@@ -5,6 +5,7 @@ import { useEquipes } from '@/entities/equipe'
 import { useEscreventes } from '@/entities/escrevente'
 import {
   ETAPA_LABEL,
+  PRIORIDADE_LABEL,
   TIPO_PRAZO_LABEL,
   useSimularProtocoloManual,
   type DetalheProtocolo,
@@ -23,8 +24,8 @@ import { PillToggle } from '@/shared/ui/pill-toggle'
 import { SeletorUnico } from '@/shared/ui/seletor-unico'
 
 const ETAPAS: Etapa[] = ['PreConferencia', 'PosConferencia']
-const PRIORIDADES: Prioridade[] = ['Normal', 'Alta']
-const PRIORIDADE_LABEL: Record<Prioridade, string> = { Normal: 'Normal', Alta: 'Alta (urgente)' }
+// Ordem de exibição do seletor de 3 botões, igual ao protótipo (Dispatch.dc.html: ['Alta','Média','Baixa']).
+const PRIORIDADES: Prioridade[] = ['Alta', 'Normal', 'Baixa']
 
 const DESTINO_LABEL: Record<string, string> = {
   Atribuido: 'atribuído automaticamente',
@@ -32,7 +33,9 @@ const DESTINO_LABEL: Record<string, string> = {
   Excecao: 'fila de exceções',
 }
 
-const formVazio = { numero: '', tipoAtoId: '', escreventeNome: '', etapa: 'PosConferencia' as Etapa, prioridade: 'Normal' as Prioridade, observacao: '' }
+// Prioridade: 'Baixa' — mesmo default do protótipo (nvPrioridade: 'Baixa' no criar), só vale
+// pro modo criação; editar sempre pré-preenche do protocolo real (ver useEffect abaixo).
+const formVazio = { numero: '', tipoAtoId: '', escreventeNome: '', etapa: 'PosConferencia' as Etapa, prioridade: 'Baixa' as Prioridade, observacao: '' }
 
 type ProtocoloManualDialogProps = {
   aberto: boolean

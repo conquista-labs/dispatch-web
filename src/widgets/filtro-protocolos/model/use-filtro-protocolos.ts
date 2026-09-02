@@ -53,7 +53,8 @@ export const useFiltroProtocolos = ({ protocolos, resolverInfo, equipes, tiposAt
     tiposAto: tiposAto.map((t): OpcaoContagem<string> => ({ valor: t.id, label: t.nome, contagem: contarTipoAto(t.id) })),
     prioridades: [
       { valor: 'Alta' as const, label: 'alta', contagem: contarPrioridade('Alta') },
-      { valor: 'Normal' as const, label: 'normal', contagem: contarPrioridade('Normal') },
+      { valor: 'Normal' as const, label: 'média', contagem: contarPrioridade('Normal') },
+      { valor: 'Baixa' as const, label: 'baixa', contagem: contarPrioridade('Baixa') },
     ],
     urgente: contarUrgente(),
   }

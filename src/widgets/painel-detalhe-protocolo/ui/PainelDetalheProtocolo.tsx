@@ -4,7 +4,7 @@ import { toast } from 'sonner'
 import { NIVEL_LABEL, useConferentes } from '@/entities/conferente'
 import { useEquipes } from '@/entities/equipe'
 import { useEscreventes } from '@/entities/escrevente'
-import { ETAPA_LABEL, prazoChip, TIPO_PRAZO_LABEL, useDetalheProtocolo, type StatusProtocolo } from '@/entities/protocolo'
+import { ETAPA_LABEL, PRIORIDADE_LABEL, prazoChip, TIPO_PRAZO_LABEL, useDetalheProtocolo, type StatusProtocolo } from '@/entities/protocolo'
 import { fraseDaRegra, MOTIVO_ALCADA_LABEL, useRegrasAlcada } from '@/entities/regraAlcada'
 import { useTiposAto } from '@/entities/tipoAto'
 import { useAtribuirAoMenosCarregado } from '@/features/protocolo/atribuir-ao-menos-carregado'
@@ -120,7 +120,7 @@ export const PainelDetalheProtocolo = ({ protocoloId, onFechar }: PainelDetalheP
             : 'padrão aberto',
         },
         { k: 'Vencimento', v: detalhe.vencimentoEm ? formatDataHora(detalhe.vencimentoEm) : '—' },
-        { k: 'Prioridade', v: detalhe.prioridade === 'Alta' ? 'Alta' : 'Normal' },
+        { k: 'Prioridade', v: PRIORIDADE_LABEL[detalhe.prioridade] },
         { k: 'Dono', v: detalhe.donoId ? (nomePorConferenteId.get(detalhe.donoId) ?? '—') : 'sem dono' },
       ]
     : []

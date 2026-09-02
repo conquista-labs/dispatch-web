@@ -23,5 +23,5 @@ export { DETALHE_PROTOCOLO_QUERY_KEY, useDetalheProtocolo } from './model/use-de
 export { useSimularProtocoloManual } from './model/use-simular-protocolo-manual'
 export type { SimularProtocoloManualParams } from './api/simular-protocolo-manual'
 export { prazoChip } from './lib/prazo-chip'
-export { ETAPA_LABEL, FAIXA_SEMAFORO_LABEL, TIPO_PRAZO_LABEL } from './lib/rotulos'
+export { ETAPA_LABEL, FAIXA_SEMAFORO_LABEL, PRIORIDADE_LABEL, TIPO_PRAZO_LABEL } from './lib/rotulos'
 export { contagemFiltrosAtivos, filtroVazio, protocoloPassaNoFiltro, type FiltroProtocolo } from './lib/filtros'

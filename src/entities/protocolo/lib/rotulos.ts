@@ -1,4 +1,4 @@
-import type { Etapa, FaixaSemaforo, TipoPrazo } from '../model/types'
+import type { Etapa, FaixaSemaforo, Prioridade, TipoPrazo } from '../model/types'
 
 // Back manda o fato cru (enum), front decide o rótulo em português — mesmo padrão de
 // FaixaSemaforo (ver prazo-chip.ts). Usado onde quer que Etapa/TipoPrazo apareçam pra humano
@@ -22,4 +22,14 @@ export const FAIXA_SEMAFORO_LABEL: Record<FaixaSemaforo, string> = {
   Amarelo: 'atenção',
   Laranja: 'crítico',
   Vermelho: 'vencido',
+}
+
+// Fiel ao protótipo (3 níveis: Alta/Média/Baixa) — "Normal" é só o nome do valor gravado no
+// banco (ver Prioridade em model/types.ts), nunca mostrado assim pra um humano. "(urgente)" em
+// Alta é uma clarificação deliberada, não literal do protótipo — mantida de uma revisão de
+// fidelidade anterior.
+export const PRIORIDADE_LABEL: Record<Prioridade, string> = {
+  Alta: 'Alta (urgente)',
+  Normal: 'Média',
+  Baixa: 'Baixa',
 }

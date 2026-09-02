@@ -1468,3 +1468,32 @@ com `border-radius` + opacidade reduzida, não algo que um usuário real veria n
 
 Verificado nos dois temas via Playwright (screenshots + suíte permanente rodada de novo: mesmas
 8 falhas pré-existentes de antes desta rodada, nenhuma nova).
+
+## Prioridade com 3 níveis (Baixa/Média/Alta)
+
+Fechava um gap documentado antes (só `Normal`/`Alta` no front, protótipo sempre teve os 3).
+`Prioridade` (`entities/protocolo/model/types.ts`) virou `'Baixa' | 'Normal' | 'Alta'` — "Normal"
+continua sendo o valor gravado (não virou "Media" no dado, ver `dispatch-api/CLAUDE.md`), só o
+rótulo mudou: `PRIORIDADE_LABEL` novo em `entities/protocolo/lib/rotulos.ts`
+(`{ Alta: 'Alta (urgente)', Normal: 'Média', Baixa: 'Baixa' }`), mesmo padrão de
+`ETAPA_LABEL`/`TIPO_PRAZO_LABEL` já existentes ali — centraliza o que antes era uma const local
+duplicada dentro de `ProtocoloManualDialog.tsx`.
+
+Mudança pequena e bem contida, confirmada por varredura completa de todo `Prioridade`/
+`prioridade` no código antes de mexer: só 4 arquivos precisaram de código novo —
+`ProtocoloManualDialog.tsx` (seletor de 3 botões, ordem `['Alta','Normal','Baixa']` igual ao
+protótipo, default do formulário de criar mudou de `'Normal'` pra `'Baixa'`, igual
+`nvPrioridade` do protótipo), `PainelDetalheProtocolo.tsx` (a metadata do painel colapsava
+qualquer coisa que não fosse Alta em "Normal" — trocado pra `PRIORIDADE_LABEL[...]`, senão
+`Baixa` ficaria escondida atrás do rótulo errado), e `use-filtro-protocolos.ts` (eixo
+"Prioridade" ganhou a 3ª opção, rótulo do meio corrigido de `'normal'` pra `'média'`). O badge
+"Alta" nos cards do quadro (`DistribuicaoProtocoloCard.tsx`/`ListaCompletaColunaSheet.tsx`)
+**não mudou** — confirmado no protótipo que só `Alta` ganha destaque visual, `Média`/`Baixa`
+são só informativas/filtráveis, então a condição `prioridade === 'Alta'` já estava certa.
+
+Verificado via Playwright nos dois temas: modal de criar protocolo mostrando os 3 botões com
+"Baixa" pré-selecionado, painel de filtros com as 3 opções e contagem (alta/média/baixa).
+Suíte permanente rodada de novo depois — mesmas 8 falhas pré-existentes, nenhuma nova (inclusive
+as duas specs que já tocavam prioridade, `distribuicao-v2.spec.ts`/`correcao-reabertura.spec.ts`,
+já estavam na lista de falhas conhecidas antes desta mudança, por motivo não relacionado —
+conferido a razão exata de cada falha pra não confundir com uma regressão desta rodada).
