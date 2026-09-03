@@ -46,7 +46,9 @@ test('Distribuição v2 — prioridade, RF-14, RF-16, RF-18c, RF-18e', async ({ 
   const botaoUrgencia = page.getByRole('button', { name: /Marcar como urgente|Remover urgência/ })
   const eraUrgente = (await botaoUrgencia.textContent())?.includes('Remover')
   await botaoUrgencia.click()
-  await expect(page.getByRole('button', { name: eraUrgente ? 'Marcar como urgente' : 'Remover urgência' })).toBeVisible()
+  await expect(
+    page.getByRole('button', { name: eraUrgente ? 'Marcar como urgente' : 'Remover urgência' }),
+  ).toBeVisible()
   // Desfaz, pra não mudar o estado do dado seedado além do necessário.
   await page.getByRole('button', { name: eraUrgente ? 'Marcar como urgente' : 'Remover urgência' }).click()
   await page.getByRole('button', { name: 'Fechar' }).click()
@@ -54,7 +56,9 @@ test('Distribuição v2 — prioridade, RF-14, RF-16, RF-18c, RF-18e', async ({ 
   // RF-16: "Redistribuir pool" mostra estado de carregamento — atrasa a resposta pra capturar o
   // texto intermediário.
   await page.route('**/protocolos/redistribuir-pool', async (route) => {
-    await new Promise((resolve) => setTimeout(resolve, 800))
+    await new Promise((resolve) => {
+      setTimeout(resolve, 800)
+    })
     await route.continue()
   })
   const botaoRedistribuir = page.getByRole('button', { name: /Redistribuir pool/ })
@@ -105,7 +109,13 @@ test('Minha fila (Conferente) — barra de filtros RF-24f realmente filtra', asy
   // gestão). Já pegou um bug real: essas duas rotas eram Distribuidora-only, então pro
   // Conferente `escreventePorId` vinha sempre vazio e TODO protocolo caía em "sem equipe" —
   // o filtro "funcionava" (marcava ativo) mas não reduzia nada de verdade.
-  const contagemPoolAntes = Number(await page.locator('strong:has-text("Pool disponível")').locator('xpath=following-sibling::span[1]').first().textContent())
+  const contagemPoolAntes = Number(
+    await page
+      .locator('strong:has-text("Pool disponível")')
+      .locator('xpath=following-sibling::span[1]')
+      .first()
+      .textContent(),
+  )
   expect(contagemPoolAntes).toBeGreaterThan(0)
 
   await expect(page.getByRole('button', { name: 'Equipe', exact: true })).toBeVisible()
@@ -115,7 +125,13 @@ test('Minha fila (Conferente) — barra de filtros RF-24f realmente filtra', asy
   await page.keyboard.press('Escape')
   await expect(page.getByText(/1 filtro ativo/)).toBeVisible()
 
-  const contagemPoolFiltrado = Number(await page.locator('strong:has-text("Pool disponível")').locator('xpath=following-sibling::span[1]').first().textContent())
+  const contagemPoolFiltrado = Number(
+    await page
+      .locator('strong:has-text("Pool disponível")')
+      .locator('xpath=following-sibling::span[1]')
+      .first()
+      .textContent(),
+  )
   expect(contagemPoolFiltrado).toBeLessThan(contagemPoolAntes)
   expect(contagemPoolFiltrado).toBeGreaterThan(0)
 

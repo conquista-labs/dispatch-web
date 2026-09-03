@@ -26,7 +26,16 @@ type ProtocoloCardProps = {
 
 // Card do pool disponível / atribuídos a você (RF-19) — mesmo layout dos dois, só muda o
 // botão de ação ("Pegar este" / "Iniciar conferência").
-export const ProtocoloCard = ({ protocolo, now, info, acaoLabel, onAcao, acaoDesabilitada, acaoVariante = 'outline', somenteLeitura }: ProtocoloCardProps) => {
+export const ProtocoloCard = ({
+  protocolo,
+  now,
+  info,
+  acaoLabel,
+  onAcao,
+  acaoDesabilitada,
+  acaoVariante = 'outline',
+  somenteLeitura,
+}: ProtocoloCardProps) => {
   const chip = prazoChip(protocolo.semaforo, protocolo.vencimentoEm, now)
 
   return (
@@ -37,8 +46,12 @@ export const ProtocoloCard = ({ protocolo, now, info, acaoLabel, onAcao, acaoDes
       </div>
       <div className="mt-1.5 text-[13px] text-pretty text-text-5">{info.tipoAtoNome ?? '—'}</div>
       <div className="mt-1 flex flex-wrap items-center gap-1.5">
-        <Chip tom={info.equipeNome ? 'neutro' : 'vencido'}>{info.equipeNome ?? 'sem equipe'}</Chip>
-        <Chip tom="neutro">{ETAPA_LABEL[protocolo.etapa]}</Chip>
+        <Chip tom={info.equipeNome ? 'neutro' : 'vencido'} fonte="padrao" className="font-medium">
+          {info.equipeNome ?? 'sem equipe'}
+        </Chip>
+        <Chip tom="neutro" fonte="padrao">
+          {ETAPA_LABEL[protocolo.etapa]}
+        </Chip>
       </div>
       <div className="mt-1 text-[11.5px] text-pretty text-muted-foreground">{info.escreventeNome ?? '—'}</div>
 

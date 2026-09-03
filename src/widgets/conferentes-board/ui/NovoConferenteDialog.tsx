@@ -31,13 +31,23 @@ export const NovoConferenteDialog = () => {
 
   const handleSalvar = () => {
     cadastrar.mutate(
-      { nome: form.nome.trim(), email: form.email.trim(), senha: form.senha, nivel: form.nivel, jornadaHoras: Number(form.jornadaHoras) },
+      {
+        nome: form.nome.trim(),
+        email: form.email.trim(),
+        senha: form.senha,
+        nivel: form.nivel,
+        jornadaHoras: Number(form.jornadaHoras),
+      },
       { onSuccess: () => setAberto(false) },
     )
   }
 
   const emailDuplicado = ehConflito409(cadastrar.error)
-  const valido = form.nome.trim().length > 0 && form.email.trim().length > 0 && form.senha.length >= 6 && Number(form.jornadaHoras) > 0
+  const valido =
+    form.nome.trim().length > 0 &&
+    form.email.trim().length > 0 &&
+    form.senha.length >= 6 &&
+    Number(form.jornadaHoras) > 0
 
   return (
     <Dialog open={aberto} onOpenChange={handleAbrir}>
@@ -52,17 +62,32 @@ export const NovoConferenteDialog = () => {
         <div className="flex flex-col gap-3">
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="nome">Nome</Label>
-            <Input id="nome" value={form.nome} onChange={(event) => setForm({ ...form, nome: event.target.value })} autoFocus />
+            <Input
+              id="nome"
+              value={form.nome}
+              onChange={(event) => setForm({ ...form, nome: event.target.value })}
+              autoFocus
+            />
           </div>
 
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="email">E-mail</Label>
-            <Input id="email" type="email" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} />
+            <Input
+              id="email"
+              type="email"
+              value={form.email}
+              onChange={(event) => setForm({ ...form, email: event.target.value })}
+            />
           </div>
 
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="senha">Senha</Label>
-            <Input id="senha" type="password" value={form.senha} onChange={(event) => setForm({ ...form, senha: event.target.value })} />
+            <Input
+              id="senha"
+              type="password"
+              value={form.senha}
+              onChange={(event) => setForm({ ...form, senha: event.target.value })}
+            />
             <span className="text-[11px] text-muted-foreground">mínimo 6 caracteres</span>
           </div>
 
@@ -97,7 +122,9 @@ export const NovoConferenteDialog = () => {
           </div>
 
           {emailDuplicado && <p className="text-[13px] text-bad-fg">Já existe um conferente com esse e-mail.</p>}
-          {cadastrar.isError && !emailDuplicado && <p className="text-[13px] text-bad-fg">Não foi possível cadastrar. Tente de novo.</p>}
+          {cadastrar.isError && !emailDuplicado && (
+            <p className="text-[13px] text-bad-fg">Não foi possível cadastrar. Tente de novo.</p>
+          )}
         </div>
 
         <DialogFooter>

@@ -45,7 +45,9 @@ export const NovoTipoAtoDialog = () => {
           <Label htmlFor="nome-tipo-ato">Nome</Label>
           <Input id="nome-tipo-ato" value={nome} onChange={(event) => setNome(event.target.value)} autoFocus />
           {jaExiste && <p className="text-[13px] text-bad-fg">Já existe um tipo de ato com esse nome.</p>}
-          {criar.isError && !jaExiste && <p className="text-[13px] text-bad-fg">Não foi possível cadastrar. Tente de novo.</p>}
+          {criar.isError && !jaExiste && (
+            <p className="text-[13px] text-bad-fg">Não foi possível cadastrar. Tente de novo.</p>
+          )}
         </div>
 
         <DialogFooter>

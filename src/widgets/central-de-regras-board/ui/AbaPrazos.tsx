@@ -31,7 +31,10 @@ export const AbaPrazos = () => {
 
   const handleMoverParaCa = (equipeId: string) => {
     if (!escreventeSelecionadoId) return
-    mover.mutate({ escreventeId: escreventeSelecionadoId, equipeId }, { onSuccess: () => setEscreventeSelecionadoId(null) })
+    mover.mutate(
+      { escreventeId: escreventeSelecionadoId, equipeId },
+      { onSuccess: () => setEscreventeSelecionadoId(null) },
+    )
   }
 
   const nomeSelecionado = escreventes.find((e) => e.id === escreventeSelecionadoId)?.nome
@@ -41,9 +44,9 @@ export const AbaPrazos = () => {
       <header className="flex items-start justify-between gap-4">
         <div>
           <h2 className="mt-5.5 mb-0 text-[15px] font-semibold tracking-[-0.01em]">Prazo por equipe e etapa</h2>
-          <p className="mt-1.5 max-w-[66ch] text-[13px] text-text-2 text-pretty">
-            O prazo não vem no relatório: sai daqui. Na importação o sistema lê o escrevente, descobre a equipe dele e aplica o prazo combinado — um para
-            pré-conferência, outro para pós.
+          <p className="mt-1.5 max-w-[66ch] text-[13px] text-pretty text-text-2">
+            O prazo não vem no relatório: sai daqui. Na importação o sistema lê o escrevente, descobre a equipe dele e
+            aplica o prazo combinado — um para pré-conferência, outro para pós.
           </p>
         </div>
         <NovaEquipeDialog />
@@ -52,10 +55,18 @@ export const AbaPrazos = () => {
       {semEquipe.length > 0 && (
         <div className="mt-4.5 rounded-[10px] border border-warn-border bg-warn-bg p-3.5">
           <div className="text-[13px] font-semibold text-warn-fg-2">Escreventes sem equipe</div>
-          <div className="mt-0.75 text-[12.5px] text-warn-fg">Os protocolos deles entram com o prazo padrão D+1. Selecione o nome e mova para a equipe certa.</div>
+          <div className="mt-0.75 text-[12.5px] text-warn-fg">
+            Os protocolos deles entram com o prazo padrão D+1. Selecione o nome e mova para a equipe certa.
+          </div>
           <div className="mt-2.5 flex flex-wrap gap-1.5">
             {semEquipe.map((esc) => (
-              <PillToggle key={esc.id} redondo label={esc.nome} selecionado={escreventeSelecionadoId === esc.id} onClick={() => toggleSelecao(esc.id)} />
+              <PillToggle
+                key={esc.id}
+                redondo
+                label={esc.nome}
+                selecionado={escreventeSelecionadoId === esc.id}
+                onClick={() => toggleSelecao(esc.id)}
+              />
             ))}
           </div>
         </div>
@@ -64,7 +75,8 @@ export const AbaPrazos = () => {
       {escreventeSelecionadoId && (
         <div className="mt-3.5 flex items-center justify-between gap-3 rounded-[10px] border border-foreground bg-card p-3">
           <span className="text-[13px]">
-            <strong className="font-semibold">{nomeSelecionado}</strong> selecionado — clique em “Mover para cá” na equipe de destino.
+            <strong className="font-semibold">{nomeSelecionado}</strong> selecionado — clique em “Mover para cá” na
+            equipe de destino.
           </span>
           <Button variant="outline" size="sm" onClick={() => setEscreventeSelecionadoId(null)}>
             Cancelar
@@ -84,7 +96,7 @@ export const AbaPrazos = () => {
           />
         ))}
       </div>
-      <p className="mt-3.5 text-[12.5px] text-muted-foreground text-pretty">
+      <p className="mt-3.5 text-[12.5px] text-pretty text-muted-foreground">
         Mudar um prazo aqui recalcula o vencimento dos protocolos abertos daquela equipe — o semáforo se ajusta na hora.
       </p>
     </div>

@@ -17,10 +17,20 @@ export type FiltroProtocolo = {
   data: string | null
 }
 
-export const filtroVazio = (): FiltroProtocolo => ({ equipeIds: [], tipoAtoIds: [], prioridades: [], urgente: false, texto: '', data: null })
+export const filtroVazio = (): FiltroProtocolo => ({
+  equipeIds: [],
+  tipoAtoIds: [],
+  prioridades: [],
+  urgente: false,
+  texto: '',
+  data: null,
+})
 
 export const contagemFiltrosAtivos = (filtro: FiltroProtocolo): number =>
-  Number(filtro.equipeIds.length > 0) + Number(filtro.tipoAtoIds.length > 0) + Number(filtro.prioridades.length > 0) + Number(filtro.urgente)
+  Number(filtro.equipeIds.length > 0) +
+  Number(filtro.tipoAtoIds.length > 0) +
+  Number(filtro.prioridades.length > 0) +
+  Number(filtro.urgente)
 
 const LIMIAR_URGENTE_MS = 4 * 60 * 60 * 1000
 
@@ -34,12 +44,19 @@ export const chaveDoDiaLocal = (iso: string): string => {
 // "Os filtros... não alteram dado nenhum — só o recorte exibido" (RF-18e): é só um predicado
 // sobre o que a tela já buscou inteiro, sem chamada nova nenhuma. `now` só é usado pelo eixo
 // "urgente" (vence em menos de 4h a partir de agora).
-export const protocoloPassaNoFiltro = (protocolo: ProtocoloResumo, info: InfoProtocolo, filtro: FiltroProtocolo, now: number): boolean => {
+export const protocoloPassaNoFiltro = (
+  protocolo: ProtocoloResumo,
+  info: InfoProtocolo,
+  filtro: FiltroProtocolo,
+  now: number,
+): boolean => {
   if (filtro.equipeIds.length > 0 && !filtro.equipeIds.includes(info.equipeId)) return false
-  if (filtro.tipoAtoIds.length > 0 && (!protocolo.tipoAtoId || !filtro.tipoAtoIds.includes(protocolo.tipoAtoId))) return false
+  if (filtro.tipoAtoIds.length > 0 && (!protocolo.tipoAtoId || !filtro.tipoAtoIds.includes(protocolo.tipoAtoId)))
+    return false
   if (filtro.prioridades.length > 0 && !filtro.prioridades.includes(protocolo.prioridade)) return false
   if (filtro.urgente) {
-    const venceLogo = protocolo.vencimentoEm != null && new Date(protocolo.vencimentoEm).getTime() - now < LIMIAR_URGENTE_MS
+    const venceLogo =
+      protocolo.vencimentoEm !== null && new Date(protocolo.vencimentoEm).getTime() - now < LIMIAR_URGENTE_MS
     if (!(protocolo.prioridade === 'Alta' || venceLogo)) return false
   }
   if (filtro.data && (!protocolo.vencimentoEm || chaveDoDiaLocal(protocolo.vencimentoEm) !== filtro.data)) return false

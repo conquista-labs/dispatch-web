@@ -55,7 +55,9 @@ export const ProtocoloColuna = ({
               texto, e o texto tem onde encolher antes do contador. */}
           <div className="flex items-start justify-between gap-2">
             <strong className="min-w-0 text-[13.5px] font-semibold text-pretty">{nome}</strong>
-            <span className="flex-none rounded-full bg-secondary px-1.5 py-px font-mono text-[11px] text-text-3">{protocolos.length}</span>
+            <span className="flex-none rounded-full bg-secondary px-1.5 py-px font-mono text-[11px] text-text-3">
+              {protocolos.length}
+            </span>
           </div>
           {sub && <div className="mt-0.5 text-[11.5px] leading-snug text-muted-foreground">{sub}</div>}
         </div>
@@ -89,7 +91,9 @@ export const ProtocoloColuna = ({
           </button>
         )}
         {protocolos.length === 0 && (
-          <div className="rounded-[10px] border border-dashed border-border p-4 text-center text-xs text-muted-foreground">{mensagemVazia}</div>
+          <div className="rounded-[10px] border border-dashed border-border p-4 text-center text-xs text-muted-foreground">
+            {mensagemVazia}
+          </div>
         )}
       </div>
 

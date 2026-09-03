@@ -6,7 +6,11 @@ import { getConcluidosHojeDoConferente } from '../api/get-concluidos-hoje-do-con
 // Chave com o id embutido — cada conferente tem sua própria fila em cache, não uma query só
 // que troca de dono por baixo (mesmo raciocínio de escopo por usuário de outras telas).
 export const filaDoConferenteQueryKey = (conferenteId: string) => ['conferentes', conferenteId, 'fila']
-export const concluidosHojeDoConferenteQueryKey = (conferenteId: string) => ['conferentes', conferenteId, 'concluidos-hoje']
+export const concluidosHojeDoConferenteQueryKey = (conferenteId: string) => [
+  'conferentes',
+  conferenteId,
+  'concluidos-hoje',
+]
 
 export const useFilaDoConferente = (conferenteId: string) =>
   useQuery({

@@ -29,8 +29,9 @@ export const AbaExcecoes = ({ excecoes, conferentes, resolverInfo, onAbrirDetalh
       {pedidos && pedidos.length > 0 && (
         <div className="mb-4">
           <div className="mb-1.5 text-[13.5px] font-semibold">Pedidos de reabertura · {pedidos.length}</div>
-          <p className="mb-2.5 text-[12.5px] text-muted-foreground text-pretty">
-            O conferente concluiu e percebeu que precisa mexer de novo. Só a distribuidora pode devolver um ato para conferência.
+          <p className="mb-2.5 text-[12.5px] text-pretty text-muted-foreground">
+            O conferente concluiu e percebeu que precisa mexer de novo. Só a distribuidora pode devolver um ato para
+            conferência.
           </p>
           {pedidos.map((pedido) => (
             <PedidoReaberturaCard key={pedido.pedidoId} pedido={pedido} onAbrirDetalhe={onAbrirDetalhe} />
@@ -39,7 +40,13 @@ export const AbaExcecoes = ({ excecoes, conferentes, resolverInfo, onAbrirDetalh
       )}
 
       {excecoes.map((protocolo) => (
-        <ExcecaoCard key={protocolo.id} protocolo={protocolo} conferentes={conferentes} info={resolverInfo(protocolo)} onAbrirDetalhe={onAbrirDetalhe} />
+        <ExcecaoCard
+          key={protocolo.id}
+          protocolo={protocolo}
+          conferentes={conferentes}
+          info={resolverInfo(protocolo)}
+          onAbrirDetalhe={onAbrirDetalhe}
+        />
       ))}
     </div>
   )

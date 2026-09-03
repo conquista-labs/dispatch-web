@@ -6,7 +6,13 @@ import { criarResolverInfoProtocolo, useConcluidosHojeDoConferente, useFilaDoCon
 import { useTiposAto } from '@/entities/tipoAto'
 import { useNow } from '@/shared/lib/use-now'
 import { BarraDeFiltros, useFiltroProtocolos } from '@/widgets/filtro-protocolos'
-import { ConcluidosHojeList, EmConferenciaCard, ListaCompletaPoolSheet, MAX_POOL_VISIVEL, ProtocoloCard } from '@/widgets/minha-fila-board'
+import {
+  ConcluidosHojeList,
+  EmConferenciaCard,
+  ListaCompletaPoolSheet,
+  MAX_POOL_VISIVEL,
+  ProtocoloCard,
+} from '@/widgets/minha-fila-board'
 
 const LEGENDA = [
   { label: 'no prazo', className: 'bg-ok-bg border-ok-border-2' },
@@ -36,7 +42,11 @@ export const FilaDoConferenteBoard = ({ conferenteId }: FilaDoConferenteBoardPro
   // RF-24f: mesmo filtro de Minha fila — a Distribuidora acompanhando a fila de alguém também
   // se beneficia de filtrar por equipe/tipo/prioridade/prazo. Extraído pra `entities/protocolo`
   // — mesma lógica repetida em DistribuicaoBoard/MinhaFilaBoard/PainelDetalheProtocolo.
-  const { resolverInfo: resolverInfoProtocolo, nomePorTipoAtoId } = criarResolverInfoProtocolo(escreventes, equipes, tiposAto)
+  const { resolverInfo: resolverInfoProtocolo, nomePorTipoAtoId } = criarResolverInfoProtocolo(
+    escreventes,
+    equipes,
+    tiposAto,
+  )
   const todosOsProtocolos = fila ? [...fila.poolDisponivel, ...fila.atribuidos, ...fila.emConferencia] : []
   const filtroProtocolos = useFiltroProtocolos({
     protocolos: todosOsProtocolos,
@@ -80,7 +90,13 @@ export const FilaDoConferenteBoard = ({ conferenteId }: FilaDoConferenteBoardPro
           </div>
           <div className="flex flex-col gap-2">
             {filaFiltrada.poolDisponivel.slice(0, MAX_POOL_VISIVEL).map((protocolo) => (
-              <ProtocoloCard key={protocolo.id} protocolo={protocolo} now={now} info={resolverInfoProtocolo(protocolo)} somenteLeitura />
+              <ProtocoloCard
+                key={protocolo.id}
+                protocolo={protocolo}
+                now={now}
+                info={resolverInfoProtocolo(protocolo)}
+                somenteLeitura
+              />
             ))}
             {filaFiltrada.poolDisponivel.length > MAX_POOL_VISIVEL && (
               <button
@@ -114,7 +130,13 @@ export const FilaDoConferenteBoard = ({ conferenteId }: FilaDoConferenteBoardPro
           </div>
           <div className="flex flex-col gap-2">
             {filaFiltrada.atribuidos.map((protocolo) => (
-              <ProtocoloCard key={protocolo.id} protocolo={protocolo} now={now} info={resolverInfoProtocolo(protocolo)} somenteLeitura />
+              <ProtocoloCard
+                key={protocolo.id}
+                protocolo={protocolo}
+                now={now}
+                info={resolverInfoProtocolo(protocolo)}
+                somenteLeitura
+              />
             ))}
             {filaFiltrada.atribuidos.length === 0 && (
               <div className="rounded-[10px] border border-dashed border-border p-4 text-center text-xs text-muted-foreground">
@@ -140,7 +162,9 @@ export const FilaDoConferenteBoard = ({ conferenteId }: FilaDoConferenteBoardPro
             )}
           </div>
 
-          {concluidos && <ConcluidosHojeList concluidos={concluidos} now={now} nomePorTipoAtoId={nomePorTipoAtoId} somenteLeitura />}
+          {concluidos && (
+            <ConcluidosHojeList concluidos={concluidos} now={now} nomePorTipoAtoId={nomePorTipoAtoId} somenteLeitura />
+          )}
         </div>
       </div>
     </div>

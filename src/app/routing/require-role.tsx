@@ -23,5 +23,5 @@ export const RequireRole = ({ roles, children }: RequireRoleProps) => {
     return <Navigate to={roleHomeRoute[usuario.papel]} replace />
   }
 
-  return <>{children}</>
+  return children
 }

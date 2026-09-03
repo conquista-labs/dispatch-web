@@ -20,7 +20,14 @@ test('Distribuidora — "Minha fila" mostra a fila de um conferente, somente lei
 
   // Somente leitura — nenhum controle de escrita deveria existir na tela, com qualquer
   // conferente selecionado.
-  for (const rotulo of ['Pegar este', 'Iniciar conferência', 'Aprovar', 'Não aprovar', '+ Observação', 'Editar observação']) {
+  for (const rotulo of [
+    'Pegar este',
+    'Iniciar conferência',
+    'Aprovar',
+    'Não aprovar',
+    '+ Observação',
+    'Editar observação',
+  ]) {
     await expect(page.getByRole('button', { name: rotulo })).toHaveCount(0)
   }
 
@@ -34,7 +41,10 @@ test('Distribuidora — "Minha fila" mostra a fila de um conferente, somente lei
 
   if (temSegunda) {
     const segundaOpcao = opcoes.nth(1)
-    await Promise.all([page.waitForResponse((res) => res.request().method() === 'GET' && /\/conferentes\/.+\/fila$/.test(res.url())), segundaOpcao.click()])
+    await Promise.all([
+      page.waitForResponse((res) => res.request().method() === 'GET' && /\/conferentes\/.+\/fila$/.test(res.url())),
+      segundaOpcao.click(),
+    ])
     // Popover fechou e a leitura nova aconteceu — confirma que o trigger "VER COMO" segue no ar
     // (não sumiu/quebrou depois da troca) em vez de reafirmar o nome, que pode se repetir entre
     // contas seed (duas se chamam "Conferente RF27").

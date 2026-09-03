@@ -24,8 +24,12 @@ export const PassoPrevia = ({ resumo, etapa, linhaDeCorte, onVoltar, onConfirmar
   const nivelPorId = new Map((conferentes ?? []).map((c) => [c.id, c.nivel]))
 
   const destinos = [
-    ...(resumo.enviadosParaPool > 0 ? [{ chave: 'pool', nome: 'Pool aberto', sub: 'quem tiver alçada pega', qtd: resumo.enviadosParaPool }] : []),
-    ...(resumo.excecoes > 0 ? [{ chave: 'excecoes', nome: 'Fila de exceções', sub: 'exige decisão sua', qtd: resumo.excecoes }] : []),
+    ...(resumo.enviadosParaPool > 0
+      ? [{ chave: 'pool', nome: 'Pool aberto', sub: 'quem tiver alçada pega', qtd: resumo.enviadosParaPool }]
+      : []),
+    ...(resumo.excecoes > 0
+      ? [{ chave: 'excecoes', nome: 'Fila de exceções', sub: 'exige decisão sua', qtd: resumo.excecoes }]
+      : []),
     ...resumo.atribuidosPorConferente.map((atribuicao) => ({
       chave: atribuicao.conferenteId,
       nome: nomePorId.get(atribuicao.conferenteId) ?? 'Conferente',
@@ -56,8 +60,12 @@ export const PassoPrevia = ({ resumo, etapa, linhaDeCorte, onVoltar, onConfirmar
         ))}
       </div>
 
-      {resumo.tiposDesconhecidos.length > 0 && <Aviso titulo="Tipos de ato que o sistema não conhece" itens={resumo.tiposDesconhecidos} />}
-      {resumo.escreventesSemEquipe.length > 0 && <Aviso titulo="Escreventes sem equipe (prazo padrão D+1)" itens={resumo.escreventesSemEquipe} />}
+      {resumo.tiposDesconhecidos.length > 0 && (
+        <Aviso titulo="Tipos de ato que o sistema não conhece" itens={resumo.tiposDesconhecidos} />
+      )}
+      {resumo.escreventesSemEquipe.length > 0 && (
+        <Aviso titulo="Escreventes sem equipe (prazo padrão D+1)" itens={resumo.escreventesSemEquipe} />
+      )}
 
       <div className="mt-5 flex justify-between">
         <Button variant="outline" onClick={onVoltar} disabled={confirmando}>

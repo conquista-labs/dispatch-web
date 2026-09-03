@@ -33,14 +33,23 @@ export const CentralDeRegrasBoard = () => {
           <button
             key={valor}
             onClick={() => setAba(valor)}
-            className={cn('rounded-md px-3 py-1.5 text-[13px] font-medium text-muted-foreground', aba === valor && 'bg-card text-foreground shadow-sm')}
+            className={cn(
+              'rounded-md px-3 py-1.5 text-[13px] font-medium text-muted-foreground',
+              aba === valor && 'bg-card text-foreground shadow-sm',
+            )}
           >
             {label}
           </button>
         ))}
       </div>
 
-      {aba === 'vigor' && <AbaRegrasEmVigor onIrParaAlcada={() => setAba('alcada')} onIrParaTipos={() => setAba('tipos')} onIrParaPrazos={() => setAba('prazos')} />}
+      {aba === 'vigor' && (
+        <AbaRegrasEmVigor
+          onIrParaAlcada={() => setAba('alcada')}
+          onIrParaTipos={() => setAba('tipos')}
+          onIrParaPrazos={() => setAba('prazos')}
+        />
+      )}
       {aba === 'aprendizado' && <AbaAprendizado />}
       {aba === 'alcada' && <AbaAlcada />}
       {aba === 'tipos' && <AbaTiposDeAto />}

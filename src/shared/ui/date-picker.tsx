@@ -26,7 +26,9 @@ export const DatePicker = ({ value, onChange, placeholder = 'Data' }: DatePicker
           className="flex flex-none items-center gap-2 rounded-lg border border-border bg-background px-2.5 py-2 text-left hover:border-muted-foreground/40"
         >
           <CalendarIcon className="size-3.5 flex-none text-muted-foreground" />
-          <span className={cn('font-mono text-[12.5px] font-medium', !value && 'text-muted-foreground')}>{value ? formatarData(value) : placeholder}</span>
+          <span className={cn('font-mono text-[12.5px] font-medium', !value && 'text-muted-foreground')}>
+            {value ? formatarData(value) : placeholder}
+          </span>
         </button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0" align="start">
@@ -39,7 +41,7 @@ export const DatePicker = ({ value, onChange, placeholder = 'Data' }: DatePicker
           }}
           locale={ptBR}
           formatters={{ formatWeekdayName: (dia) => LETRA_DIA_SEMANA[dia.getDay()] }}
-          className="[--cell-size:35px] [&_.rdp-weekday]:font-mono [&_.rdp-weekday]:text-[10px] [&_.rdp-day_button]:font-mono [&_.rdp-day_button]:text-[11.5px]"
+          className="[--cell-size:35px] [&_.rdp-day_button]:font-mono [&_.rdp-day_button]:text-[11.5px] [&_.rdp-weekday]:font-mono [&_.rdp-weekday]:text-[10px]"
         />
         {value && (
           <div className="border-t border-border p-2">

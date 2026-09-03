@@ -66,7 +66,11 @@ export const PassoLinhas = ({ resumo, etapa, linhaDeCorte, onVoltar, onContinuar
             : linha.equipe
               ? `${linha.equipe} · ${ETAPA_LABEL[etapa]}`
               : 'padrão da casa · escrevente sem equipe'
-          const leitura = linha.jaExiste ? 'já existe' : linha.tipoConhecido ? `${linha.comAlcada} com alçada` : 'tipo novo'
+          const leitura = linha.jaExiste
+            ? 'já existe'
+            : linha.tipoConhecido
+              ? `${linha.comAlcada} com alçada`
+              : 'tipo novo'
 
           return (
             // RNF-10: tipo de ato/escrevente/equipe não truncam mais — items-start (não center)
@@ -80,18 +84,29 @@ export const PassoLinhas = ({ resumo, etapa, linhaDeCorte, onVoltar, onContinuar
               )}
             >
               <span className="mt-0.5 w-20 flex-none font-mono text-[12.5px] font-medium">{linha.protocolo}</span>
-              <span className="min-w-24 flex-1 pr-2 text-text-5 text-pretty">{linha.tipoAto}</span>
+              <span className="min-w-24 flex-1 pr-2 text-pretty text-text-5">{linha.tipoAto}</span>
               <span className="w-[126px] flex-none">
-                <span className="block text-text-2 text-pretty">{linha.escrevente}</span>
+                <span className="block text-pretty text-text-2">{linha.escrevente}</span>
                 {!linha.jaExiste && (
-                  <span className={cn('mt-0.5 block font-mono text-[10.5px] text-pretty', linha.equipe ? 'text-muted-foreground' : 'text-bad-fg')}>
+                  <span
+                    className={cn(
+                      'mt-0.5 block font-mono text-[10.5px] text-pretty',
+                      linha.equipe ? 'text-muted-foreground' : 'text-bad-fg',
+                    )}
+                  >
                     {linha.equipe ?? 'sem equipe'}
                   </span>
                 )}
               </span>
               <span className="w-[182px] flex-none pr-2">
-                {chip && linha.prazo ? <Chip tom={chip.tom}>{TIPO_PRAZO_LABEL[linha.prazo]}</Chip> : <span className="text-muted-foreground">—</span>}
-                {regraPrazo && <span className="mt-0.5 block text-[10.5px] leading-snug text-muted-foreground">{regraPrazo}</span>}
+                {chip && linha.prazo ? (
+                  <Chip tom={chip.tom}>{TIPO_PRAZO_LABEL[linha.prazo]}</Chip>
+                ) : (
+                  <span className="text-muted-foreground">—</span>
+                )}
+                {regraPrazo && (
+                  <span className="mt-0.5 block text-[10.5px] leading-snug text-muted-foreground">{regraPrazo}</span>
+                )}
               </span>
               <span
                 className={cn(
@@ -117,4 +132,3 @@ export const PassoLinhas = ({ resumo, etapa, linhaDeCorte, onVoltar, onContinuar
     </div>
   )
 }
-

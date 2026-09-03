@@ -1,6 +1,10 @@
 import type { MotivoAlcada, OrigemRegra, PermissaoRegra } from '../model/types'
 
-export const PERMISSAO_LABEL: Record<PermissaoRegra, string> = { Permite: 'pode', Nega: 'não pode', Reserva: 'é o único que confere' }
+export const PERMISSAO_LABEL: Record<PermissaoRegra, string> = {
+  Permite: 'pode',
+  Nega: 'não pode',
+  Reserva: 'é o único que confere',
+}
 
 export const ORIGEM_LABEL: Record<OrigemRegra, string> = { Manual: 'você', Aprendida: 'aprendida' }
 

@@ -16,16 +16,20 @@ export const AbaTiposDeAto = () => {
         <h2 className="m-0 text-[15px] font-semibold tracking-[-0.01em]">Tipos de ato</h2>
         <NovoTipoAtoDialog />
       </div>
-      <p className="m-0 mb-3.5 max-w-[74ch] text-[12.5px] text-muted-foreground text-pretty">
-        O catálogo que a importação e as regras de alçada usam. Um tipo desativado não é apagado — só barra protocolos novos, que vão para exceção até
-        alguém reativar. Só é possível remover um tipo que não está em uso.
+      <p className="m-0 mb-3.5 max-w-[74ch] text-[12.5px] text-pretty text-muted-foreground">
+        O catálogo que a importação e as regras de alçada usam. Um tipo desativado não é apagado — só barra protocolos
+        novos, que vão para exceção até alguém reativar. Só é possível remover um tipo que não está em uso.
       </p>
 
       {!tipos && <Carregando />}
-      {tipos && tipos.length === 0 && <p className="text-[13px] text-muted-foreground">Nenhum tipo de ato cadastrado ainda.</p>}
+      {tipos && tipos.length === 0 && (
+        <p className="text-[13px] text-muted-foreground">Nenhum tipo de ato cadastrado ainda.</p>
+      )}
 
       <div className="flex flex-col gap-1.5">
-        {tipos?.map((tipo) => <TipoAtoRow key={tipo.id} tipo={tipo} />)}
+        {tipos?.map((tipo) => (
+          <TipoAtoRow key={tipo.id} tipo={tipo} />
+        ))}
       </div>
     </div>
   )

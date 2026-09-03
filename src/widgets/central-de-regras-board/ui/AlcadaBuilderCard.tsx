@@ -66,7 +66,10 @@ export const AlcadaBuilderCard = ({ builder: b, conferentes }: AlcadaBuilderCard
         <span className="w-[60px] flex-none text-[11.5px] font-medium text-text-2">Permissão</span>
         <SeletorUnico
           valor={b.builder.permissao}
-          opcoes={(['Permite', 'Nega', 'Reserva'] as const).map((permissao) => ({ valor: permissao, label: PERMISSAO_LABEL[permissao] }))}
+          opcoes={(['Permite', 'Nega', 'Reserva'] as const).map((permissao) => ({
+            valor: permissao,
+            label: PERMISSAO_LABEL[permissao],
+          }))}
           onSelecionar={(permissao) => b.setBuilder((atual) => ({ ...atual, permissao }))}
           placeholder="buscar permissão…"
         />

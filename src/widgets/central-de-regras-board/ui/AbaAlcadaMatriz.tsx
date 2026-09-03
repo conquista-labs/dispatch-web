@@ -43,10 +43,15 @@ export const AbaAlcadaMatriz = ({ conferentes, tiposAto, alcance }: AbaAlcadaMat
   const q = busca.trim().toLowerCase()
 
   const regraDeGrupo = (conferenteId: string, grupo: GrupoTipoAto): RegraAlcada | undefined =>
-    regras.find((r) => r.ativa && r.permissao === 'Permite' && r.sujeitoConferenteId === conferenteId && r.alvoGrupo === grupo)
+    regras.find(
+      (r) => r.ativa && r.permissao === 'Permite' && r.sujeitoConferenteId === conferenteId && r.alvoGrupo === grupo,
+    )
 
   const regraDeTipo = (conferenteId: string, tipoId: string): RegraAlcada | undefined =>
-    regras.find((r) => r.ativa && r.permissao === 'Permite' && r.sujeitoConferenteId === conferenteId && r.alvoTipoAtoId === tipoId)
+    regras.find(
+      (r) =>
+        r.ativa && r.permissao === 'Permite' && r.sujeitoConferenteId === conferenteId && r.alvoTipoAtoId === tipoId,
+    )
 
   const alternaGrupo = (conferenteId: string, grupo: GrupoTipoAto) => {
     const existente = regraDeGrupo(conferenteId, grupo)
@@ -70,7 +75,12 @@ export const AbaAlcadaMatriz = ({ conferentes, tiposAto, alcance }: AbaAlcadaMat
 
   return (
     <div>
-      <Input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="buscar grupo ou tipo de ato…" className="mb-2.5" />
+      <Input
+        value={busca}
+        onChange={(e) => setBusca(e.target.value)}
+        placeholder="buscar grupo ou tipo de ato…"
+        className="mb-2.5"
+      />
 
       <div className="overflow-x-auto rounded-[10px] border border-border bg-card shadow-sm">
         <div className="flex min-w-max border-b border-border bg-card px-3 py-2 text-[11px] font-medium text-text-2">
@@ -99,7 +109,7 @@ export const AbaAlcadaMatriz = ({ conferentes, tiposAto, alcance }: AbaAlcadaMat
           return (
             <div key={grupo}>
               <div className="flex min-w-max items-center border-b border-secondary bg-secondary/50 px-3 py-1.5">
-                <span className="flex w-[220px] flex-none min-w-0 items-center gap-1.5">
+                <span className="flex w-[220px] min-w-0 flex-none items-center gap-1.5">
                   <button
                     type="button"
                     data-testid={`expandir-grupo-${grupo}`}
@@ -109,7 +119,9 @@ export const AbaAlcadaMatriz = ({ conferentes, tiposAto, alcance }: AbaAlcadaMat
                     {aberto ? '−' : '+'}
                   </button>
                   <span className="truncate text-[13px] font-semibold">{GRUPO_LABEL[grupo]}</span>
-                  <span className="flex-none font-mono text-[10.5px] text-muted-foreground">{tiposDoGrupo.length} tipos</span>
+                  <span className="flex-none font-mono text-[10.5px] text-muted-foreground">
+                    {tiposDoGrupo.length} tipos
+                  </span>
                 </span>
                 {conferentes.map((c) => {
                   const permitidos = alcancePorConferenteId.get(c.id)?.tiposPermitidosIds ?? []
@@ -137,10 +149,18 @@ export const AbaAlcadaMatriz = ({ conferentes, tiposAto, alcance }: AbaAlcadaMat
 
               {aberto &&
                 visiveis.map((tipo) => {
-                  const comAlcada = conferentes.filter((c) => (alcancePorConferenteId.get(c.id)?.tiposPermitidosIds ?? []).includes(tipo.id)).length
+                  const comAlcada = conferentes.filter((c) =>
+                    (alcancePorConferenteId.get(c.id)?.tiposPermitidosIds ?? []).includes(tipo.id),
+                  ).length
                   return (
-                    <div key={tipo.id} className={cn('flex min-w-max items-center border-b border-secondary px-3 py-1', comAlcada === 0 && 'bg-bad-bg')}>
-                      <span className="flex w-[220px] flex-none min-w-0 items-center gap-1.5 pl-[25px]">
+                    <div
+                      key={tipo.id}
+                      className={cn(
+                        'flex min-w-max items-center border-b border-secondary px-3 py-1',
+                        comAlcada === 0 && 'bg-bad-bg',
+                      )}
+                    >
+                      <span className="flex w-[220px] min-w-0 flex-none items-center gap-1.5 pl-[25px]">
                         <span className="truncate text-[12.5px] text-text-3">{tipo.nome}</span>
                       </span>
                       {conferentes.map((c) => {
@@ -152,12 +172,21 @@ export const AbaAlcadaMatriz = ({ conferentes, tiposAto, alcance }: AbaAlcadaMat
                           <CelulaAlcance
                             key={c.id}
                             estado={ESTADO_TIPO[status]}
-                            titulo={bloq ? `${c.nome}: fora da alçada` : `${c.nome} pode conferir${excecao ? ' (exceção individual)' : ' (herdado do grupo)'}`}
+                            titulo={
+                              bloq
+                                ? `${c.nome}: fora da alçada`
+                                : `${c.nome} pode conferir${excecao ? ' (exceção individual)' : ' (herdado do grupo)'}`
+                            }
                             onClick={() => alternaTipo(c.id, tipo.id)}
                           />
                         )
                       })}
-                      <span className={cn('w-20 flex-none text-right text-[11px]', comAlcada === 0 ? 'text-bad-fg' : comAlcada === 1 ? 'text-warn-fg' : 'text-muted-foreground')}>
+                      <span
+                        className={cn(
+                          'w-20 flex-none text-right text-[11px]',
+                          comAlcada === 0 ? 'text-bad-fg' : comAlcada === 1 ? 'text-warn-fg' : 'text-muted-foreground',
+                        )}
+                      >
                         {comAlcada > 0 ? `${comAlcada} pessoas` : 'ninguém'}
                       </span>
                     </div>
@@ -175,8 +204,8 @@ export const AbaAlcadaMatriz = ({ conferentes, tiposAto, alcance }: AbaAlcadaMat
         <span className="text-muted-foreground">· não confere</span>
       </div>
       <p className="mt-2 max-w-[78ch] text-[12px] text-pretty text-muted-foreground">
-        Clique na linha do <strong>grupo</strong> pra ligar ou desligar a pessoa no grupo inteiro. Expanda e clique num <strong>tipo</strong> pra abrir
-        exceção individual, sem tocar no resto do grupo.
+        Clique na linha do <strong>grupo</strong> pra ligar ou desligar a pessoa no grupo inteiro. Expanda e clique num{' '}
+        <strong>tipo</strong> pra abrir exceção individual, sem tocar no resto do grupo.
       </p>
     </div>
   )

@@ -22,7 +22,14 @@ type EmConferenciaCardProps = {
 
 // Card "Em conferência" (RF-21/RF-22) — único com borda destacada (é o que está em andamento
 // agora) e cronômetro ao vivo em vez do chip de prazo no topo.
-export const EmConferenciaCard = ({ protocolo, now, onAprovar, onReprovar, desabilitado, somenteLeitura }: EmConferenciaCardProps) => {
+export const EmConferenciaCard = ({
+  protocolo,
+  now,
+  onAprovar,
+  onReprovar,
+  desabilitado,
+  somenteLeitura,
+}: EmConferenciaCardProps) => {
   const chip = prazoChip(protocolo.semaforo, protocolo.vencimentoEm, now)
   const decorridoMs = protocolo.iniciadoEm ? now - new Date(protocolo.iniciadoEm).getTime() : 0
 

@@ -33,7 +33,10 @@ export const EditarConferenteDialog = ({ conferente }: EditarConferenteDialogPro
   }
 
   const handleSalvar = () => {
-    editarPerfil.mutate({ conferenteId: conferente.id, nome: nome.trim(), email: email.trim() }, { onSuccess: () => setAberto(false) })
+    editarPerfil.mutate(
+      { conferenteId: conferente.id, nome: nome.trim(), email: email.trim() },
+      { onSuccess: () => setAberto(false) },
+    )
   }
 
   const emailDuplicado = ehConflito409(editarPerfil.error)
@@ -67,7 +70,9 @@ export const EditarConferenteDialog = ({ conferente }: EditarConferenteDialogPro
           </div>
 
           {emailDuplicado && <p className="text-[13px] text-bad-fg">Já existe um conferente com esse e-mail.</p>}
-          {editarPerfil.isError && !emailDuplicado && <p className="text-[13px] text-bad-fg">Não foi possível salvar. Tente de novo.</p>}
+          {editarPerfil.isError && !emailDuplicado && (
+            <p className="text-[13px] text-bad-fg">Não foi possível salvar. Tente de novo.</p>
+          )}
         </div>
 
         <DialogFooter>

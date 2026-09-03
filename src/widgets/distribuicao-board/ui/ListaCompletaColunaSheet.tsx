@@ -15,7 +15,15 @@ type ListaCompletaColunaSheetProps = {
 // RF-18c: "+N protocolos" abre a lista integral da coluna (não só os ocultos), ordenada por
 // vencimento. Sem "quantos têm alçada" por item (simplificação consciente, ver CLAUDE.md) — a
 // mesma informação já está um clique adiante, no painel de detalhe de cada protocolo.
-export const ListaCompletaColunaSheet = ({ aberto, onFechar, nome, protocolos, resolverInfo, now, onAbrirDetalhe }: ListaCompletaColunaSheetProps) => {
+export const ListaCompletaColunaSheet = ({
+  aberto,
+  onFechar,
+  nome,
+  protocolos,
+  resolverInfo,
+  now,
+  onAbrirDetalhe,
+}: ListaCompletaColunaSheetProps) => {
   const ordenados = [...protocolos].sort((a, b) => {
     if (!a.vencimentoEm) return 1
     if (!b.vencimentoEm) return -1
@@ -49,19 +57,26 @@ export const ListaCompletaColunaSheet = ({ aberto, onFechar, nome, protocolos, r
                   <span className="font-mono text-[12px] font-medium">{protocolo.numero}</span>
                   <Chip tom={chip.tom}>{chip.label}</Chip>
                 </div>
-                <div className="mt-1 overflow-hidden text-ellipsis whitespace-nowrap text-[13px] text-text-5">{info.tipoAtoNome ?? '—'}</div>
+                <div className="mt-1 overflow-hidden text-[13px] text-ellipsis whitespace-nowrap text-text-5">
+                  {info.tipoAtoNome ?? '—'}
+                </div>
                 {/* RF-18a: "Alta" (não "urgente") — mesmo rótulo/posição do card do quadro
                     (DistribuicaoProtocoloCard.tsx), junto da meta de escrevente/equipe/etapa. */}
                 <div className="mt-0.5 flex items-center gap-1.5">
                   {protocolo.prioridade === 'Alta' && (
-                    <span className="flex-none rounded-full border border-bad-border bg-bad-bg px-1.5 text-[10.5px] font-semibold text-bad-fg">Alta</span>
+                    <span className="flex-none rounded-full border border-bad-border bg-bad-bg px-1.5 text-[10.5px] font-semibold text-bad-fg">
+                      Alta
+                    </span>
                   )}
                   <div
-                    className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-[11.5px] text-muted-foreground"
+                    className="min-w-0 flex-1 overflow-hidden text-[11.5px] text-ellipsis whitespace-nowrap text-muted-foreground"
                     title={`${info.escreventeNome ?? '—'} · ${info.equipeNome ?? 'sem equipe'} · ${ETAPA_LABEL[protocolo.etapa]}`}
                   >
                     {info.escreventeNome ?? '—'} ·{' '}
-                    <span className={info.equipeNome ? undefined : 'text-bad-fg'}>{info.equipeNome ?? 'sem equipe'}</span> · {ETAPA_LABEL[protocolo.etapa]}
+                    <span className={info.equipeNome ? undefined : 'text-bad-fg'}>
+                      {info.equipeNome ?? 'sem equipe'}
+                    </span>{' '}
+                    · {ETAPA_LABEL[protocolo.etapa]}
                   </div>
                 </div>
               </button>

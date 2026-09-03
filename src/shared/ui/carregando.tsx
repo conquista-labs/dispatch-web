@@ -9,4 +9,6 @@ type CarregandoProps = {
 // classe usado em outros lugares do app enquanto uma query carrega. `className` opcional pra
 // cada chamador manter o espaçamento que já tinha (o objetivo aqui é parar de duplicar o
 // markup, não mudar layout de ninguém).
-export const Carregando = ({ className }: CarregandoProps) => <p className={cn('text-[13.5px] text-muted-foreground', className)}>Carregando…</p>
+export const Carregando = ({ className }: CarregandoProps) => (
+  <p className={cn('text-[13.5px] text-muted-foreground', className)}>Carregando…</p>
+)

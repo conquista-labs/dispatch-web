@@ -54,7 +54,10 @@ const SeletorEtapa = ({ value, onChange }: { value: Etapa; onChange: (valor: Eta
               onChange(opcao.valor)
               setAberto(false)
             }}
-            className={cn('flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left hover:bg-secondary', opcao.valor === value && 'bg-secondary')}
+            className={cn(
+              'flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left hover:bg-secondary',
+              opcao.valor === value && 'bg-secondary',
+            )}
           >
             <span
               className={cn(
@@ -97,19 +100,24 @@ export const PassoDados = ({ onContinuar, carregando, erro }: PassoDadosProps) =
   return (
     <div>
       <p className="mb-4 max-w-[70ch] text-[13.5px] text-text-2">
-        Duas informações não vêm no arquivo e precisam ser declaradas antes: a etapa do lote e a partir de quando processar.
+        Duas informações não vêm no arquivo e precisam ser declaradas antes: a etapa do lote e a partir de quando
+        processar.
       </p>
 
       <div className="grid grid-cols-2 gap-2">
         <SurfaceCard className="p-3.5 px-4">
           <div className="text-[12.5px] font-medium text-text-3">Etapa do relatório</div>
-          <div className="mt-0.5 mb-2.5 text-[11.5px] text-muted-foreground">o lote inteiro é pré ou pós — nunca misturado</div>
+          <div className="mt-0.5 mb-2.5 text-[11.5px] text-muted-foreground">
+            o lote inteiro é pré ou pós — nunca misturado
+          </div>
           <SeletorEtapa value={etapa} onChange={setEtapa} />
         </SurfaceCard>
 
         <SurfaceCard className="p-3.5 px-4">
           <div className="text-[12.5px] font-medium text-text-3">Linha de corte</div>
-          <div className="mt-0.5 mb-2.5 text-[11.5px] text-muted-foreground">processar só o que aconteceu depois disso</div>
+          <div className="mt-0.5 mb-2.5 text-[11.5px] text-muted-foreground">
+            processar só o que aconteceu depois disso
+          </div>
           <DateTimePicker value={linhaDeCorte} onChange={setLinhaDeCorte} />
         </SurfaceCard>
       </div>
@@ -120,7 +128,9 @@ export const PassoDados = ({ onContinuar, carregando, erro }: PassoDadosProps) =
         <textarea
           value={texto}
           onChange={(event) => setTexto(event.target.value)}
-          placeholder={'protocolo,tipoAto,escrevente,dataHoraAndamento\n262414,VENDA E COMPRA,BARBARA RIBEIRO,2026-08-26 10:16:53'}
+          placeholder={
+            'protocolo,tipoAto,escrevente,dataHoraAndamento\n262414,VENDA E COMPRA,BARBARA RIBEIRO,2026-08-26 10:16:53'
+          }
           className="h-64 w-full resize-y rounded-lg border border-dashed border-border bg-background p-3 font-mono text-xs text-foreground outline-none focus:border-primary"
         />
         {erro && <p className="mt-2 text-[13px] text-bad-fg">{erro}</p>}

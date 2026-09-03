@@ -34,7 +34,11 @@ export const AbaAlcada = () => {
   // de carregamento abaixo — regra dos hooks (useAlcadaBuilder chama useState/useMutation por
   // dentro, não pode ficar atrás de um `if` condicionado a dado que ainda pode não ter
   // chegado).
-  const { nomePorConferenteId, nomePorTipoAtoId, nomePorEquipeId } = criarNomesDaCentralDeRegras(conferentes ?? [], tiposAto ?? [], equipes ?? [])
+  const { nomePorConferenteId, nomePorTipoAtoId, nomePorEquipeId } = criarNomesDaCentralDeRegras(
+    conferentes ?? [],
+    tiposAto ?? [],
+    equipes ?? [],
+  )
   const builder = useAlcadaBuilder({
     conferentes: conferentes ?? [],
     equipes: equipes ?? [],
@@ -53,9 +57,9 @@ export const AbaAlcada = () => {
       <div className="mt-5 mb-1 flex items-baseline justify-between gap-3">
         <div>
           <h2 className="m-0 text-[15px] font-semibold tracking-[-0.01em]">Regras de alçada</h2>
-          <p className="m-0 mt-0.5 max-w-[74ch] text-[12.5px] text-muted-foreground text-pretty">
-            Quem pode conferir o quê. As regras são lidas em três camadas — a de baixo vence a de cima. Quem está barrado nem recebe o protocolo, e se
-            ninguém sobrar o ato vai para exceções com o motivo.
+          <p className="m-0 mt-0.5 max-w-[74ch] text-[12.5px] text-pretty text-muted-foreground">
+            Quem pode conferir o quê. As regras são lidas em três camadas — a de baixo vence a de cima. Quem está
+            barrado nem recebe o protocolo, e se ninguém sobrar o ato vai para exceções com o motivo.
           </p>
         </div>
         {!builder.aberto && (

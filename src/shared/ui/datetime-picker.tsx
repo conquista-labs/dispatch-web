@@ -1,6 +1,6 @@
 import { ptBR } from 'date-fns/locale'
 import { CalendarIcon, ChevronDownIcon, MinusIcon, PlusIcon } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 import { Button } from '@/shared/ui/button'
 import { Calendar } from '@/shared/ui/calendar'
@@ -41,7 +41,14 @@ export const DateTimePicker = ({ value, onChange }: DateTimePickerProps) => {
   const [aberto, setAberto] = useState(false)
   const [textoData, setTextoData] = useState(formatarData(value))
 
-  useEffect(() => setTextoData(formatarData(value)), [value])
+  // Ajusta o estado local durante o render, sem efeito (achado ligando mais categorias do
+  // oxlint) — compara por getTime() (valor), não pela referência do Date, senão um `value` novo
+  // com o mesmo instante já dispararia a mesma lógica de "mudou" à toa.
+  const [instanteRefletido, setInstanteRefletido] = useState(value.getTime())
+  if (value.getTime() !== instanteRefletido) {
+    setInstanteRefletido(value.getTime())
+    setTextoData(formatarData(value))
+  }
 
   const handleSelecionarData = (data: Date | undefined) => {
     if (!data) return
@@ -131,7 +138,7 @@ export const DateTimePicker = ({ value, onChange }: DateTimePickerProps) => {
             // só o rótulo do mês ("agosto 2026") fica na fonte de texto normal. `[&_.rdp-x]` em vez
             // de `classNames` porque esse prop substitui a classe inteira da chave (perderia o
             // `flex`/tamanho padrão do react-day-picker), só quero acrescentar a fonte.
-            className="[--cell-size:35px] [&_.rdp-weekday]:font-mono [&_.rdp-weekday]:text-[10px] [&_.rdp-day_button]:font-mono [&_.rdp-day_button]:text-[11.5px]"
+            className="[--cell-size:35px] [&_.rdp-day_button]:font-mono [&_.rdp-day_button]:text-[11.5px] [&_.rdp-weekday]:font-mono [&_.rdp-weekday]:text-[10px]"
             // Sem autoFocus: ele fazia o react-day-picker pousar o foco de teclado em "hoje" assim
             // que o popover abria, e isso desenha um anel de foco em "hoje" ao mesmo tempo que o
             // preenchimento do dia selecionado aparece em outro dia — duas marcações "concorrentes"
@@ -188,7 +195,12 @@ type StepperProps = {
 const Stepper = ({ valor, min, max, onAlterar, onDecrementar, onIncrementar }: StepperProps) => {
   const [texto, setTexto] = useState(valor)
 
-  useEffect(() => setTexto(valor), [valor])
+  // Mesmo padrão do DateTimePicker acima — ajusta durante o render, sem efeito.
+  const [valorRefletido, setValorRefletido] = useState(valor)
+  if (valor !== valorRefletido) {
+    setValorRefletido(valor)
+    setTexto(valor)
+  }
 
   const commit = () => {
     const numero = Number(texto)
@@ -198,7 +210,11 @@ const Stepper = ({ valor, min, max, onAlterar, onDecrementar, onIncrementar }: S
 
   return (
     <div className="flex items-center gap-px rounded-md border border-border bg-background p-0.5">
-      <button type="button" onClick={onDecrementar} className="flex size-5 items-center justify-center rounded text-text-2 hover:bg-secondary">
+      <button
+        type="button"
+        onClick={onDecrementar}
+        className="flex size-5 items-center justify-center rounded text-text-2 hover:bg-secondary"
+      >
         <MinusIcon className="size-3" />
       </button>
       <input
@@ -216,7 +232,11 @@ const Stepper = ({ valor, min, max, onAlterar, onDecrementar, onIncrementar }: S
         size={2}
         className="w-[22px] flex-none border-none bg-transparent text-center font-mono text-[12.5px] font-medium outline-none"
       />
-      <button type="button" onClick={onIncrementar} className="flex size-5 items-center justify-center rounded text-text-2 hover:bg-secondary">
+      <button
+        type="button"
+        onClick={onIncrementar}
+        className="flex size-5 items-center justify-center rounded text-text-2 hover:bg-secondary"
+      >
         <PlusIcon className="size-3" />
       </button>
     </div>

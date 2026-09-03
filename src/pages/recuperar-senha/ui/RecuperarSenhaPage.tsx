@@ -19,9 +19,21 @@ type Passo = 'ident' | 'codigo' | 'senha' | 'ok'
 const PASSOS: Passo[] = ['ident', 'codigo', 'senha']
 
 const TEXTOS: Record<Passo, [string, string, string]> = {
-  ident: ['ETAPA 1 DE 3', 'Recuperar acesso', 'Informe o e-mail da sua conta. Nada é enviado por mensagem — a prova de identidade vem do seu app autenticador.'],
-  codigo: ['ETAPA 2 DE 3', 'Código do autenticador', 'Abra o app no celular e digite o código de 6 dígitos que ele mostra para o Dispatch.'],
-  senha: ['ETAPA 3 DE 3', 'Defina a nova senha', 'Escolha uma frase longa e fácil de lembrar. Comprimento protege mais que símbolos.'],
+  ident: [
+    'ETAPA 1 DE 3',
+    'Recuperar acesso',
+    'Informe o e-mail da sua conta. Nada é enviado por mensagem — a prova de identidade vem do seu app autenticador.',
+  ],
+  codigo: [
+    'ETAPA 2 DE 3',
+    'Código do autenticador',
+    'Abra o app no celular e digite o código de 6 dígitos que ele mostra para o Dispatch.',
+  ],
+  senha: [
+    'ETAPA 3 DE 3',
+    'Defina a nova senha',
+    'Escolha uma frase longa e fácil de lembrar. Comprimento protege mais que símbolos.',
+  ],
   ok: ['CONCLUÍDO', 'Senha alterada', 'Você já pode entrar com a senha nova.'],
 }
 
@@ -93,7 +105,12 @@ export const RecuperarSenhaPage = () => {
     if (passo === 'codigo') {
       validarCodigo.mutate(
         { email, codigo },
-        { onSuccess: (data) => { setTokenRecuperacao(data.tokenRecuperacao); setPasso('senha') } },
+        {
+          onSuccess: (data) => {
+            setTokenRecuperacao(data.tokenRecuperacao)
+            setPasso('senha')
+          },
+        },
       )
       return
     }
@@ -128,22 +145,37 @@ export const RecuperarSenhaPage = () => {
               <span
                 key={p}
                 className="block h-[3px] flex-1 rounded-full"
-                style={{ background: passo === 'ok' ? 'var(--ok-fg)' : i <= PASSOS.indexOf(passo) ? 'var(--foreground)' : 'var(--secondary)' }}
+                style={{
+                  background:
+                    passo === 'ok'
+                      ? 'var(--ok-fg)'
+                      : i <= PASSOS.indexOf(passo)
+                        ? 'var(--foreground)'
+                        : 'var(--secondary)',
+                }}
               />
             ))}
           </div>
 
           <div className="p-[22px]">
-            <div className="font-mono text-[10.5px] font-medium tracking-[0.06em] text-muted-foreground">{etapaLabel}</div>
+            <div className="font-mono text-[10.5px] font-medium tracking-[0.06em] text-muted-foreground">
+              {etapaLabel}
+            </div>
             <h1 className="mt-1.5 text-[19px] font-semibold tracking-[-0.02em] text-balance">{titulo}</h1>
-            <p className="mt-2 text-[13px] leading-[1.55] text-muted-foreground text-pretty">{sub}</p>
+            <p className="mt-2 text-[13px] leading-[1.55] text-pretty text-muted-foreground">{sub}</p>
 
             {passo === 'ident' && <PassoIdentificacao email={email} onEmailChange={setEmail} />}
             {passo === 'codigo' && <PassoCodigo codigo={codigo} onCodigoChange={setCodigo} temErro={!!erro} />}
-            {passo === 'senha' && <PassoSenha senha1={senha1} onSenha1Change={setSenha1} senha2={senha2} onSenha2Change={setSenha2} />}
+            {passo === 'senha' && (
+              <PassoSenha senha1={senha1} onSenha1Change={setSenha1} senha2={senha2} onSenha2Change={setSenha2} />
+            )}
             {passo === 'ok' && <PassoOk />}
 
-            {erro && <div className="mt-3.5 rounded-lg border border-bad-border bg-bad-bg p-2.5 text-[12.5px] leading-normal text-bad-fg">{erro}</div>}
+            {erro && (
+              <div className="mt-3.5 rounded-lg border border-bad-border bg-bad-bg p-2.5 text-[12.5px] leading-normal text-bad-fg">
+                {erro}
+              </div>
+            )}
 
             <button
               type="button"
@@ -156,7 +188,11 @@ export const RecuperarSenhaPage = () => {
 
             {passo !== 'ok' && (
               <div className="mt-3.5 flex justify-center">
-                <button type="button" onClick={voltar} className="p-0.5 text-[12.5px] font-medium text-text-2 hover:text-foreground">
+                <button
+                  type="button"
+                  onClick={voltar}
+                  className="p-0.5 text-[12.5px] font-medium text-text-2 hover:text-foreground"
+                >
                   {passo === 'ident' ? 'Voltar para entrar' : 'Voltar'}
                 </button>
               </div>
@@ -164,7 +200,7 @@ export const RecuperarSenhaPage = () => {
           </div>
         </div>
 
-        <p className="mt-4 px-0.5 text-[11.5px] leading-[1.55] text-muted-foreground text-pretty">{nota}</p>
+        <p className="mt-4 px-0.5 text-[11.5px] leading-[1.55] text-pretty text-muted-foreground">{nota}</p>
       </div>
     </div>
   )

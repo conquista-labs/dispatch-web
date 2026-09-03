@@ -1,5 +1,5 @@
 import { ChevronDownIcon } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 import { useAlcance, useConferentes, type Conferente, type Nivel } from '@/entities/conferente'
 import { cn } from '@/shared/lib/utils'
@@ -16,12 +16,13 @@ export const FilaConferentesPage = () => {
   const { data: alcance } = useAlcance()
   const [selecionadoId, setSelecionadoId] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (!selecionadoId && conferentes && conferentes.length > 0) {
-      const primeiroNaEscala = conferentes.find((c) => c.naEscala) ?? conferentes[0]
-      setSelecionadoId(primeiroNaEscala.id)
-    }
-  }, [conferentes, selecionadoId])
+  // Seleciona o default assim que a lista chega, direto durante o render — sem efeito (achado
+  // ligando mais categorias do oxlint). Autotermina: uma vez selecionadoId deixa de ser null,
+  // esse bloco nunca mais reexecuta (a escolha do usuário nunca é sobrescrita).
+  if (!selecionadoId && conferentes && conferentes.length > 0) {
+    const primeiroNaEscala = conferentes.find((c) => c.naEscala) ?? conferentes[0]
+    setSelecionadoId(primeiroNaEscala.id)
+  }
 
   const selecionado = conferentes?.find((c) => c.id === selecionadoId)
   const alcanceSelecionado = alcance?.find((a) => a.conferenteId === selecionadoId)
@@ -34,7 +35,9 @@ export const FilaConferentesPage = () => {
           <p className="mt-1.5 text-[13.5px] text-muted-foreground">
             {selecionado
               ? `${selecionado.nome} · Analista ${NIVEL_LABEL[selecionado.nivel]}${
-                  alcanceSelecionado ? ` · pode conferir ${alcanceSelecionado.tiposPermitidosIds.length} tipos de ato` : ''
+                  alcanceSelecionado
+                    ? ` · pode conferir ${alcanceSelecionado.tiposPermitidosIds.length} tipos de ato`
+                    : ''
                 }`
               : 'Escolha um conferente pra acompanhar a fila.'}
           </p>
@@ -77,10 +80,14 @@ const SeletorConferente = ({ conferentes, selecionadoId, onSelecionar }: Seletor
           className="flex min-w-[216px] items-start gap-2.5 rounded-lg border border-border bg-card px-2.5 py-2 text-left hover:border-muted-foreground/40"
         >
           <span className="min-w-0 flex-1">
-            <span className="block font-mono text-[10px] font-medium tracking-[0.04em] text-muted-foreground">VER COMO</span>
+            <span className="block font-mono text-[10px] font-medium tracking-[0.04em] text-muted-foreground">
+              VER COMO
+            </span>
             {/* RNF-10: nome completo — essa tela existe pra escolher 1 entre vários conferentes,
                 é o caso mais direto do requisito de não confundir registros parecidos. */}
-            <span className="mt-px block text-[13px] font-medium text-pretty">{selecionado?.nome ?? 'Escolher conferente'}</span>
+            <span className="mt-px block text-[13px] font-medium text-pretty">
+              {selecionado?.nome ?? 'Escolher conferente'}
+            </span>
           </span>
           <ChevronDownIcon className="mt-0.5 size-4 flex-none text-muted-foreground" />
         </button>

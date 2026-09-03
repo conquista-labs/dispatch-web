@@ -13,6 +13,7 @@ import {
   useDetalheProtocolo,
   type AlcadaConferente,
   type DetalheProtocolo,
+  type HistoricoConferencia,
   type StatusProtocolo,
 } from '@/entities/protocolo'
 import { fraseDaRegra, MOTIVO_ALCADA_LABEL, useRegrasAlcada } from '@/entities/regraAlcada'
@@ -76,11 +77,16 @@ const STATUS_TOM: Record<StatusProtocolo, NonNullable<React.ComponentProps<typeo
 // ato, atribuído tira da fila de alguém; nos demais estados não tem ninguém pra avisar.
 // Extraída de um ternário aninhado dentro de template string (achado numa auditoria de
 // qualidade) — mesma lógica, só mais fácil de ler com `if`s sequenciais.
-const avisoDeExclusao = (detalhe: DetalheProtocolo | undefined, nomePorConferenteId: Map<string, string>): string | null => {
+const avisoDeExclusao = (
+  detalhe: DetalheProtocolo | undefined,
+  nomePorConferenteId: Map<string, string>,
+): string | null => {
   if (!detalhe) return null
   if (detalhe.status === 'Conferindo') return 'Isso interrompe a conferência de quem está com esse ato agora.'
   if (detalhe.status === 'Atribuido') {
-    const nomeDono = detalhe.donoId ? (nomePorConferenteId.get(detalhe.donoId) ?? 'quem está com ele') : 'quem está com ele'
+    const nomeDono = detalhe.donoId
+      ? (nomePorConferenteId.get(detalhe.donoId) ?? 'quem está com ele')
+      : 'quem está com ele'
     return `Isso tira o ato da fila de ${nomeDono}.`
   }
   return null
@@ -116,11 +122,17 @@ export const PainelDetalheProtocolo = ({ protocoloId, onFechar }: PainelDetalheP
   // DistribuicaoBoard/MinhaFilaBoard/FilaDoConferenteBoard. `nomePorConferenteId` fica fora do
   // hook (não é escrevente/equipe/tipoAto).
   const nomePorConferenteId = new Map((conferentes ?? []).map((c) => [c.id, c.nome]))
-  const { escreventePorId, nomePorEquipeId, nomePorTipoAtoId } = criarResolverInfoProtocolo(escreventes, equipes, tiposAto)
+  const { escreventePorId, nomePorEquipeId, nomePorTipoAtoId } = criarResolverInfoProtocolo(
+    escreventes,
+    equipes,
+    tiposAto,
+  )
 
   const escrevente = detalhe ? escreventePorId.get(detalhe.escreventeId) : undefined
   const equipeNome = escrevente?.equipeId ? nomePorEquipeId.get(escrevente.equipeId) : undefined
-  const regraAplicada = detalhe?.regraAplicadaId ? (regras ?? []).find((r) => r.id === detalhe.regraAplicadaId) : undefined
+  const regraAplicada = detalhe?.regraAplicadaId
+    ? (regras ?? []).find((r) => r.id === detalhe.regraAplicadaId)
+    : undefined
 
   const chip = detalhe ? prazoChip(detalhe.semaforo, detalhe.vencimentoEm, now) : null
 
@@ -168,77 +180,109 @@ export const PainelDetalheProtocolo = ({ protocoloId, onFechar }: PainelDetalheP
   return (
     <>
       <Sheet open={!!protocoloId} onOpenChange={(aberto) => !aberto && onFechar()}>
-        <SheetContent side="right" showCloseButton={false} className="w-[min(432px,92vw)] gap-0 overflow-y-auto p-0 sm:max-w-[432px]">
-        <SheetHeader className="sticky top-0 z-10 flex-row items-start justify-between gap-3 space-y-0 border-b border-border bg-background p-5">
-          <div className="min-w-0">
-            <SheetTitle className="font-mono text-[17px] font-semibold tracking-[-0.01em]">{detalhe?.numero ?? '…'}</SheetTitle>
-            {/* RNF-10: nome do tipo de ato não trunca */}
-            <SheetDescription className="mt-0.5 text-[12.5px] text-pretty">
-              {detalhe ? (nomePorTipoAtoId.get(detalhe.tipoAtoId ?? '') ?? detalhe.tipoAtoNomeOriginal ?? '—') : ''}
-            </SheetDescription>
-          </div>
-          <Button variant="outline" size="sm" onClick={onFechar}>
-            Fechar
-          </Button>
-        </SheetHeader>
+        <SheetContent
+          side="right"
+          showCloseButton={false}
+          className="w-[min(432px,92vw)] gap-0 overflow-y-auto p-0 sm:max-w-[432px]"
+        >
+          <SheetHeader className="sticky top-0 z-10 flex-row items-start justify-between gap-3 space-y-0 border-b border-border bg-background p-5">
+            <div className="min-w-0">
+              <SheetTitle className="font-mono text-[17px] font-semibold tracking-[-0.01em]">
+                {detalhe?.numero ?? '…'}
+              </SheetTitle>
+              {/* RNF-10: nome do tipo de ato não trunca */}
+              <SheetDescription className="mt-0.5 text-[12.5px] text-pretty">
+                {detalhe ? (nomePorTipoAtoId.get(detalhe.tipoAtoId ?? '') ?? detalhe.tipoAtoNomeOriginal ?? '—') : ''}
+              </SheetDescription>
+            </div>
+            <Button variant="outline" size="sm" onClick={onFechar}>
+              Fechar
+            </Button>
+          </SheetHeader>
 
-        <div className="px-5 py-4">
-          {carregando && <Carregando />}
+          <div className="px-5 py-4">
+            {carregando && <Carregando />}
 
-          {!carregando && detalhe && chip && (
-            <>
-              <div className="flex flex-wrap gap-1.5">
-                <Chip tom={STATUS_TOM[detalhe.status]}>{STATUS_LABEL[detalhe.status]}</Chip>
-                <Chip tom={chip.tom}>{chip.label}</Chip>
-              </div>
-
-              {detalhe.motivoExcecao && (
-                <div className="mt-3 rounded-[9px] border border-bad-border bg-bad-bg p-2.5 text-xs leading-relaxed text-bad-fg text-pretty">
-                  {detalhe.motivoExcecao}
+            {!carregando && detalhe && chip && (
+              <>
+                <div className="flex flex-wrap gap-1.5">
+                  <Chip tom={STATUS_TOM[detalhe.status]}>{STATUS_LABEL[detalhe.status]}</Chip>
+                  <Chip tom={chip.tom}>{chip.label}</Chip>
                 </div>
-              )}
 
-              <div className="mt-4 rounded-[10px] border border-border bg-card px-3.5">
-                {linhas.map((linha) => (
-                  <div key={linha.k} className="flex items-baseline justify-between gap-3.5 border-t border-secondary py-2 first:border-t-0">
-                    <span className="flex-none text-xs text-text-2">{linha.k}</span>
-                    <span className="text-right text-[12.5px] text-text-5 text-pretty">{linha.v}</span>
+                {detalhe.motivoExcecao && (
+                  <div className="mt-3 rounded-[9px] border border-bad-border bg-bad-bg p-2.5 text-xs leading-relaxed text-pretty text-bad-fg">
+                    {detalhe.motivoExcecao}
                   </div>
-                ))}
-              </div>
+                )}
 
-              <div className="mt-4.5 mb-2 font-mono text-[10.5px] tracking-[0.04em] text-muted-foreground">LINHA DO TEMPO</div>
-              <div className="rounded-[10px] border border-border bg-card p-3">
-                <LinhaDoTempo rotulo="Andamento" quando={detalhe.andamentoEm} />
-                <LinhaDoTempo rotulo="Atribuído" quando={detalhe.atribuidoEm} />
-                <LinhaDoTempo rotulo="Iniciado" quando={detalhe.iniciadoEm} />
-                <LinhaDoTempo rotulo="Concluído" quando={detalhe.concluidoEm} />
-                <LinhaDoTempo rotulo="Corrigido" quando={detalhe.corrigidoEm} />
-                <LinhaDoTempo rotulo="Reaberto" quando={detalhe.reabertoEm} />
-              </div>
+                <div className="mt-4 rounded-[10px] border border-border bg-card px-3.5">
+                  {linhas.map((linha) => (
+                    <div
+                      key={linha.k}
+                      className="flex items-baseline justify-between gap-3.5 border-t border-secondary py-2 first:border-t-0"
+                    >
+                      <span className="flex-none text-xs text-text-2">{linha.k}</span>
+                      <span className="text-right text-[12.5px] text-pretty text-text-5">{linha.v}</span>
+                    </div>
+                  ))}
+                </div>
 
-              <div className="mt-4.5 mb-2 font-mono text-[10.5px] tracking-[0.04em] text-muted-foreground">QUEM PODE CONFERIR ESTE ATO</div>
-              <ListaAlcada alcada={detalhe.alcada} conferentes={conferentes ?? []} />
+                <div className="mt-4.5 mb-2 font-mono text-[10.5px] tracking-[0.04em] text-muted-foreground">
+                  LINHA DO TEMPO
+                </div>
+                <div className="rounded-[10px] border border-border bg-card p-3">
+                  <LinhaDoTempo rotulo="Andamento" quando={detalhe.andamentoEm} />
+                  <LinhaDoTempo rotulo="Atribuído" quando={detalhe.atribuidoEm} />
+                  <LinhaDoTempo rotulo="Iniciado" quando={detalhe.iniciadoEm} />
+                  <LinhaDoTempo rotulo="Concluído" quando={detalhe.concluidoEm} />
+                  <LinhaDoTempo rotulo="Corrigido" quando={detalhe.corrigidoEm} />
+                  <LinhaDoTempo rotulo="Reaberto" quando={detalhe.reabertoEm} />
+                </div>
 
-              <div className="mt-4.5 mb-2 font-mono text-[10.5px] tracking-[0.04em] text-muted-foreground">OBSERVAÇÃO</div>
-              <ObservacaoField protocoloId={detalhe.id} observacao={detalhe.observacao} />
+                {detalhe.historicoConferencias.length > 0 && (
+                  <>
+                    <div className="mt-4.5 mb-2 font-mono text-[10.5px] tracking-[0.04em] text-muted-foreground">
+                      HISTÓRICO DE CONFERÊNCIAS
+                    </div>
+                    <HistoricoConferencias
+                      historico={detalhe.historicoConferencias}
+                      nomePorConferenteId={nomePorConferenteId}
+                    />
+                  </>
+                )}
 
-              <AcoesDeStatus detalhe={detalhe} />
+                <div className="mt-4.5 mb-2 font-mono text-[10.5px] tracking-[0.04em] text-muted-foreground">
+                  QUEM PODE CONFERIR ESTE ATO
+                </div>
+                <ListaAlcada alcada={detalhe.alcada} conferentes={conferentes ?? []} />
 
-              {/* RF-18g/i: separado das ações de status acima — editar/excluir valem pra
+                <div className="mt-4.5 mb-2 font-mono text-[10.5px] tracking-[0.04em] text-muted-foreground">
+                  OBSERVAÇÃO
+                </div>
+                <ObservacaoField protocoloId={detalhe.id} observacao={detalhe.observacao} />
+
+                <AcoesDeStatus detalhe={detalhe} />
+
+                {/* RF-18g/i: separado das ações de status acima — editar/excluir valem pra
                   qualquer protocolo, não dependem do estado atual. */}
-              <div className="mt-4.5 flex gap-1.5 border-t border-secondary pt-4.5">
-                <Button variant="outline" size="sm" onClick={() => setEditarAberto(true)}>
-                  Editar protocolo
-                </Button>
-                <Button variant="outline" size="sm" className="text-bad-fg hover:bg-bad-bg" onClick={() => setConfirmarExcluirAberto(true)}>
-                  Excluir
-                </Button>
-              </div>
-            </>
-          )}
-        </div>
-      </SheetContent>
+                <div className="mt-4.5 flex gap-1.5 border-t border-secondary pt-4.5">
+                  <Button variant="outline" size="sm" onClick={() => setEditarAberto(true)}>
+                    Editar protocolo
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-bad-fg hover:bg-bad-bg"
+                    onClick={() => setConfirmarExcluirAberto(true)}
+                  >
+                    Excluir
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
+        </SheetContent>
       </Sheet>
 
       {detalhe && (
@@ -261,12 +305,18 @@ export const PainelDetalheProtocolo = ({ protocoloId, onFechar }: PainelDetalheP
               {detalhe && ` · ${nomePorTipoAtoId.get(detalhe.tipoAtoId ?? '') ?? detalhe.tipoAtoNomeOriginal ?? '—'}`}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {avisoExclusao ? `${avisoExclusao} Essa ação não pode ser desfeita depois de fechar o aviso de "desfazer".` : 'Essa ação não pode ser desfeita depois de fechar o aviso de "desfazer".'}
+              {avisoExclusao
+                ? `${avisoExclusao} Essa ação não pode ser desfeita depois de fechar o aviso de "desfazer".`
+                : 'Essa ação não pode ser desfeita depois de fechar o aviso de "desfazer".'}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={excluir.isPending}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleExcluir} disabled={excluir.isPending} className="bg-bad-fg text-white hover:bg-bad-fg/90">
+            <AlertDialogAction
+              onClick={handleExcluir}
+              disabled={excluir.isPending}
+              className="bg-bad-fg text-white hover:bg-bad-fg/90"
+            >
               {excluir.isPending ? 'Excluindo…' : 'Excluir'}
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -280,7 +330,9 @@ const LinhaDoTempo = ({ rotulo, quando }: { rotulo: string; quando: string | nul
   <div className="flex items-baseline gap-2.5 py-1">
     <span className={cn('mt-1 block size-1.5 flex-none rounded-full', quando ? 'bg-foreground' : 'bg-border')} />
     <span className="w-[70px] flex-none text-xs text-text-2">{rotulo}</span>
-    <span className={cn('flex-1 text-xs text-pretty', quando ? 'text-text-5' : 'text-muted-foreground')}>{quando ? formatDataHora(quando) : '—'}</span>
+    <span className={cn('flex-1 text-xs text-pretty', quando ? 'text-text-5' : 'text-muted-foreground')}>
+      {quando ? formatDataHora(quando) : '—'}
+    </span>
   </div>
 )
 
@@ -303,12 +355,43 @@ const ListaAlcada = ({ alcada, conferentes }: { alcada: AlcadaConferente[]; conf
           <span className="text-[12.5px] text-text-5">{conferente?.nome ?? '—'}</span>
           <span className={cn('text-right text-[11px]', a.elegivel ? 'text-ok-fg' : 'text-bad-fg')}>
             {conferente ? `Analista ${NIVEL_LABEL[conferente.nivel]}` : ''} ·{' '}
-            {a.elegivel ? 'pode conferir' : (a.motivo ? MOTIVO_ALCADA_LABEL[a.motivo] : 'barrado')}
+            {a.elegivel ? 'pode conferir' : a.motivo ? MOTIVO_ALCADA_LABEL[a.motivo] : 'barrado'}
           </span>
         </div>
       )
     })}
     {alcada.length === 0 && <p className="text-[12.5px] text-muted-foreground">Ninguém na escala hoje.</p>}
+  </div>
+)
+
+// Continuidade de conferência (pedido do dono, não é RF numerado nem está no protótipo
+// aprovado — ver dispatch-api/CLAUDE.md): outras linhas com o mesmo Número, mais recente
+// primeiro. Só renderizada pelo pai quando existe pelo menos uma (protocolo sem histórico não
+// mostra a seção, igual `motivoExcecao` só aparece quando existe). Mesmo padrão visual de
+// `ListaAlcada` — nome à esquerda, status + data à direita — reaproveitando STATUS_LABEL/
+// STATUS_TOM já definidos neste arquivo.
+const HistoricoConferencias = ({
+  historico,
+  nomePorConferenteId,
+}: {
+  historico: HistoricoConferencia[]
+  nomePorConferenteId: Map<string, string>
+}) => (
+  <div className="flex flex-col gap-1.5">
+    {historico.map((h) => (
+      <div
+        key={h.protocoloId}
+        className="flex items-center justify-between gap-2.5 rounded-lg border border-border bg-card px-2.5 py-1.5"
+      >
+        <span className="text-[12.5px] text-text-5">
+          {h.donoId ? (nomePorConferenteId.get(h.donoId) ?? '—') : 'sem dono'}
+        </span>
+        <span className="flex items-center gap-1.5">
+          <Chip tom={STATUS_TOM[h.status]}>{STATUS_LABEL[h.status]}</Chip>
+          <span className="text-[11px] text-muted-foreground">{formatDataHora(h.andamentoEm)}</span>
+        </span>
+      </div>
+    ))}
   </div>
 )
 
@@ -344,12 +427,22 @@ const AcoesDeStatus = ({ detalhe }: { detalhe: DetalheProtocolo }) => {
           </Button>
         )}
         {podeAtribuirAoMenosCarregado && (
-          <Button variant="outline" size="sm" onClick={() => atribuirMenosCarregado.mutate(detalhe.id)} disabled={atribuirMenosCarregado.isPending}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => atribuirMenosCarregado.mutate(detalhe.id)}
+            disabled={atribuirMenosCarregado.isPending}
+          >
             Atribuir ao menos carregado
           </Button>
         )}
         {podeReabrirConferencia && (
-          <Button variant="outline" size="sm" onClick={() => reabrirConferencia.mutate(detalhe.id)} disabled={reabrirConferencia.isPending}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => reabrirConferencia.mutate(detalhe.id)}
+            disabled={reabrirConferencia.isPending}
+          >
             Reabrir conferência
           </Button>
         )}
@@ -357,14 +450,21 @@ const AcoesDeStatus = ({ detalhe }: { detalhe: DetalheProtocolo }) => {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => definirPrioridade.mutate({ protocoloId: detalhe.id, prioridade: detalhe.prioridade === 'Alta' ? 'Normal' : 'Alta' })}
+            onClick={() =>
+              definirPrioridade.mutate({
+                protocoloId: detalhe.id,
+                prioridade: detalhe.prioridade === 'Alta' ? 'Normal' : 'Alta',
+              })
+            }
             disabled={definirPrioridade.isPending}
           >
             {detalhe.prioridade === 'Alta' ? 'Remover urgência' : 'Marcar como urgente'}
           </Button>
         )}
       </div>
-      {atribuirMenosCarregado.isError && <p className="mt-2 text-[12.5px] text-bad-fg">Ninguém com alçada na escala agora.</p>}
+      {atribuirMenosCarregado.isError && (
+        <p className="mt-2 text-[12.5px] text-bad-fg">Ninguém com alçada na escala agora.</p>
+      )}
     </>
   )
 }

@@ -40,10 +40,17 @@ export const PassoSenha = ({ senha1, onSenha1Change, senha2, onSenha2Change }: P
       </div>
       <div className="flex flex-col gap-[5px] rounded-lg border border-border bg-background p-[11px]">
         {regras.map((r) => (
-          <span key={r.label} className="flex items-center gap-2" style={{ color: r.ok ? 'var(--text-3)' : 'var(--muted)' }}>
+          <span
+            key={r.label}
+            className="flex items-center gap-2"
+            style={{ color: r.ok ? 'var(--text-3)' : 'var(--muted)' }}
+          >
             <span
               className="flex size-[13px] flex-none items-center justify-center rounded-full border-[1.5px]"
-              style={{ borderColor: r.ok ? 'var(--foreground)' : 'var(--d4)', background: r.ok ? 'var(--foreground)' : 'transparent' }}
+              style={{
+                borderColor: r.ok ? 'var(--foreground)' : 'var(--d4)',
+                background: r.ok ? 'var(--foreground)' : 'transparent',
+              }}
             >
               {r.ok && <span className="block size-[5px] rounded-full bg-background" />}
             </span>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 import type { Equipe } from '@/entities/equipe'
 import type { Escrevente } from '@/entities/escrevente'
@@ -21,16 +21,33 @@ type EquipeCardProps = {
 
 // RF-35/RF-36 — nome edita inline (commit no blur, evita um PUT por tecla já que o back
 // recalcula vencimento a cada troca de prazo — RF-38), prazo pré/pós edita direto pelos pills.
-export const EquipeCard = ({ equipe, escreventes, escreventeSelecionadoId, onSelecionarEscrevente, onMoverParaCa }: EquipeCardProps) => {
+export const EquipeCard = ({
+  equipe,
+  escreventes,
+  escreventeSelecionadoId,
+  onSelecionarEscrevente,
+  onMoverParaCa,
+}: EquipeCardProps) => {
   const [nome, setNome] = useState(equipe.nome)
+  // Ajusta o estado local durante o render, sem efeito (achado ligando mais categorias do
+  // oxlint) — mesmo padrão recomendado pelo React pra "resetar estado quando uma prop muda":
+  // evita o flash de valor desatualizado que um useEffect (roda depois do paint) causaria.
+  const [nomeRefletido, setNomeRefletido] = useState(equipe.nome)
+  if (equipe.nome !== nomeRefletido) {
+    setNomeRefletido(equipe.nome)
+    setNome(equipe.nome)
+  }
   const editar = useEditarEquipe()
-
-  useEffect(() => setNome(equipe.nome), [equipe.nome])
 
   const commitNome = () => {
     const aparado = nome.trim()
     if (aparado && aparado !== equipe.nome) {
-      editar.mutate({ equipeId: equipe.id, nome: aparado, prazoPreConferencia: equipe.prazoPreConferencia, prazoPosConferencia: equipe.prazoPosConferencia })
+      editar.mutate({
+        equipeId: equipe.id,
+        nome: aparado,
+        prazoPreConferencia: equipe.prazoPreConferencia,
+        prazoPosConferencia: equipe.prazoPosConferencia,
+      })
     } else {
       setNome(equipe.nome)
     }
@@ -89,7 +106,9 @@ export const EquipeCard = ({ equipe, escreventes, escreventeSelecionadoId, onSel
       </div>
 
       <div className="mt-3 flex flex-wrap gap-1.5 border-t border-secondary pt-3">
-        {escreventes.length === 0 && <span className="text-xs text-muted-foreground">nenhum escrevente nesta equipe</span>}
+        {escreventes.length === 0 && (
+          <span className="text-xs text-muted-foreground">nenhum escrevente nesta equipe</span>
+        )}
         {escreventes.map((esc) => (
           <PillToggle
             key={esc.id}

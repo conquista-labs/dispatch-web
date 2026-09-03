@@ -41,25 +41,49 @@ export const PainelFiltros = ({
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between gap-2">
             <span className="text-[11.5px] font-semibold text-text-2">Equipe do escrevente</span>
-            <span className="font-mono text-[10.5px] text-muted-foreground">{contaLabel(filtro.equipeIds.length, contagens.equipes.length)}</span>
+            <span className="font-mono text-[10.5px] text-muted-foreground">
+              {contaLabel(filtro.equipeIds.length, contagens.equipes.length)}
+            </span>
           </div>
-          <FiltroEixo placeholder="buscar equipe do escrevente…" vazioLabel="todas" opcoes={contagens.equipes} selecionados={filtro.equipeIds} onAlternar={alternarEquipe} />
+          <FiltroEixo
+            placeholder="buscar equipe do escrevente…"
+            vazioLabel="todas"
+            opcoes={contagens.equipes}
+            selecionados={filtro.equipeIds}
+            onAlternar={alternarEquipe}
+          />
         </div>
 
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between gap-2">
             <span className="text-[11.5px] font-semibold text-text-2">Tipo de ato</span>
-            <span className="font-mono text-[10.5px] text-muted-foreground">{contaLabel(filtro.tipoAtoIds.length, contagens.tiposAto.length)}</span>
+            <span className="font-mono text-[10.5px] text-muted-foreground">
+              {contaLabel(filtro.tipoAtoIds.length, contagens.tiposAto.length)}
+            </span>
           </div>
-          <FiltroEixo placeholder="buscar tipo de ato…" vazioLabel="todos" opcoes={contagens.tiposAto} selecionados={filtro.tipoAtoIds} onAlternar={alternarTipoAto} />
+          <FiltroEixo
+            placeholder="buscar tipo de ato…"
+            vazioLabel="todos"
+            opcoes={contagens.tiposAto}
+            selecionados={filtro.tipoAtoIds}
+            onAlternar={alternarTipoAto}
+          />
         </div>
 
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between gap-2">
             <span className="text-[11.5px] font-semibold text-text-2">Prioridade</span>
-            <span className="font-mono text-[10.5px] text-muted-foreground">{contaLabel(filtro.prioridades.length, contagens.prioridades.length)}</span>
+            <span className="font-mono text-[10.5px] text-muted-foreground">
+              {contaLabel(filtro.prioridades.length, contagens.prioridades.length)}
+            </span>
           </div>
-          <FiltroEixo placeholder="buscar prioridade…" vazioLabel="todas" opcoes={contagens.prioridades} selecionados={filtro.prioridades} onAlternar={alternarPrioridade} />
+          <FiltroEixo
+            placeholder="buscar prioridade…"
+            vazioLabel="todas"
+            opcoes={contagens.prioridades}
+            selecionados={filtro.prioridades}
+            onAlternar={alternarPrioridade}
+          />
         </div>
 
         <div className="flex flex-col gap-2">

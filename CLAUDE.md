@@ -13,7 +13,7 @@ Front-end do Dispatch — consome a API em `../dispatch-api`.
 - **Vite + React 19 + TypeScript**, sem SSR (SPA autenticada atrás de login — não há ganho de
   SEO/first-paint que justifique Next.js aqui).
 - **TanStack Query** para estado de servidor (cache, refetch, mutations) — não existe uma
-  camada de "usecase" própria por cima disso; os hooks de query/mutation *são* a camada de
+  camada de "usecase" própria por cima disso; os hooks de query/mutation _são_ a camada de
   acesso a dados.
 - **Zustand + `persist`** para sessão (token + usuário), sobrevive a F5 via localStorage.
 - **React Router v7** para rotas.
@@ -205,6 +205,7 @@ ponta (login, `/auth/me` no boot, guarda de rota por papel, logout), shadcn/ui c
 certos, tema (cores, tipografia, logo, claro/escuro) copiado do protótipo aprovado.
 
 **Minha fila (RF-19 a RF-24) é a primeira tela de verdade, construída de ponta a ponta**:
+
 - `entities/protocolo` — tipos espelhando `ProtocoloResumo`/`ProtocoloConcluidoResumo` do back,
   `useMinhaFila`/`useConcluidosHoje` (GET).
 - `features/minha-fila/{pegar-protocolo,iniciar-conferencia,concluir-conferencia}` +
@@ -218,6 +219,7 @@ certos, tema (cores, tipografia, logo, claro/escuro) copiado do protótipo aprov
   gigante" acima pro porquê.
 
 **Distribuição (RF-13 a RF-18) também está construída de ponta a ponta**:
+
 - `entities/conferente` — `GET /conferentes` (fecha o gap de nome de dono que faltava desde a
   visão por conferente/por status).
 - `entities/protocolo` ganha `useVisaoDistribuicao` (`GET /protocolos/distribuicao`).
@@ -241,6 +243,7 @@ certos, tema (cores, tipografia, logo, claro/escuro) copiado do protótipo aprov
 **Importar relatório (RF-05 a RF-12) construída de ponta a ponta, os 3 passos do protótipo aprovado**
 (dados → revisão → distribuição — o protótipo mudou de 2 pra 3 passos depois de ajuste do time de
 design; o back ganhou RF-08 pra sustentar o passo do meio, ver `../dispatch-api/CLAUDE.md`):
+
 - `features/protocolo/importar-lote` — `usePreVisualizarLote`/`useConfirmarLote`, tipos espelhando
   `ImportarLoteRequest`/`ResumoImportacao` (agora com `linhas: LinhaPreviaImportacao[] | null`,
   RF-08 — nulo na confirmação).
@@ -258,7 +261,7 @@ design; o back ganhou RF-08 pra sustentar o passo do meio, ver `../dispatch-api/
   SO), destoavam do resto da tela. Trocado a pedido do dono depois de ver o resultado ao vivo.
   `date-fns`/`react-day-picker` entraram como dependência automática do `calendar.tsx` do shadcn.
 - **Gotcha do `shadcn add`, nº 3**: `components.json` tinha um campo `"pointer": true` (herdado,
-  por engano, de um flag de *init* da CLI que eu tratei como campo persistível ao corrigir o bug
+  por engano, de um flag de _init_ da CLI que eu tratei como campo persistível ao corrigir o bug
   de cursor) — isso quebra qualquer `npx shadcn add <x>` com "Invalid configuration found in
   components.json". Removido; o cursor-pointer já era coberto pela regra `@layer base` global,
   então não perdeu nada.
@@ -284,6 +287,7 @@ primeiro passo.
 **Ajustes de fidelidade feitos numa segunda rodada, depois de navegar o protótipo de verdade**
 (pedido do dono — Select/DateTimePicker "continuavam diferentes", e depois "confira Distribuição
 também"):
+
 - **Seletor de Etapa**: o `Select` do shadcn não tem como mostrar duas linhas dentro do próprio
   campo (rótulo + explicação, ex. "Pós-conferência" / "depois da lavratura"). Trocado por um
   `Popover` customizado (`SeletorEtapa`, dentro de `PassoDados.tsx`) com trigger de duas linhas e
@@ -357,7 +361,7 @@ também"):
   - O seletor (igual o protótipo, que também não tem digitação — só clique) só dava pra ajustar
     data via calendário e hora/minuto via stepper −/+ um em um. Pra chegar em "10:57" a partir de
     qualquer outro valor, seriam dezenas de cliques — na prática o usuário mexe só no
-    hora/minuto e esquece de clicar no dia certo no calendário, deixando a *data* errada sem
+    hora/minuto e esquece de clicar no dia certo no calendário, deixando a _data_ errada sem
     perceber (o campo mostra "30/08/2016 · 12:57" ou parecido, fácil de não notar o ano errado
     num texto pequeno).
   - Isso expôs um segundo problema, esse sim uma regressão real em relação ao protótipo: o
@@ -375,7 +379,7 @@ também"):
     protótipo (hoje 00:00).
   - Confirmado via Playwright digitando "10" e "57" direto nos campos (sem tocar em nenhum
     stepper) contra o CSV de 12 linhas do dono e corte 10:57: prévia leu `8 ignoradas / 4
-    processadas` — bate exatamente com as 4 linhas cujo horário é ≥ 10:57.
+processadas` — bate exatamente com as 4 linhas cujo horário é ≥ 10:57.
 - **Bug real achado no caminho, não só fidelidade**: `prazoChip` (`entities/protocolo/lib/prazo-chip.ts`,
   usado por Minha fila **e** Distribuição) prefixava "vence em"/"estourou há" em qualquer faixa —
   o protótipo só usa esse prefixo nos 3 estados de risco (amarelo/laranja/vermelho); o estado
@@ -473,15 +477,15 @@ Conferente — mesmo rótulo no menu, conteúdo bem diferente:
   arquivo, populado por `useConferentes()`) + `widgets/fila-do-conferente-board`. Primeira
   versão usava o `Select` genérico do shadcn — trocado depois que o dono atualizou o protótipo
   com um dropdown customizado de verdade (mesmo padrão do `SeletorEtapa` de Importar: `Popover`
-  + trigger de duas linhas + lista com indicador de seleção), substituindo o antigo botão "Ver
-  como outro conferente" que só ciclava um por vez. Cada item da lista mostra nível + carga
-  atual (`cargaAtual`) à direita; conferente ausente vem com opacidade reduzida, mas ainda
-  selecionável (a Distribuidora pode querer ver a fila de alguém de folga). **Detalhe batido
-  contra o protótipo e que quase passou batido**: o item ativo/selecionado precisa de um fundo
-  diferenciado (`bg-secondary`) cobrindo a linha inteira, não só o indicador de seleção — faltava
-  isso tanto aqui quanto no `SeletorEtapa` (o mesmo gap nos dois, corrigido nos dois juntos).
-  Seleciona o primeiro conferente na escala por padrão (`naEscala`), ou o primeiro da lista se
-  ninguém estiver.
+  - trigger de duas linhas + lista com indicador de seleção), substituindo o antigo botão "Ver
+    como outro conferente" que só ciclava um por vez. Cada item da lista mostra nível + carga
+    atual (`cargaAtual`) à direita; conferente ausente vem com opacidade reduzida, mas ainda
+    selecionável (a Distribuidora pode querer ver a fila de alguém de folga). **Detalhe batido
+    contra o protótipo e que quase passou batido**: o item ativo/selecionado precisa de um fundo
+    diferenciado (`bg-secondary`) cobrindo a linha inteira, não só o indicador de seleção — faltava
+    isso tanto aqui quanto no `SeletorEtapa` (o mesmo gap nos dois, corrigido nos dois juntos).
+    Seleciona o primeiro conferente na escala por padrão (`naEscala`), ou o primeiro da lista se
+    ninguém estiver.
 - `widgets/fila-do-conferente-board` — mesmo board de 3 colunas de `minha-fila-board`, sempre
   em modo leitura. **Reaproveita os componentes de card** (`ProtocoloCard`, `EmConferenciaCard`,
   `ConcluidosHojeList`) do outro widget em vez de duplicar — os dois agora saem no barrel de
@@ -513,7 +517,7 @@ três desde antes desta sessão (commit "Adiciona a Central de Regras"); só fal
   não pode conferir Inventário") a partir do fato cru que o back manda — reaproveitada pela
   lista de regras e pelo preview ao vivo do construtor guiado (RF-32).
 - **RF-32 (construtor guiado)**: é UI pura, sem endpoint próprio — monta o request de `POST
-  /regras-alcada` no fim. **Divergência deliberada do protótipo**: lá o builder deixa selecionar
+/regras-alcada` no fim. **Divergência deliberada do protótipo**: lá o builder deixa selecionar
   vários alvos e cria "uma regra com array de alvos", mas o back só aceita um alvo por regra
   (RF-31: `AlvoAlcada` é XOR etapa/tipo). Resolvido criando **uma regra por alvo selecionado**
   (`Promise.all` de `mutateAsync`) — preserva a UX de multi-seleção do protótipo sem inventar um
@@ -544,11 +548,12 @@ três desde antes desta sessão (commit "Adiciona a Central de Regras"); só fal
 
 **Cadastro manual de tipo de ato**, na aba Alçada — complementa o cadastro automático que a
 importação passou a fazer (ver `../dispatch-api/CLAUDE.md`, "Cadastro automático de tipo de ato
-+ normalização"). `NovoTipoAtoDialog` (mesmo padrão de `NovaEquipeDialog`), `features/tipoAto/criar`
-(`POST /tipos-ato`, 409 se já existir mesmo nome normalizado — trata igual duplicidade de e-mail
-em `NovoConferenteDialog`). Nome sai normalizado pelo back de qualquer jeito, front não precisa
-tratar isso. Confirmado via Playwright: cadastro novo (201) e duplicata com caixa diferente (409,
-mensagem "já existe um tipo de ato com esse nome").
+
+- normalização"). `NovoTipoAtoDialog` (mesmo padrão de `NovaEquipeDialog`), `features/tipoAto/criar`
+  (`POST /tipos-ato`, 409 se já existir mesmo nome normalizado — trata igual duplicidade de e-mail
+  em `NovoConferenteDialog`). Nome sai normalizado pelo back de qualquer jeito, front não precisa
+  tratar isso. Confirmado via Playwright: cadastro novo (201) e duplicata com caixa diferente (409,
+  mensagem "já existe um tipo de ato com esse nome").
 
 **Badge de pílula no menu lateral** (RF-13/RF-39, `widgets/app-shell/ui/AppShell.tsx`) — igual
 ao protótipo: "Distribuição" mostra `N exc` (tom de aviso) se tiver exceção aberta, senão o
@@ -572,7 +577,7 @@ protocolo, em qualquer aba de Distribuição (`Por conferente`/`Por status`/`Exc
   `showCloseButton={false}` porque o protótipo tem um botão "Fechar" de texto, não o X padrão do
   componente.
 - **`widgets/painel-detalhe-protocolo`** — `PainelDetalheProtocolo`, recebe `protocoloId: string
-  | null` + `onFechar`. Reaproveita `ObservacaoField` (mesmo campo de Minha fila/Distribuição),
+| null` + `onFechar`. Reaproveita `ObservacaoField` (mesmo campo de Minha fila/Distribuição),
   `fraseDaRegra` (Central de Regras, pra "regra aplicada"), `prazoChip`/`Chip` (mesmo semáforo
   de todo canto). `entities/protocolo` ganha `DetalheProtocolo`/`useDetalheProtocolo(id)` —
   `enabled: !!id`, só busca quando o painel está de fato aberto.
@@ -652,7 +657,7 @@ um `<input>` digitável ao lado dos botões ±, mesmo padrão `w-[Npx]`+`size` d
   `usePedidosReaberturaPendentes` em `DistribuicaoBoard.tsx`. Feature nova
   `features/protocolo/decidir-pedido-reabertura`.
 - **`PainelDetalheProtocolo.tsx`** ganhou `podeReabrirConferencia` (`status is 'Aprovado' |
-  'Reprovado'`) no mesmo bloco de ações condicionais que já tinha "devolver ao pool"/"atribuir
+'Reprovado'`) no mesmo bloco de ações condicionais que já tinha "devolver ao pool"/"atribuir
   ao menos carregado", mais duas linhas na timeline (`Corrigido`/`Reaberto`). Feature nova
   `features/protocolo/reabrir-conferencia`.
 - **Achado num teste de comportamento real (não só aparência), `data-testid` virou necessário**:
@@ -734,7 +739,7 @@ sem sufixo tipo `-cartorio` — ver `../dispatch-api/CLAUDE.md`, seção "Deploy
   **Gotcha real**: `vite build` local roda em modo `production` por padrão e **não** lê
   `.env.development` — um `npm run build` local sem essa env var configurada localmente
   geraria um bundle com `VITE_API_URL` `undefined`. Por isso o deploy é sempre `netlify deploy
-  --prod --build` (o build roda do lado do Netlify, com a env var certa), nunca upload de um
+--prod --build` (o build roda do lado do Netlify, com a env var certa), nunca upload de um
   `dist/` gerado na máquina local.
 - **Se o site for renomeado de novo** (nome do Netlify muda a URL de produção, que é a origem
   CORS): precisa atualizar a env var `Cors__AllowedOrigin` no dashboard do Render também — os
@@ -770,7 +775,7 @@ condicional por aba nas telas com abas). Dois achados reais, corrigidos:
   `/distribuicao` carregava, painel aberto ou não. Os cinco hooks (em `entities/*`) ganharam
   `options?: { enabled?: boolean }` (mesmo padrão já usado em `useVisaoDistribuicao`/
   `useSugestoesPendentes` pro `AppShell`), e `PainelDetalheProtocolo.tsx` passa `enabled:
-  !!protocoloId` nos cinco. `useDetalheProtocolo` fica de fora da lista de hooks alterados —
+!!protocoloId` nos cinco. `useDetalheProtocolo` fica de fora da lista de hooks alterados —
   já estava certo.
 - **`AbaPrazos.tsx` buscava `GET /escreventes` e `GET /escreventes/sem-equipe` juntos**, sendo
   que o segundo é um subconjunto trivial do primeiro (`escreventes.filter(e => !e.equipeId)`)
@@ -788,8 +793,8 @@ mesma `queryKey`, então o TanStack Query já dedupa em uma requisição só).
 
 ## RNF-10 — nome de registro não trunca
 
-*"Nenhum nome de registro pode ser truncado em tela cuja função é distinguir registros
-parecidos (catálogo de tipos, lista de escreventes): o nome quebra em linha."* Levantamento
+_"Nenhum nome de registro pode ser truncado em tela cuja função é distinguir registros
+parecidos (catálogo de tipos, lista de escreventes): o nome quebra em linha."_ Levantamento
 completo achou 16 ocorrências, corrigidas em duas categorias:
 
 - **Corte de dado** (`AbaPorConferente.tsx`, `AbaPorStatus.tsx`, `AbaRegrasEmVigor.tsx`):
@@ -957,18 +962,18 @@ existente, agora estendido com alvo de grupo e permissão de reserva.
   o card de regra (frase/origem/ativar/remover) sem mudança. "O que cada um alcança hoje" (RF-34)
   migrou pra cá sem alteração.
 - **`AbaAlcadaMatriz.tsx`** (novo) — grade grupo/tipo × pessoa, sem endpoint novo: cruza `GET
-  /conferentes/alcance` (já devolve `tiposPermitidosIds`) com `GET /tipos-ato` (nome + grupo) no
+/conferentes/alcance` (já devolve `tiposPermitidosIds`) com `GET /tipos-ato` (nome + grupo) no
   próprio front. Linha de grupo expande/colapsa pra mostrar os tipos individuais. **Divergência
   deliberada do protótipo**: lá, um clique num grupo "cheio" cria uma regra de **negação**
   escondida (bloqueia o grupo inteiro mesmo vindo de outra fonte, tipo nível); aqui, cada clique
   só cria ou remove a regra atômica que a própria matriz criou (`sujeitoConferenteId` + `Permite`
-  + `alvoGrupo`/`alvoTipoAtoId`) — se o alcance vier de outro lugar (nível, alçada plena), a
-  matriz não inventa um bloqueio silencioso; quem quer negar usa o construtor guiado, onde
-  "Nega" é uma escolha explícita, não um efeito colateral de clicar numa célula verde. Motivo:
-  o back só aceita um alvo por regra (sem array como o protótipo), então "desligar uma pessoa
-  de um grupo cheio" não tem uma única regra óbvia pra remover quando o alcance dela vem de uma
-  regra de nível compartilhada com outras pessoas — inventar uma negação ali seria arriscado sem
-  confirmação explícita do usuário.
+  - `alvoGrupo`/`alvoTipoAtoId`) — se o alcance vier de outro lugar (nível, alçada plena), a
+    matriz não inventa um bloqueio silencioso; quem quer negar usa o construtor guiado, onde
+    "Nega" é uma escolha explícita, não um efeito colateral de clicar numa célula verde. Motivo:
+    o back só aceita um alvo por regra (sem array como o protótipo), então "desligar uma pessoa
+    de um grupo cheio" não tem uma única regra óbvia pra remover quando o alcance dela vem de uma
+    regra de nível compartilhada com outras pessoas — inventar uma negação ali seria arriscado sem
+    confirmação explícita do usuário.
 - **`AbaAlcadaTestar.tsx`** (novo) — consome o `POST /regras-alcada/testar` novo do back
   (`useTestarAlcada`, `entities/regraAlcada`). Réplica do layout do protótipo: seletores de
   etapa/equipe/tipo, veredito colorido (verde/vermelho), duas colunas "Podem conferir"/"Barrados
@@ -992,6 +997,7 @@ existente, agora estendido com alvo de grupo e permissão de reserva.
   lado de quem está barrado, de graça — antes só mostrava "barrado" sem dizer por quê.
 
 **Duas rodadas de ajuste de fidelidade depois do primeiro corte, a pedido do dono**:
+
 - Removido o botão "Novo tipo de ato" do cabeçalho da aba Alçada (sobrou do corte anterior,
   antes de "Tipos de ato" virar aba própria) — o protótipo só tem "Nova regra" ali; "Tipos de
   ato" já tem seu próprio diálogo de criação, então não perdeu funcionalidade nenhuma.
@@ -1051,6 +1057,7 @@ Regressão permanente (`fila-conferentes`/`conferentes`/`auth`/`session-isolatio
 `login`) verde.
 
 **Ajustes a pedido do dono, mesma rodada**:
+
 - Limite de truncamento subiu de 3 pra 5 em `ProtocoloColuna.tsx` (variant "conferente", usada
   por "Pool aberto"/colunas de Distribuição) e `MAX_POOL_VISIVEL` de `MinhaFilaBoard.tsx`/
   `FilaDoConferenteBoard.tsx`.
@@ -1081,13 +1088,14 @@ grande, dá pra truncar")** — desta vez fui direto no markup do `Dispatch.dc.h
 comparar só visualmente (`p.tipo`/`p.meta`, linhas ~375-378 e ~1621-1624 do arquivo), porque a
 essa altura eyeballing screenshot já tinha errado uma vez. Achados **confirmados no CSS
 inline do protótipo, não aproximados**:
+
 - `p.meta` (a linha "escrevente · equipe · etapa") é `overflow:hidden;text-overflow:ellipsis;
-  white-space:nowrap` — uma linha só, truncada com reticências — **não** `text-wrap:pretty`
+white-space:nowrap` — uma linha só, truncada com reticências — **não** `text-wrap:pretty`
   como eu tinha usado. Isso é o que fazia o card "crescer" quando o nome do escrevente era
   longo: a linha quebrava em 2-3 linhas em vez de truncar. Corrigido em
   `DistribuicaoProtocoloCard.tsx` e no item da lista de `ListaCompletaColunaSheet.tsx`
   (mesmo padrão no protótipo, linha ~1624) — os dois ganharam `overflow-hidden text-ellipsis
-  whitespace-nowrap` + `title` com o texto completo (tooltip nativo do browser), preservando
+whitespace-nowrap` + `title` com o texto completo (tooltip nativo do browser), preservando
   o acesso ao nome inteiro sem inventar um componente de tooltip novo pra isso.
 - **Divergência deliberada de RNF-10 aqui, registrada**: RNF-10 pede nome sem truncar "em tela
   cuja função é distinguir registros parecidos" (catálogo, listas) — mas esta linha é dado
@@ -1096,16 +1104,16 @@ inline do protótipo, não aproximados**:
   precisar ver o nome completo sem reabrir a decisão de RNF-10 nos lugares onde ela
   efetivamente se aplica (Conferentes, Tipos de ato — nenhum dos dois mudou).
 - `p.tipo` tinha tamanho/cor errados por aproximação: protótipo usa `font-size:12.5px;
-  color:var(--text-5)` em Distribuição (eu tinha `11.5px`/`text-text-2`) e `font-size:13px;
-  color:var(--text-5)` em Minha fila (essa already batia). Corrigido nos dois cards + no item
+color:var(--text-5)` em Distribuição (eu tinha `11.5px`/`text-text-2`) e `font-size:13px;
+color:var(--text-5)` em Minha fila (essa already batia). Corrigido nos dois cards + no item
   da lista completa (`13px`, também truncado no protótipo, `overflow-hidden text-ellipsis
-  whitespace-nowrap` lá também). Escrevente de Minha fila (`ProtocoloCard.tsx`) tinha
+whitespace-nowrap` lá também). Escrevente de Minha fila (`ProtocoloCard.tsx`) tinha
   `12px`; protótipo usa `11.5px` — corrigido. **Não truncado** em Minha fila: o protótipo não
   tem `overflow`/`ellipsis` na linha do escrevente lá (`p.escrevLabel`, sozinho, sem juntar
   com equipe/etapa que já são pills separadas) — só Distribuição junta os 3 campos numa
   string só e trunca.
 - **Não mexido de propósito**: o `Chip` compartilhado (`shared/ui/chip.tsx`, `font-mono
-  text-[11px]`) usado nas pills de prazo/equipe/etapa em todo o app — o protótipo usa
+text-[11px]`) usado nas pills de prazo/equipe/etapa em todo o app — o protótipo usa
   `10.5px` sem mono pras pills de equipe/etapa especificamente, mas mudar o componente
   compartilhado afetaria dezenas de usos já verificados (prazo em toda tela, "urgente",
   etc.); risco desproporcional ao pedido, que era especificamente sobre o nome do
@@ -1136,6 +1144,7 @@ RF-18e, não uma combinação de exemplo. `FiltroProtocolo.faixasSemaforo: Faixa
 `urgente: boolean`; `protocoloPassaNoFiltro` ganhou parâmetro `now` só pra esse cálculo.
 
 **Implementação**:
+
 - `entities/protocolo/lib/filtros.ts` — `FiltroProtocolo` ganhou `texto`, `data` (chave
   `"yyyy-mm-dd"` do dia local do vencimento) e trocou `faixasSemaforo` por `urgente`.
   `contagemFiltrosAtivos` continua só os 4 eixos combináveis (equipe/tipo/prioridade/urgente) —
@@ -1342,6 +1351,7 @@ gaps reais:
   (~384px), bem mais estreito que o protótipo.
 
 **Duas divergências reais, mantidas conscientemente, não "corrigidas" às pressas**:
+
 - **Prioridade tem 2 níveis (Normal/Alta), não os 3 do protótipo** (Alta/Média/Baixa) — o
   domínio do back só suporta 2 desde antes desta sessão (RF-18a, "marcar como
   urgente"/"remover urgência" já era binário). Ampliar pra 3 é mudança de `enum Prioridade` em
@@ -1544,14 +1554,13 @@ no fluxo de conferentes (mesmo mecanismo de detecção de erro, ver duplicação
   de ninguém), usado nas 7 abas do cluster mais em `PainelDetalheProtocolo.tsx` (achado extra na
   hora de mexer no arquivo).
 - **`GRUPOS` hardcoded 3x** → `entities/tipoAto` passou a exportar `GRUPOS =
-  Object.keys(GRUPO_LABEL) as GrupoTipoAto[]`, mesmo padrão de `TIPOS_PRAZO` já usado ao lado.
+Object.keys(GRUPO_LABEL) as GrupoTipoAto[]`, mesmo padrão de `TIPOS_PRAZO` já usado ao lado.
 - **Rótulos dessincronizados** → `ExcecaoCard.tsx` e `AbaPorConferente.tsx` passaram a importar
   `ETAPA_LABEL`/`NIVEL_LABEL` de `entities/protocolo`/`entities/conferente` em vez de manter
   cópia local.
 - **Boilerplate de diálogo** → extraído só o que era genuinamente idêntico
   (`ehConflito409(error)`, novo em `shared/lib/conflito-409.ts`); reset-ao-abrir e campos do
-  formulário continuam próprios de cada diálogo — são formatos diferentes demais (5 campos vs.
-  2) pra um hook único valer a pena, decisão consciente de não abstrair demais.
+  formulário continuam próprios de cada diálogo — são formatos diferentes demais (5 campos vs. 2) pra um hook único valer a pena, decisão consciente de não abstrair demais.
 - **`ImportarLoteWizard.tsx`** → `paraRequestLinhas()` extraída, usada por
   `handleContinuar`/`handleConfirmar`.
 - **`MAX_POOL_VISIVEL`** → `widgets/minha-fila-board/lib/constantes.ts`, reexportado no barrel,
@@ -1563,7 +1572,7 @@ no fluxo de conferentes (mesmo mecanismo de detecção de erro, ver duplicação
 
 - **`AbaAlcada.tsx`** (308 → ~95 linhas) — estado do builder + textos derivados +
   `handleCriarRegra` viraram o hook `useAlcadaBuilder()` (`widgets/central-de-regras-board/
-  model/use-alcada-builder.ts`); o card do builder virou `<AlcadaBuilderCard />`. `AbaAlcada.tsx`
+model/use-alcada-builder.ts`); o card do builder virou `<AlcadaBuilderCard />`. `AbaAlcada.tsx`
   ficou só o shell da sub-aba (fetch + as 3 visões).
 - **`PainelDetalheProtocolo.tsx`** (331 linhas, maior arquivo do app) — lista de alçada virou
   `<ListaAlcada />`, o bloco de botões de ação condicionais virou `<AcoesDeStatus />` (mutations
@@ -1578,7 +1587,7 @@ no fluxo de conferentes (mesmo mecanismo de detecção de erro, ver duplicação
   avançar) e por `PassoSenha` (pra desenhar o checklist) sem duplicar a regra em dois lugares.
 - **`AbaAlcadaMatriz.tsx`** — indicador de cobertura da linha de grupo e da linha de tipo virou
   `<CelulaAlcance estado={...} />` compartilhado (`widgets/central-de-regras-board/ui/
-  CelulaAlcance.tsx`), com o mapeamento estado→{glifo,cor} em `lib/alcance.ts` (dois `Record`
+CelulaAlcance.tsx`), com o mapeamento estado→{glifo,cor} em `lib/alcance.ts` (dois `Record`
   separados, `ESTADO_GRUPO`/`ESTADO_TIPO` — são espaços de estado diferentes, cobertura do
   grupo inteiro vs. origem da permissão num tipo, não fazia sentido forçar um union só).
 
@@ -1606,3 +1615,178 @@ no fluxo de conferentes (mesmo mecanismo de detecção de erro, ver duplicação
   do RF-18d ("prioridade alta ou menos de 4h pro vencimento"), confirmado contra o protótipo —
   é um conceito diferente do semáforo (que já vem calculado do back) e existe no front porque
   depende do relógio local entre um refetch e outro, não porque reinventa uma regra do back.
+
+## Continuidade de conferência — histórico no painel de detalhe
+
+Pedido do dono (não é RF numerado nem está no protótipo aprovado — ver `dispatch-api/CLAUDE.md`
+pra decisão completa, feita antes de codificar): quando um protocolo reprovado reaparece num
+relatório seguinte na mesma etapa, o back agora atribui direto ao conferente que fez a primeira
+conferência dele. `PainelDetalheProtocolo.tsx` ganhou a seção "HISTÓRICO DE CONFERÊNCIAS" (entre
+"LINHA DO TEMPO" e "QUEM PODE CONFERIR ESTE ATO"), só renderizada quando o protocolo tem outras
+linhas com o mesmo Número — reaproveita o mesmo padrão visual de `ListaAlcada` (nome do dono à
+esquerda, `Chip` de status + data à direita), usando `STATUS_LABEL`/`STATUS_TOM`/
+`nomePorConferenteId`/`formatDataHora` já existentes no arquivo. Não precisou de sessão de
+protótipo nova — é extensão de uma tela que já existe, não uma página nova.
+
+`entities/protocolo/model/types.ts` ganhou `HistoricoConferencia` (formato cru do back:
+`protocoloId`/`andamentoEm`/`status`/`donoId`/`concluidoEm` — front resolve nome/rótulo, mesma
+disciplina de sempre) e `DetalheProtocolo.historicoConferencias`. Nenhum endpoint novo — o
+campo veio de graça no `GET /protocolos/{id}/detalhe` já existente.
+
+Verificado com Playwright (spec temporário, não faz parte da suíte permanente — não depende de
+fixture fixa, igual `painel-detalhe-protocolo.spec.ts` já documenta): importou um protocolo,
+reprovou como um conferente de teste, reimportou a mesma linha, confirmou a seção aparecendo
+nos dois temas com o dono/status/data certos e "Regra aplicada: padrão aberto" (não uma
+`RegraAlcada` — a atribuição veio da continuidade, não de uma regra de alçada).
+
+## Frase completa de alçance em Conferentes — fecha o item do backlog
+
+`ConferenteCard.tsx` mostrava só "pode conferir N tipos de ato" (contagem crua de
+`GET /conferentes/alcance`). O protótipo aprovado (`Dispatch.dc.html`, seção do card de
+Conferentes) mostra `prefLabel` ("pode conferir todos os M tipos de ato" ou "N de M") **mais**
+até 3 pills, uma por `RegraAlcada` aplicável à pessoa (sujeito = ela mesma ou o nível dela,
+`fraseRegra`/`r.alvo.join(', ')` no protótipo), com um "+N regras" quando sobra mais — não uma
+frase única agregando tudo num string só (motor v2/v3 só aceita um alvo por regra, então "5
+tipos numa frase só" no protótipo vem de uma regra com múltiplos itens no alvo, cenário que o
+back atual não tem — cada tipo vira uma regra própria aqui, logo N pills, não 1 pill com N
+nomes).
+
+- `ConferentesBoard.tsx` passou a buscar `useRegrasAlcada()`/`useTiposAto()`/`useEquipes()` e
+  monta, por conferente, a lista de frases via `fraseDaRegra` (já existia, reaproveitado de
+  `AbaRegrasEmVigor`/`PainelDetalheProtocolo` — nenhuma lógica de formatação nova).
+- `ConferenteCard.tsx` ganhou `prefLabel` (substitui o texto antigo) + até 3 pills + link
+  "+N regras" pra Central de Regras.
+- `entities/conferente/model/types.ts`: `AlcanceDoConferente` ganhou `equipesPermitidasIds`
+  (o record C# já tinha, só não estava espelhado — gap achado na investigação, corrigido de
+  passagem).
+
+**Achado no caminho, consequência direta da tabela `config` (ver dispatch-api/CLAUDE.md)**:
+`AbaRegrasEmVigor.tsx` (Central de Regras) tinha 2 frases hardcoded na seção "Operação" ("Cada
+conferente conduz 1 ato por vez", "Semáforo: amarelo abaixo de 4h, laranja abaixo de 60min") —
+agora que esses valores são editáveis via `PUT /config`, texto fixo no front mentiria assim que
+alguém editasse. Nova entity `entities/configuracao` (só leitura, `GET /config` — sem tela de
+edição própria ainda, mesma decisão do back) substitui os 2 itens por texto derivado de
+`useConfiguracao()`.
+
+Verificado com Playwright (spec temporário): Conferentes mostrando `prefLabel`/pills/"+N
+regras" nos dois temas (inclusive um caso real de "+1 regra" com 4 regras aplicáveis); Central
+de Regras → Regras em vigor mostrando os valores de config corretos na seção Operação.
+
+## `Chip` ganha variante `fonte` — fecha o gap de fidelidade nas pills de equipe/etapa
+
+Gap conhecido do backlog: pills de equipe/etapa (`ProtocoloCard.tsx` em Minha fila,
+`ExcecaoCard.tsx` em Exceções) usavam o `Chip` padrão (11px, JetBrains Mono — certo pra
+prazo/status), mas o protótipo aprovado usa 10.5px sem mono pra essas duas especificamente.
+`shared/ui/chip.tsx` ganhou uma segunda dimensão de variante no `cva`, `fonte?: 'mono' |
+'padrao'` (default `'mono'`, preserva os 8 usos existentes de prazo/status/faixa sem tocar
+neles — `twMerge` via `cn` resolve o conflito de classes dentro do próprio `chipVariants()`).
+`'padrao'` → `font-normal text-[10.5px]`; a pill de equipe (que no protótipo tem peso 500)
+ainda passa `className="font-medium"` por cima.
+
+Verificado com Playwright nos dois temas: Minha fila (`ProtocoloCard`, pills "sem equipe"/
+"Equipe RIO" + etapa) e Distribuição → Exceções (`ExcecaoCard`, pill de equipe) — tamanho/fonte
+batendo com o protótipo, chip de prazo/status ao lado continuando mono/11px sem regressão.
+
+## vitest + lint a sério + hook de pre-commit — fecha o item do backlog
+
+Zero testes de unidade e lint quase desligado eram os dois maiores gaps de ferramental do
+projeto (só 2 regras soltas do oxlint ligadas, nenhuma categoria).
+
+**vitest**: `vitest.config.ts` próprio (não misturado em `vite.config.ts` — os dois `UserConfig`
+colidem de tipo), ambiente `node` (nenhum dos alvos toca DOM), `exclude: ['e2e/**',
+'node_modules/**']` pra não brigar com os specs do Playwright. 5 suítes novas, coladas junto do
+arquivo testado (mesmo padrão de colocation do FSD): `shared/lib/format.test.ts`,
+`shared/lib/parse-csv.test.ts`, `entities/protocolo/lib/filtros.test.ts`,
+`entities/protocolo/lib/prazo-chip.test.ts`, `entities/regraAlcada/lib/frase.test.ts` — 40
+testes, cobertura real (não esqueleto) das 5 funções de lógica pura mais expostas a regressão
+silenciosa (formatação, parsing de CSV, predicado de filtro, semáforo de prazo, frase de regra).
+
+**Lint, duas rodadas**:
+
+1. Os 8 avisos pré-existentes (6× `set-state-in-effect`, 1× `purity`, 1× `only-export-components`)
+   corrigidos por refatoração, nenhum desligado — ver padrão "ajusta o estado durante o render,
+   sem efeito" (recomendado pelo próprio react.dev como alternativa a
+   `useEffect(() => setState(prop), [prop])`) aplicado em `EquipeCard`, `TipoAtoRow`,
+   `FilaConferentesPage`, `datetime-picker.tsx` (`DateTimePicker` e `Stepper`); `buttonVariants`
+   extraído pra `button-variants.ts` próprio (resolve `only-export-components` sem perder o
+   `cva` original).
+2. `.oxlintrc.json` ganhou o bloco `"categories"` (`correctness: "error"`,
+   `suspicious`/`pedantic: "warn"`) — isso sozinho surfaceu ~1500 achados. Triado por frequência
+   antes de reagir um por um: a maioria (1329 de ~1500) era `react/react-in-jsx-scope`, regra
+   que assume o transform clássico do JSX (`import React from 'react'` em todo arquivo) — este
+   projeto usa o transform automático do Vite, nunca precisou desse import, então a regra é
+   puro falso positivo aqui. Desligada, junto de mais 5 que ou não fazem sentido pra este
+   projeto (`no-warning-comments` — a palavra portuguesa "todo" ativa a regra em qualquer
+   comentário que a contenha, codebase inteiro é em pt-BR; `require-unicode-regexp` — ruído
+   pedante, nenhuma regex do projeto processa texto fora de ASCII de um jeito que dependa
+   disso) ou contrariam uma postura já registrada neste CLAUDE.md (`max-lines-per-function`/
+   `max-lines` — "se uma combinação de classe repete numa terceira vez vira componente", nunca
+   "se a função passa de N linhas"; tamanho por si só não é o sinal usado aqui) ou são estilo
+   puro sem valor de correção (`no-inline-comments`). Todas as 6 desligadas com comentário
+   justificando em `.oxlintrc.json`, uma por uma — nenhuma desligada só porque dava trabalho.
+   Os ~20 achados genuínos restantes foram corrigidos de verdade: `eqeqeq` (2×, `!=` → `!==`,
+   seguro porque os campos são `string | null` sem `undefined`), `jsx-no-useless-fragment` (2×,
+   `session-boot.tsx`/`require-role.tsx` — `<>{children}</>` vira só `children`, componente
+   pode devolver `ReactNode` direto), `no-negated-condition` (`ConferenteCard.tsx`, ternário
+   invertido pra tirar a negação do topo), `no-unescaped-entities` (`seletor-unico.tsx`, aspas
+   viram `&quot;`), `no-promise-executor-return` (um `e2e` spec, `setTimeout` dentro de chaves
+   em vez de corpo implícito da arrow function) e o par `no-shadow`+`no-unstable-nested-components`
+   em `calendar.tsx` (arquivo vendorizado do shadcn) — `Root`/`Chevron`/`WeekNumber` (que não
+   dependem de nenhuma prop de `Calendar`) hospedados em escopo de módulo em vez de recriados a
+   cada render dentro do objeto `components`; só `DayButton` continua definido dentro de
+   `Calendar` (depende de `locale`, que vem do closure) — esse ganhou um
+   `oxlint-disable-next-line` pontual, comentado, em vez de forçar a extração via
+   prop-drilling desproporcional pra um arquivo de terceiro com um único ponto de uso.
+   `npm run lint` fecha em 0 erros e 0 avisos.
+
+**Hook de pre-commit**: `husky` + `lint-staged`, `.husky/pre-commit` rodando `npx lint-staged`,
+config em `package.json` (`"lint-staged": { "*.{ts,tsx}": "oxlint" }`). Testado de verdade
+(stage + `npx lint-staged` direto, sem esperar um commit real): oxlint roda contra os arquivos
+staged de fato. Confirmado também que só erro (categoria `correctness`) derruba o exit code —
+aviso (`suspicious`/`pedantic`) não bloqueia commit, mesmo comportamento de `npm run lint`
+sozinho; decisão consciente de manter (não forçar `--max-warnings 0`), já que a severidade das
+categorias em si já foi a decisão deliberada de quais achados merecem parar um commit.
+
+Verificado: `npx tsc -b`, `npm run build`, `npm run test` (40/40) e `npm run lint` (0/0) depois
+de cada rodada de correção — inclusive um `verify-visual` pontual em `calendar.tsx`
+especificamente (maior risco de regressão silenciosa do lote, por reestruturar como os slots
+`Root`/`Chevron`/`WeekNumber`/`DayButton` são registrados no `DayPicker`): `DateTimePicker` em
+Importar, nos dois temas, calendário renderizando dias/mês/dia-da-semana corretos.
+
+## `prettier-plugin-tailwindcss` + reformat do repo inteiro — fecha o item do backlog
+
+Último item do backlog de ferramental, deliberadamente por último — rodar antes reformataria
+arquivos que as fases anteriores (vitest, lint, `Chip`, frase de alçada) ainda iam editar,
+duplicando diff.
+
+`.prettierrc.json`: `semi: false`, `singleQuote: true` (só formaliza o que o código já fazia à
+mão, confirmado lendo alguns arquivos antes de fixar as opções — nenhuma mudança de estilo em
+si), `printWidth: 120` (`p90` das linhas do projeto, fora dos arquivos vendorizados do shadcn de
+`className` gigante, já ficava em ~96 caracteres — 120 é folga suficiente pra não quebrar a
+maioria das linhas existentes num diff gigante à toa, sem deixar tão largo que vire ilegível).
+`tailwindStylesheet` aponta pro `src/app/styles/index.css` — Tailwind v4 não tem um
+`tailwind.config.js` central pro plugin inspecionar sozinho; sem apontar o `@theme`/tokens
+customizados (`bg-ok-bg`, `text-text-2`...) o plugin não saberia onde esses nomes entram na
+ordem de classe canônica. Confirmado com um teste isolado antes do reformat completo (`bg-card
+p-2 flex items-center text-foreground` → `flex items-center bg-card p-2 text-foreground`) — o
+plugin está de fato ordenando, não só presente sem efeito.
+
+`npm run format`/`format:check` novos. `lint-staged` (da Fase anterior) ganhou `prettier
+--write` antes do `oxlint` na mesma entrada `*.{ts,tsx}` — formata primeiro, lint depois: um
+achado de lint não deveria sobreviver só porque a formatação ainda não rodou.
+
+`npx prettier --write .` rodado uma vez no repo inteiro — diff grande (praticamente todo
+arquivo `.ts`/`.tsx` mudou alguma coisa: quebra de objeto/parâmetro longo em múltiplas linhas,
+vírgula final, ordem de classe Tailwind), mas só formatação — confirmado comparando o bundle de
+produção antes/depois (`npm run build`): o chunk principal (`index-*.js`) ficou com **o mesmo
+tamanho em bytes gzipados** (86.85 kB nos dois), só o hash do nome do arquivo mudou (conteúdo
+do bundle idêntico byte a byte antes de minificar o whitespace, já que source maps não entram
+no hash de conteúdo relevante aqui — o ponto é que o tamanho não mudou nem 1 byte, sinal forte
+de que nenhuma lógica foi alterada, só formatação de código-fonte).
+
+Verificado: `npx tsc -b`, `npm run build`, `npm run test` (40/40), `npm run lint` (0/0) — todos
+limpos depois do reformat completo. **`verify-visual`** em Conferentes e Central de Regras →
+Regras em vigor (as duas telas mais recentemente mexidas nesta sessão, maior risco relativo de
+uma classe Tailwind reordenada de um jeito que colidisse com outra via `twMerge`), nos dois
+temas — nenhuma diferença visual, incluindo os elementos mais sensíveis a essa reordenação
+(`prefLabel`+pills de Conferentes, seção "Operação" derivada de `useConfiguracao()`).

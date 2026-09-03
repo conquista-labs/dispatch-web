@@ -39,7 +39,12 @@ type ConcluidosHojeListProps = {
 // com o texto, que é como estava antes e que o dono viu como "fonte estranha" — o texto em
 // mono da janela de correção só faz sentido com o prefixo "MARCOU ERRADO? ·" que dava contexto
 // a ele; sem o prefixo virava prosa solta em fonte tabular, por isso "estranho").
-export const ConcluidosHojeList = ({ concluidos, now, nomePorTipoAtoId, somenteLeitura = false }: ConcluidosHojeListProps) => {
+export const ConcluidosHojeList = ({
+  concluidos,
+  now,
+  nomePorTipoAtoId,
+  somenteLeitura = false,
+}: ConcluidosHojeListProps) => {
   const corrigir = useCorrigirResultado()
   const pedirReabertura = usePedirReabertura()
   const cancelarPedido = useCancelarPedidoReabertura()
@@ -50,28 +55,42 @@ export const ConcluidosHojeList = ({ concluidos, now, nomePorTipoAtoId, somenteL
     <SurfaceCard className="mt-1.5">
       <div className="mb-1.5 text-xs font-semibold text-text-2">Concluídos hoje · {concluidos.length}</div>
       {concluidos.map((protocolo) => {
-        const restanteMs = protocolo.concluidoEm ? JANELA_DE_CORRECAO_MS - (now - new Date(protocolo.concluidoEm).getTime()) : 0
+        const restanteMs = protocolo.concluidoEm
+          ? JANELA_DE_CORRECAO_MS - (now - new Date(protocolo.concluidoEm).getTime())
+          : 0
         const naJanela = restanteMs > 0
         const trocaLabel = protocolo.status === 'Aprovado' ? '"não aprovado"' : '"aprovado"'
         const tipoAtoNome = protocolo.tipoAtoId ? (nomePorTipoAtoId.get(protocolo.tipoAtoId) ?? '—') : '—'
 
         return (
-          <div key={protocolo.id} data-testid={`concluido-${protocolo.id}`} className="border-t border-secondary py-1.5 first:border-t-0">
+          <div
+            key={protocolo.id}
+            data-testid={`concluido-${protocolo.id}`}
+            className="border-t border-secondary py-1.5 first:border-t-0"
+          >
             <div className="flex items-center justify-between gap-2">
               <span className="font-mono text-xs text-text-2">{protocolo.numero}</span>
-              <Chip tom={STATUS_TOM[protocolo.status] ?? 'neutro'}>{STATUS_LABEL[protocolo.status] ?? protocolo.status}</Chip>
+              <Chip tom={STATUS_TOM[protocolo.status] ?? 'neutro'}>
+                {STATUS_LABEL[protocolo.status] ?? protocolo.status}
+              </Chip>
             </div>
             <div className="mt-1 flex items-center gap-1.5">
               <span className="min-w-0 flex-1 truncate text-[11.5px] text-text-3">{tipoAtoNome}</span>
-              <span className="flex-none font-mono text-[11px] text-muted-foreground">{protocolo.duracao ? formatDuracaoConcluida(protocolo.duracao) : '—'}</span>
+              <span className="flex-none font-mono text-[11px] text-muted-foreground">
+                {protocolo.duracao ? formatDuracaoConcluida(protocolo.duracao) : '—'}
+              </span>
             </div>
 
-            {protocolo.corrigidoEm && <div className="mt-1 text-[10.5px] text-warn-fg">resultado já corrigido uma vez</div>}
+            {protocolo.corrigidoEm && (
+              <div className="mt-1 text-[10.5px] text-warn-fg">resultado já corrigido uma vez</div>
+            )}
 
             {!somenteLeitura &&
               (protocolo.pedidoReaberturaPendenteId ? (
                 <div className="mt-2 rounded-md border border-warn-border bg-warn-bg px-2.5 py-1.5">
-                  <div className="text-[11.5px] text-warn-fg leading-snug">Reabertura solicitada — aguardando a distribuidora</div>
+                  <div className="text-[11.5px] leading-snug text-warn-fg">
+                    Reabertura solicitada — aguardando a distribuidora
+                  </div>
                   <Button
                     variant="outline"
                     size="sm"
@@ -84,8 +103,16 @@ export const ConcluidosHojeList = ({ concluidos, now, nomePorTipoAtoId, somenteL
                 </div>
               ) : naJanela ? (
                 <div className="mt-2 border-t border-secondary pt-2">
-                  <div className="mb-1.5 font-mono text-[10.5px] text-muted-foreground">MARCOU ERRADO? · pode corrigir por {Math.ceil(restanteMs / 60_000)}min</div>
-                  <Button variant="outline" size="sm" className="w-full text-[12px]" onClick={() => corrigir.mutate(protocolo.id)} disabled={corrigir.isPending}>
+                  <div className="mb-1.5 font-mono text-[10.5px] text-muted-foreground">
+                    MARCOU ERRADO? · pode corrigir por {Math.ceil(restanteMs / 60_000)}min
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full text-[12px]"
+                    onClick={() => corrigir.mutate(protocolo.id)}
+                    disabled={corrigir.isPending}
+                  >
                     Corrigir para {trocaLabel}
                   </Button>
                 </div>

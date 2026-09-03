@@ -18,7 +18,9 @@ export const PillToggle = ({ label, selecionado, onClick, redondo = false }: Pil
     className={cn(
       'border px-2.5 py-1 text-xs font-medium whitespace-nowrap transition-colors',
       redondo ? 'rounded-full' : 'rounded-md',
-      selecionado ? 'border-foreground bg-foreground text-background' : 'border-border bg-card text-text-3 hover:border-muted-foreground',
+      selecionado
+        ? 'border-foreground bg-foreground text-background'
+        : 'border-border bg-card text-text-3 hover:border-muted-foreground',
     )}
   >
     {label}

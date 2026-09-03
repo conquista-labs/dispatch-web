@@ -48,7 +48,12 @@ export const NovaEquipeDialog = () => {
         <div className="flex flex-col gap-3">
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="nome-equipe">Nome</Label>
-            <Input id="nome-equipe" value={form.nome} onChange={(event) => setForm({ ...form, nome: event.target.value })} autoFocus />
+            <Input
+              id="nome-equipe"
+              value={form.nome}
+              onChange={(event) => setForm({ ...form, nome: event.target.value })}
+              autoFocus
+            />
           </div>
 
           <div className="flex flex-col gap-1.5">

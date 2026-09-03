@@ -32,15 +32,19 @@ export const LoginPage = () => {
           <h2 className="m-0 max-w-[15em] text-[30px] leading-[1.15] font-semibold tracking-[-0.025em] text-balance">
             A fila de conferência do cartório, distribuída sozinha.
           </h2>
-          <p className="mt-3.5 max-w-[26em] text-[14.5px] leading-normal text-zinc-400 text-pretty">
-            Cada ato vai para quem tem alçada para ele, na ordem do prazo. O que estoura aparece em vermelho antes de virar problema.
+          <p className="mt-3.5 max-w-[26em] text-[14.5px] leading-normal text-pretty text-zinc-400">
+            Cada ato vai para quem tem alçada para ele, na ordem do prazo. O que estoura aparece em vermelho antes de
+            virar problema.
           </p>
         </div>
 
         <div className="flex items-center gap-2.5 text-xs text-zinc-500">
           {LEGENDA.map((item) => (
             <span key={item.label} className="ml-1.5 flex items-center gap-1.5 first:ml-0">
-              <span className="block size-2.5 flex-none rounded-[3px] border" style={{ background: item.bg, borderColor: item.border }} />
+              <span
+                className="block size-2.5 flex-none rounded-[3px] border"
+                style={{ background: item.bg, borderColor: item.border }}
+              />
               {item.label}
             </span>
           ))}

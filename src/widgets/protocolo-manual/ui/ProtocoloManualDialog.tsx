@@ -35,7 +35,14 @@ const DESTINO_LABEL: Record<string, string> = {
 
 // Prioridade: 'Baixa' — mesmo default do protótipo (nvPrioridade: 'Baixa' no criar), só vale
 // pro modo criação; editar sempre pré-preenche do protocolo real (ver useEffect abaixo).
-const formVazio = { numero: '', tipoAtoId: '', escreventeNome: '', etapa: 'PosConferencia' as Etapa, prioridade: 'Baixa' as Prioridade, observacao: '' }
+const formVazio = {
+  numero: '',
+  tipoAtoId: '',
+  escreventeNome: '',
+  etapa: 'PosConferencia' as Etapa,
+  prioridade: 'Baixa' as Prioridade,
+  observacao: '',
+}
 
 type ProtocoloManualDialogProps = {
   aberto: boolean
@@ -55,7 +62,12 @@ type ProtocoloManualDialogProps = {
 // `novoAberto`, linhas ~1739-1808): 520px, número+etapa numa linha, tipo de ato sozinho,
 // escrevente+prioridade numa linha, observação, prévia com eyebrow "O QUE O SISTEMA VAI FAZER",
 // rodapé com Cancelar+Excluir à esquerda e Criar/Salvar à direita.
-export const ProtocoloManualDialog = ({ aberto, onFechar, protocoloParaEditar, onPedirExclusao }: ProtocoloManualDialogProps) => {
+export const ProtocoloManualDialog = ({
+  aberto,
+  onFechar,
+  protocoloParaEditar,
+  onPedirExclusao,
+}: ProtocoloManualDialogProps) => {
   const editando = !!protocoloParaEditar
   const { data: escreventes } = useEscreventes()
   const { data: equipes } = useEquipes()
@@ -89,7 +101,13 @@ export const ProtocoloManualDialog = ({ aberto, onFechar, protocoloParaEditar, o
 
   const podeSimular = form.tipoAtoId !== '' && form.escreventeNome.trim() !== ''
   const { data: simulacao, isFetching: simulando } = useSimularProtocoloManual(
-    { numero: form.numero.trim(), tipoAtoId: form.tipoAtoId, escreventeNome: form.escreventeNome.trim(), etapa: form.etapa, prioridade: form.prioridade },
+    {
+      numero: form.numero.trim(),
+      tipoAtoId: form.tipoAtoId,
+      escreventeNome: form.escreventeNome.trim(),
+      etapa: form.etapa,
+      prioridade: form.prioridade,
+    },
     podeSimular,
   )
 
@@ -97,7 +115,9 @@ export const ProtocoloManualDialog = ({ aberto, onFechar, protocoloParaEditar, o
   // No modo edição o próprio número atual não conta como "duplicado" — a simulação roda contra
   // o mesmo escrevente/tipo/etapa de sempre, mas ExisteComNumeroAsync não sabe que é o mesmo
   // registro; só bloqueia se o número digitado mudou pra outro que já existe.
-  const numeroIndisponivel = simulacao ? !simulacao.numeroDisponivel && (!editando || form.numero.trim() !== protocoloParaEditar!.numero) : false
+  const numeroIndisponivel = simulacao
+    ? !simulacao.numeroDisponivel && (!editando || form.numero.trim() !== protocoloParaEditar!.numero)
+    : false
   const podeSalvar = numeroValido && !numeroIndisponivel && form.tipoAtoId !== '' && form.escreventeNome.trim() !== ''
 
   const mutation = editando ? editar : criar
@@ -160,15 +180,24 @@ export const ProtocoloManualDialog = ({ aberto, onFechar, protocoloParaEditar, o
                 disabled={editando}
                 autoFocus={!editando}
               />
-              {form.numero && !numeroValido && <span className="text-[11px] text-bad-fg">só números, mínimo 4 dígitos</span>}
-              {numeroValido && numeroIndisponivel && <span className="text-[11px] text-bad-fg">este protocolo já existe no sistema</span>}
+              {form.numero && !numeroValido && (
+                <span className="text-[11px] text-bad-fg">só números, mínimo 4 dígitos</span>
+              )}
+              {numeroValido && numeroIndisponivel && (
+                <span className="text-[11px] text-bad-fg">este protocolo já existe no sistema</span>
+              )}
             </div>
 
             <div className="flex flex-none flex-col gap-1.5">
               <Label>Etapa</Label>
               <div className="flex gap-1.5">
                 {ETAPAS.map((etapa) => (
-                  <PillToggle key={etapa} label={ETAPA_LABEL[etapa]} selecionado={form.etapa === etapa} onClick={() => setForm({ ...form, etapa })} />
+                  <PillToggle
+                    key={etapa}
+                    label={ETAPA_LABEL[etapa]}
+                    selecionado={form.etapa === etapa}
+                    onClick={() => setForm({ ...form, etapa })}
+                  />
                 ))}
               </div>
             </div>
@@ -176,8 +205,15 @@ export const ProtocoloManualDialog = ({ aberto, onFechar, protocoloParaEditar, o
 
           <div className="flex flex-col gap-1.5">
             <Label>Tipo de ato</Label>
-            <SeletorUnico valor={form.tipoAtoId} opcoes={tipoOpcoes} onSelecionar={(tipoAtoId) => setForm({ ...form, tipoAtoId })} placeholder="buscar tipo de ato…" />
-            <span className="text-[11px] text-muted-foreground">só tipos já cadastrados — sem opção de criar um novo por aqui</span>
+            <SeletorUnico
+              valor={form.tipoAtoId}
+              opcoes={tipoOpcoes}
+              onSelecionar={(tipoAtoId) => setForm({ ...form, tipoAtoId })}
+              placeholder="buscar tipo de ato…"
+            />
+            <span className="text-[11px] text-muted-foreground">
+              só tipos já cadastrados — sem opção de criar um novo por aqui
+            </span>
           </div>
 
           <div className="flex gap-3">
@@ -196,7 +232,12 @@ export const ProtocoloManualDialog = ({ aberto, onFechar, protocoloParaEditar, o
               <Label>Prioridade</Label>
               <div className="flex flex-col gap-1.5">
                 {PRIORIDADES.map((prioridade) => (
-                  <PillToggle key={prioridade} label={PRIORIDADE_LABEL[prioridade]} selecionado={form.prioridade === prioridade} onClick={() => setForm({ ...form, prioridade })} />
+                  <PillToggle
+                    key={prioridade}
+                    label={PRIORIDADE_LABEL[prioridade]}
+                    selecionado={form.prioridade === prioridade}
+                    onClick={() => setForm({ ...form, prioridade })}
+                  />
                 ))}
               </div>
             </div>
@@ -214,13 +255,17 @@ export const ProtocoloManualDialog = ({ aberto, onFechar, protocoloParaEditar, o
 
           {podeSimular && (
             <div className="rounded-lg border border-border bg-secondary/40 p-3">
-              <div className="mb-1.5 font-mono text-[10.5px] tracking-[0.04em] text-muted-foreground">O QUE O SISTEMA VAI FAZER</div>
+              <div className="mb-1.5 font-mono text-[10.5px] tracking-[0.04em] text-muted-foreground">
+                O QUE O SISTEMA VAI FAZER
+              </div>
               {simulando && !simulacao ? (
                 <span className="text-[12.5px] text-muted-foreground">calculando…</span>
               ) : simulacao ? (
                 <dl className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[12.5px]">
                   <dt className="text-muted-foreground">Equipe</dt>
-                  <dd className={simulacao.semEquipeSinalizado ? 'text-bad-fg' : ''}>{simulacao.equipeNome ?? 'sem equipe'}</dd>
+                  <dd className={simulacao.semEquipeSinalizado ? 'text-bad-fg' : ''}>
+                    {simulacao.equipeNome ?? 'sem equipe'}
+                  </dd>
                   <dt className="text-muted-foreground">Prazo</dt>
                   <dd>
                     {TIPO_PRAZO_LABEL[simulacao.prazo]} · vence {formatDataHora(simulacao.vencimentoEm)}
@@ -228,14 +273,18 @@ export const ProtocoloManualDialog = ({ aberto, onFechar, protocoloParaEditar, o
                   <dt className="text-muted-foreground">Grupo do ato</dt>
                   <dd>{simulacao.grupo ? GRUPO_LABEL[simulacao.grupo] : 'sem grupo'}</dd>
                   <dt className="text-muted-foreground">Destino</dt>
-                  <dd className={simulacao.destino === 'Excecao' ? 'text-bad-fg' : ''}>{DESTINO_LABEL[simulacao.destino]}</dd>
+                  <dd className={simulacao.destino === 'Excecao' ? 'text-bad-fg' : ''}>
+                    {DESTINO_LABEL[simulacao.destino]}
+                  </dd>
                 </dl>
               ) : null}
             </div>
           )}
 
           {numeroJaExiste && <p className="text-[13px] text-bad-fg">Este protocolo já existe no sistema.</p>}
-          {mutation.isError && !numeroJaExiste && <p className="text-[13px] text-bad-fg">Não foi possível salvar. Tente de novo.</p>}
+          {mutation.isError && !numeroJaExiste && (
+            <p className="text-[13px] text-bad-fg">Não foi possível salvar. Tente de novo.</p>
+          )}
         </div>
 
         <DialogFooter className="sm:justify-between">
@@ -244,7 +293,12 @@ export const ProtocoloManualDialog = ({ aberto, onFechar, protocoloParaEditar, o
               Cancelar
             </Button>
             {editando && onPedirExclusao && (
-              <Button variant="outline" className="text-bad-fg hover:bg-bad-bg" onClick={onPedirExclusao} disabled={mutation.isPending}>
+              <Button
+                variant="outline"
+                className="text-bad-fg hover:bg-bad-bg"
+                onClick={onPedirExclusao}
+                disabled={mutation.isPending}
+              >
                 Excluir
               </Button>
             )}

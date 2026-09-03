@@ -1,10 +1,12 @@
 import { MinusIcon, PlusIcon } from 'lucide-react'
+import { Link } from 'react-router-dom'
 
 import type { Conferente, Nivel } from '@/entities/conferente'
 import { NIVEL_LABEL } from '@/entities/conferente'
 import { useEditarNivelEJornada } from '@/features/conferente/editar-nivel-jornada'
 import { useMarcarPresenca } from '@/features/conferente/marcar-presenca'
 import { useRemoverConferente } from '@/features/conferente/remover'
+import { ROUTES } from '@/shared/config/routes'
 import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/ui/button'
 import { SurfaceCard } from '@/shared/ui/surface-card'
@@ -16,27 +18,33 @@ const PROXIMO_NIVEL: Record<Nivel, Nivel> = { Junior: 'Pleno', Pleno: 'Senior', 
 const JORNADA_MIN = 2
 const JORNADA_MAX = 12
 
+// Até 3 pills de regra por card (mesmo limite do protótipo aprovado) — o resto vira um "+N
+// regras" que manda pra Central de Regras ver a lista inteira.
+const MAX_PILLS_DE_ALCADA = 3
+
 type ConferenteCardProps = {
   conferente: Conferente
   tiposAlcancados: number | null
+  totalTipos: number | null
+  frasesDeAlcada: string[]
 }
 
 // RF-25 a RF-29 — um card por conferente. Nível/jornada editam direto no card (stepper/pill,
 // igual o protótipo). Nome/e-mail são um agregado separado no back (Usuario, não Conferente) —
 // abrem um modal próprio (EditarConferenteDialog, mesmo padrão do "Novo conferente").
-export const ConferenteCard = ({ conferente, tiposAlcancados }: ConferenteCardProps) => {
+export const ConferenteCard = ({ conferente, tiposAlcancados, totalTipos, frasesDeAlcada }: ConferenteCardProps) => {
   const editarNivelEJornada = useEditarNivelEJornada()
   const marcarPresenca = useMarcarPresenca()
   const remover = useRemoverConferente()
 
   const ocupacao = conferente.capacidadeEstimada > 0 ? conferente.cargaAtual / conferente.capacidadeEstimada : 0
-  const corCarga = !conferente.naEscala
-    ? 'text-muted-foreground'
-    : conferente.cargaAtual >= conferente.capacidadeEstimada
+  const corCarga = conferente.naEscala
+    ? conferente.cargaAtual >= conferente.capacidadeEstimada
       ? 'text-bad-fg'
       : ocupacao > 0.75
         ? 'text-crit-fg'
         : 'text-foreground'
+    : 'text-muted-foreground'
 
   const mexerJornada = (delta: number) => {
     const nova = Math.min(JORNADA_MAX, Math.max(JORNADA_MIN, conferente.jornadaHoras + delta))
@@ -45,10 +53,29 @@ export const ConferenteCard = ({ conferente, tiposAlcancados }: ConferenteCardPr
   }
 
   const ciclarNivel = () =>
-    editarNivelEJornada.mutate({ conferenteId: conferente.id, nivel: PROXIMO_NIVEL[conferente.nivel], jornadaHoras: conferente.jornadaHoras })
+    editarNivelEJornada.mutate({
+      conferenteId: conferente.id,
+      nivel: PROXIMO_NIVEL[conferente.nivel],
+      jornadaHoras: conferente.jornadaHoras,
+    })
+
+  // Mesmo texto do protótipo aprovado (prefLabel): "todos os M" quando alcança o catálogo
+  // inteiro, "N de M" caso contrário.
+  const prefLabel =
+    tiposAlcancados === null || totalTipos === null
+      ? null
+      : tiposAlcancados === totalTipos
+        ? `pode conferir todos os ${totalTipos} tipos de ato`
+        : `pode conferir ${tiposAlcancados} de ${totalTipos} tipos de ato`
+
+  const pills = frasesDeAlcada.slice(0, MAX_PILLS_DE_ALCADA)
+  const resto = frasesDeAlcada.length - pills.length
 
   return (
-    <SurfaceCard data-testid={`conferente-card-${conferente.id}`} className={cn('p-3.5 px-4', !conferente.naEscala && 'bg-secondary/40')}>
+    <SurfaceCard
+      data-testid={`conferente-card-${conferente.id}`}
+      className={cn('p-3.5 px-4', !conferente.naEscala && 'bg-secondary/40')}
+    >
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-start gap-1.5">
           {/* RNF-10: nome/e-mail não truncam — dois conferentes parecidos ("Ana Silva"/"Ana
@@ -102,7 +129,9 @@ export const ConferenteCard = ({ conferente, tiposAlcancados }: ConferenteCardPr
           >
             <MinusIcon className="size-3" />
           </button>
-          <span className="min-w-[34px] text-center font-mono text-[12.5px] font-medium">{conferente.jornadaHoras}h</span>
+          <span className="min-w-[34px] text-center font-mono text-[12.5px] font-medium">
+            {conferente.jornadaHoras}h
+          </span>
           <button
             type="button"
             onClick={() => mexerJornada(1)}
@@ -120,8 +149,29 @@ export const ConferenteCard = ({ conferente, tiposAlcancados }: ConferenteCardPr
           Analista {NIVEL_LABEL[conferente.nivel]}
         </button>
 
-        {tiposAlcancados !== null && <span className="text-[11.5px] text-muted-foreground">pode conferir {tiposAlcancados} tipos de ato</span>}
+        {prefLabel && <span className="text-[11.5px] text-muted-foreground">{prefLabel}</span>}
       </div>
+
+      {pills.length > 0 && (
+        <div className="mt-2 flex flex-wrap items-center gap-1.5">
+          {pills.map((frase, indice) => (
+            <span
+              key={indice}
+              className="rounded-full border border-border bg-secondary px-2 py-0.5 text-[11px] text-pretty text-text-2"
+            >
+              {frase}
+            </span>
+          ))}
+          {resto > 0 && (
+            <Link
+              to={ROUTES.centralDeRegras}
+              className="text-[11px] font-medium text-muted-foreground underline decoration-dotted hover:text-foreground"
+            >
+              +{resto} {resto === 1 ? 'regra' : 'regras'}
+            </Link>
+          )}
+        </div>
+      )}
     </SurfaceCard>
   )
 }

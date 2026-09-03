@@ -59,8 +59,16 @@ export const VisaoConferente = ({ dashboard }: VisaoConferenteProps) => {
           valor={pct(meu.percentualAprovado)}
           sub={`${Math.round((1 - meu.percentualAprovado) * meu.volume)} com apontamento`}
         />
-        <KpiCard label="Tempo médio" valor={meu.tempoMedio ? formatDuracaoConcluida(meu.tempoMedio) : '—'} sub="por ato" />
-        <KpiCard label="Complexidade média" valor={meu.complexidadeMedia.toFixed(1)} sub="peso dos atos que você pega" />
+        <KpiCard
+          label="Tempo médio"
+          valor={meu.tempoMedio ? formatDuracaoConcluida(meu.tempoMedio) : '—'}
+          sub="por ato"
+        />
+        <KpiCard
+          label="Complexidade média"
+          valor={meu.complexidadeMedia.toFixed(1)}
+          sub="peso dos atos que você pega"
+        />
       </div>
 
       <h2 className="mt-5.5 mb-2.5 text-[15px] font-semibold tracking-[-0.01em]">Seu score do período</h2>
@@ -82,9 +90,9 @@ export const VisaoConferente = ({ dashboard }: VisaoConferenteProps) => {
           ))}
         </div>
 
-        <p className="mt-4 text-[11.5px] text-muted-foreground text-pretty">
-          O score pesa 40% volume, 30% prazo, 20% qualidade e 10% complexidade. A complexidade existe para que pegar inventário não pese contra quem faz
-          venda e compra.
+        <p className="mt-4 text-[11.5px] text-pretty text-muted-foreground">
+          O score pesa 40% volume, 30% prazo, 20% qualidade e 10% complexidade. A complexidade existe para que pegar
+          inventário não pese contra quem faz venda e compra.
         </p>
       </SurfaceCard>
 
@@ -100,7 +108,10 @@ export const VisaoConferente = ({ dashboard }: VisaoConferenteProps) => {
               </div>
             </div>
             {comparacao.map((linha) => (
-              <div key={linha.label} className="flex items-center justify-between border-t border-secondary py-2 text-[13px] first:border-t-0">
+              <div
+                key={linha.label}
+                className="flex items-center justify-between border-t border-secondary py-2 text-[13px] first:border-t-0"
+              >
                 <span className="text-text-5">{linha.label}</span>
                 <div className="flex gap-8 font-mono">
                   <span className="w-16 text-right font-medium">{linha.voce}</span>
@@ -109,7 +120,9 @@ export const VisaoConferente = ({ dashboard }: VisaoConferenteProps) => {
               </div>
             ))}
           </SurfaceCard>
-          <p className="mt-1.5 text-[11.5px] text-muted-foreground text-pretty">Média dos conferentes na escala, sem identificar ninguém.</p>
+          <p className="mt-1.5 text-[11.5px] text-pretty text-muted-foreground">
+            Média dos conferentes na escala, sem identificar ninguém.
+          </p>
         </>
       )}
     </div>

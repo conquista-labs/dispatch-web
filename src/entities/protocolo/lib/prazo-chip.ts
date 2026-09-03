@@ -15,7 +15,11 @@ const TOM_POR_FAIXA: Record<FaixaSemaforo, TomChip> = {
   Vermelho: 'vencido',
 }
 
-export const prazoChip = (semaforo: FaixaSemaforo | null, vencimentoEm: string | null, now: number): { label: string; tom: TomChip } => {
+export const prazoChip = (
+  semaforo: FaixaSemaforo | null,
+  vencimentoEm: string | null,
+  now: number,
+): { label: string; tom: TomChip } => {
   if (!semaforo || !vencimentoEm) {
     return { label: '—', tom: 'neutro' }
   }

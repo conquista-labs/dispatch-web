@@ -20,6 +20,9 @@ export type AlcanceDoConferente = {
   conferenteId: string
   etapasPermitidas: ('PreConferencia' | 'PosConferencia')[]
   tiposPermitidosIds: string[]
+  // null = "sem equipe" como alvo válido (RF-29a) — o C# já tinha esse campo, só não estava
+  // espelhado aqui (achado numa investigação de backlog).
+  equipesPermitidasIds: (string | null)[]
 }
 
 // Espelha CoberturaAlcada/TipoDeAtoResumo (ConferenteEndpoints.cs) — RF-30.

@@ -55,11 +55,13 @@ não invente credencial nem hardcode senha nova sem confirmar.
 Pra checar só **layout/tema** sem precisar de API (não depende de dado real), navegue direto
 pras páginas públicas (`/login`) ou use `page.addInitScript` pra pré-popular o `localStorage`
 do Zustand `persist` — formato `{"state":{...},"version":0}`. Exemplo pro tema:
+
 ```ts
 await page.addInitScript(() => {
   localStorage.setItem('dispatch-tema', JSON.stringify({ state: { tema: 'dark' }, version: 0 }))
 })
 ```
+
 Chave da sessão é `dispatch-session` (`entities/usuario/model/session-store.ts`) — só use isso
 pra montar cenário de UI que não precisa bater na API de verdade; qualquer coisa que dependa de
 dado (lista de protocolos, conferentes...) precisa do login real, senão a API rejeita o token

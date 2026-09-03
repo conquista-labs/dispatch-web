@@ -81,7 +81,10 @@ export const DistribuicaoBoard = () => {
     emConferencia: visao.emConferencia.filter(passaNoFiltro),
     concluidos: visao.concluidos.filter(passaNoFiltro),
     excecoes: visao.excecoes.filter(passaNoFiltro),
-    porConferente: visao.porConferente.map((grupo) => ({ ...grupo, protocolos: grupo.protocolos.filter(passaNoFiltro) })),
+    porConferente: visao.porConferente.map((grupo) => ({
+      ...grupo,
+      protocolos: grupo.protocolos.filter(passaNoFiltro),
+    })),
   }
 
   return (
@@ -132,7 +135,13 @@ export const DistribuicaoBoard = () => {
           />
         )}
         {aba === 'status' && (
-          <AbaPorStatus visao={visaoFiltrada} conferentes={conferentes} now={now} resolverInfo={resolverInfoProtocolo} onAbrirDetalhe={setProtocoloDetalheId} />
+          <AbaPorStatus
+            visao={visaoFiltrada}
+            conferentes={conferentes}
+            now={now}
+            resolverInfo={resolverInfoProtocolo}
+            onAbrirDetalhe={setProtocoloDetalheId}
+          />
         )}
         {aba === 'excecoes' && (
           <AbaExcecoes

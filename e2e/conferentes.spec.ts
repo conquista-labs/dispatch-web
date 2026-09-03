@@ -46,13 +46,17 @@ test('Conferentes — carrega, cadastra, edita perfil e remove um conferente de 
   const dialogEditar = page.getByRole('dialog')
   await dialogEditar.getByLabel('Nome', { exact: true }).fill('Conferente E2E Editado')
   await Promise.all([
-    page.waitForResponse((res) => res.request().method() === 'PUT' && res.url().includes(`/conferentes/${conferenteId}/perfil`)),
+    page.waitForResponse(
+      (res) => res.request().method() === 'PUT' && res.url().includes(`/conferentes/${conferenteId}/perfil`),
+    ),
     dialogEditar.getByRole('button', { name: 'Salvar' }).click(),
   ])
   await expect(card.getByText('Conferente E2E Editado', { exact: true })).toBeVisible()
 
   await Promise.all([
-    page.waitForResponse((res) => res.request().method() === 'DELETE' && res.url().includes(`/conferentes/${conferenteId}`)),
+    page.waitForResponse(
+      (res) => res.request().method() === 'DELETE' && res.url().includes(`/conferentes/${conferenteId}`),
+    ),
     card.getByRole('button', { name: 'Remover' }).click(),
   ])
   await expect(card).toHaveCount(0)

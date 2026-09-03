@@ -18,7 +18,8 @@ const aplicarNoDocumento = (tema: Tema) => {
 export const useThemeStore = create<ThemeState>()(
   persist(
     (set, get) => ({
-      tema: typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light',
+      tema:
+        typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light',
       toggleTema: () => {
         const novo = get().tema === 'dark' ? 'light' : 'dark'
         aplicarNoDocumento(novo)

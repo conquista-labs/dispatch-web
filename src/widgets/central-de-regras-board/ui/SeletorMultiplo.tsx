@@ -18,9 +18,16 @@ type SeletorMultiploProps<T> = {
 // protocolos), sem a contagem por opção (não faz sentido aqui, não é filtro sobre dado
 // carregado). Padronizado pro alvo do construtor de regra (RF-32): antes era uma parede de
 // pills (até 24 tipos de ato de uma vez), inconsistente com o resto do app.
-export const SeletorMultiplo = <T,>({ selecionados, opcoes, onAlternar, placeholder = 'buscar…' }: SeletorMultiploProps<T>) => {
+export const SeletorMultiplo = <T,>({
+  selecionados,
+  opcoes,
+  onAlternar,
+  placeholder = 'buscar…',
+}: SeletorMultiploProps<T>) => {
   const [busca, setBusca] = useState('')
-  const visiveis = busca.trim() ? opcoes.filter((o) => o.label.toLowerCase().includes(busca.trim().toLowerCase())) : opcoes
+  const visiveis = busca.trim()
+    ? opcoes.filter((o) => o.label.toLowerCase().includes(busca.trim().toLowerCase()))
+    : opcoes
 
   const textoTrigger =
     selecionados.length === 0
@@ -41,7 +48,12 @@ export const SeletorMultiplo = <T,>({ selecionados, opcoes, onAlternar, placehol
         </button>
       </PopoverTrigger>
       <PopoverContent align="start" className="max-h-80 w-[260px] overflow-y-auto p-1">
-        <Input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder={placeholder} className="mb-1 h-7 text-[12.5px]" />
+        <Input
+          value={busca}
+          onChange={(e) => setBusca(e.target.value)}
+          placeholder={placeholder}
+          className="mb-1 h-7 text-[12.5px]"
+        />
         {visiveis.map((opcao, indice) => {
           const ativo = selecionados.includes(opcao.valor)
           return (
@@ -49,9 +61,17 @@ export const SeletorMultiplo = <T,>({ selecionados, opcoes, onAlternar, placehol
               key={indice}
               type="button"
               onClick={() => onAlternar(opcao.valor)}
-              className={cn('flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left hover:bg-secondary', ativo && 'bg-secondary')}
+              className={cn(
+                'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left hover:bg-secondary',
+                ativo && 'bg-secondary',
+              )}
             >
-              <span className={cn('flex size-3.5 flex-none items-center justify-center rounded border', ativo ? 'border-foreground bg-foreground' : 'border-border')}>
+              <span
+                className={cn(
+                  'flex size-3.5 flex-none items-center justify-center rounded border',
+                  ativo ? 'border-foreground bg-foreground' : 'border-border',
+                )}
+              >
                 {ativo && <span className="size-1.5 rounded-full bg-background" />}
               </span>
               <span className="min-w-0 flex-1 truncate text-[12.5px]">{opcao.label}</span>

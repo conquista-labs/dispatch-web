@@ -36,7 +36,9 @@ export const ObservacaoField = ({ protocoloId, observacao, somenteLeitura }: Obs
     <>
       {observacao && !editando && (
         <div className="mt-2 rounded-[7px] border border-secondary bg-background p-2 text-[11.5px] leading-snug text-text-3">
-          <span className="mb-0.5 block font-mono text-[9.5px] tracking-[0.04em] text-muted-foreground">OBSERVAÇÃO</span>
+          <span className="mb-0.5 block font-mono text-[9.5px] tracking-[0.04em] text-muted-foreground">
+            OBSERVAÇÃO
+          </span>
           {observacao}
         </div>
       )}
@@ -51,7 +53,12 @@ export const ObservacaoField = ({ protocoloId, observacao, somenteLeitura }: Obs
       )}
 
       {!somenteLeitura && (
-        <Button variant="ghost" onClick={handleClicar} disabled={isPending} className="mt-1.5 h-auto w-full justify-start px-1.5 py-1 text-[11.5px] font-medium">
+        <Button
+          variant="ghost"
+          onClick={handleClicar}
+          disabled={isPending}
+          className="mt-1.5 h-auto w-full justify-start px-1.5 py-1 text-[11.5px] font-medium"
+        >
           {editando ? 'Salvar observação' : observacao ? 'Editar observação' : '+ Observação'}
         </Button>
       )}

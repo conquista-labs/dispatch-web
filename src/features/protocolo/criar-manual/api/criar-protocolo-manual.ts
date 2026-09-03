@@ -13,7 +13,9 @@ export type CriarProtocoloManualParams = {
 
 // POST /protocolos/manual (RF-18f) — 409 se o número já existir (o front trata via
 // mutation.error, mesmo padrão de qualquer outra mutation do projeto).
-export const criarProtocoloManual = async (params: CriarProtocoloManualParams): Promise<ResultadoDistribuicaoProtocolo> => {
+export const criarProtocoloManual = async (
+  params: CriarProtocoloManualParams,
+): Promise<ResultadoDistribuicaoProtocolo> => {
   const { data } = await httpClient.post<ResultadoDistribuicaoProtocolo>('/protocolos/manual', params)
   return data
 }

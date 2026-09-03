@@ -55,10 +55,14 @@ export const ExcecaoCard = ({ protocolo, conferentes, info, onAbrirDetalhe }: Ex
             <span className="text-pretty">{info.tipoAtoNome ?? '—'}</span>
             <span className="text-muted-foreground">·</span>
             <span className="text-pretty">{info.escreventeNome ?? '—'}</span>
-            <Chip tom={info.equipeNome ? 'neutro' : 'vencido'}>{info.equipeNome ?? 'sem equipe'}</Chip>
+            <Chip tom={info.equipeNome ? 'neutro' : 'vencido'} fonte="padrao" className="font-medium">
+              {info.equipeNome ?? 'sem equipe'}
+            </Chip>
           </div>
           <div className="mt-1 text-[12.5px] leading-snug text-text-2">{protocolo.motivoExcecao}</div>
-          {erro && <div className="mt-1.5 text-[12.5px] text-bad-fg">Não foi possível concluir a ação. Tente de novo.</div>}
+          {erro && (
+            <div className="mt-1.5 text-[12.5px] text-bad-fg">Não foi possível concluir a ação. Tente de novo.</div>
+          )}
         </div>
 
         {!resolvendo && (

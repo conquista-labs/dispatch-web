@@ -4,6 +4,7 @@ export type {
   Etapa,
   FaixaSemaforo,
   GrupoPorConferente,
+  HistoricoConferencia,
   InfoProtocolo,
   Prioridade,
   ProtocoloConcluidoResumo,

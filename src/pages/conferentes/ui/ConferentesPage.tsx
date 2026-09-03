@@ -7,7 +7,8 @@ export const ConferentesPage = () => (
       <div>
         <h1 className="m-0 text-xl font-semibold tracking-[-0.015em]">Conferentes</h1>
         <p className="mt-1.5 max-w-[70ch] text-[13.5px] text-muted-foreground">
-          Quem está na escala hoje, o nível e a jornada de cada um. O nível define a alçada, e a alçada é o que o motor de distribuição consulta.
+          Quem está na escala hoje, o nível e a jornada de cada um. O nível define a alçada, e a alçada é o que o motor
+          de distribuição consulta.
         </p>
       </div>
       <NovoConferenteDialog />

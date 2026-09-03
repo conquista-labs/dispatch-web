@@ -16,7 +16,8 @@ const chaveParaData = (chave: string): Date => {
   const [ano, mes, dia] = chave.split('-').map(Number)
   return new Date(ano, mes - 1, dia)
 }
-const dataParaChave = (data: Date): string => `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}-${String(data.getDate()).padStart(2, '0')}`
+const dataParaChave = (data: Date): string =>
+  `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}-${String(data.getDate()).padStart(2, '0')}`
 
 // RF-18e/RF-24f: busca livre + data + botão "Filtros" (abre o painel com os 4 eixos
 // combináveis) — antes uma barra fixa com um dropdown por eixo, redesenhada a partir da
@@ -36,13 +37,18 @@ export const BarraDeFiltros = (props: BarraDeFiltrosProps) => {
         placeholder="Buscar protocolo, tipo de ato, escrevente, equipe…"
         className="min-w-[220px] flex-1"
       />
-      <DatePicker value={filtro.data ? chaveParaData(filtro.data) : null} onChange={(data) => setData(data ? dataParaChave(data) : null)} />
+      <DatePicker
+        value={filtro.data ? chaveParaData(filtro.data) : null}
+        onChange={(data) => setData(data ? dataParaChave(data) : null)}
+      />
       <button
         type="button"
         onClick={() => setPainelAberto(true)}
         className={cn(
           'flex flex-none items-center gap-1.5 rounded-lg border px-3 py-2 text-[13px] font-medium',
-          contagemFiltrosAtivos > 0 ? 'border-foreground bg-foreground text-background' : 'border-border bg-background hover:border-muted-foreground/40',
+          contagemFiltrosAtivos > 0
+            ? 'border-foreground bg-foreground text-background'
+            : 'border-border bg-background hover:border-muted-foreground/40',
         )}
       >
         <SlidersHorizontalIcon className="size-3.5" />

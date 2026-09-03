@@ -45,12 +45,16 @@ const IndicadorDePassos = ({ passo }: { passo: Passo }) => {
             <span
               className={cn(
                 'flex size-[22px] flex-none items-center justify-center rounded-full border font-mono text-[11px] font-medium',
-                atingido ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-card text-muted-foreground',
+                atingido
+                  ? 'border-primary bg-primary text-primary-foreground'
+                  : 'border-border bg-card text-muted-foreground',
               )}
             >
               {indice + 1}
             </span>
-            <span className={cn('text-[13px] font-medium', atual ? 'text-foreground' : 'text-text-2')}>{item.label}</span>
+            <span className={cn('text-[13px] font-medium', atual ? 'text-foreground' : 'text-text-2')}>
+              {item.label}
+            </span>
             {indice < PASSOS.length - 1 && <span className="mx-0.5 block h-px w-6 bg-border" />}
           </div>
         )
@@ -63,7 +67,11 @@ const IndicadorDePassos = ({ passo }: { passo: Passo }) => {
 // a linha (RF-08, regra que gerou cada prazo) → prévia agregada + confirmação (RF-10/RF-11).
 export const ImportarLoteWizard = () => {
   const [passo, setPasso] = useState<Passo>('dados')
-  const [pedido, setPedido] = useState<{ etapa: Etapa; linhaDeCorte: string; linhas: ReturnType<typeof parseCsv> } | null>(null)
+  const [pedido, setPedido] = useState<{
+    etapa: Etapa
+    linhaDeCorte: string
+    linhas: ReturnType<typeof parseCsv>
+  } | null>(null)
   const [resumo, setResumo] = useState<ResumoImportacao | null>(null)
   const navigate = useNavigate()
 
@@ -101,7 +109,11 @@ export const ImportarLoteWizard = () => {
       {passo !== 'concluido' && <IndicadorDePassos passo={passo} />}
 
       {passo === 'dados' && (
-        <PassoDados onContinuar={handleContinuar} carregando={preVisualizar.isPending} erro={preVisualizar.isError ? 'Não foi possível ler o relatório. Confira o formato das linhas.' : null} />
+        <PassoDados
+          onContinuar={handleContinuar}
+          carregando={preVisualizar.isPending}
+          erro={preVisualizar.isError ? 'Não foi possível ler o relatório. Confira o formato das linhas.' : null}
+        />
       )}
 
       {passo === 'revisao' && resumo && pedido && (
@@ -127,7 +139,9 @@ export const ImportarLoteWizard = () => {
 
       {passo === 'concluido' && resumo && (
         <div className="rounded-xl border border-ok-border bg-ok-bg p-8 text-center">
-          <div className="text-[15px] font-semibold text-ok-fg">Lote importado — {resumo.processadas} protocolos distribuídos.</div>
+          <div className="text-[15px] font-semibold text-ok-fg">
+            Lote importado — {resumo.processadas} protocolos distribuídos.
+          </div>
           <Button className="mt-4" onClick={() => navigate(ROUTES.distribuicao)}>
             Ver distribuição
           </Button>

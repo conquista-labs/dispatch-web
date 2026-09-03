@@ -70,7 +70,10 @@ export const LoginForm = ({ mostrarLinksAuxiliares = true }: LoginFormProps = {}
       </Button>
       {mostrarLinksAuxiliares && (
         <div className="mt-3.5 flex flex-wrap justify-center gap-3.5">
-          <Link to={ROUTES.recuperarSenha} className="p-0.5 text-[12.5px] font-medium text-text-2 hover:text-foreground">
+          <Link
+            to={ROUTES.recuperarSenha}
+            className="p-0.5 text-[12.5px] font-medium text-text-2 hover:text-foreground"
+          >
             Esqueci minha senha
           </Link>
           <span className="text-[12.5px] text-border">·</span>

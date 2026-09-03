@@ -23,7 +23,9 @@ test('Correção de resultado e pedido de reabertura — ciclo completo pela UI'
   const { token: tokenDistribuidora } = await loginResp.json()
   const authDistribuidora = { Authorization: `Bearer ${tokenDistribuidora}` }
 
-  const loginConferenteResp = await api.post('/auth/login', { data: { email: EMAIL_CONFERENTE, senha: SENHA_CONFERENTE } })
+  const loginConferenteResp = await api.post('/auth/login', {
+    data: { email: EMAIL_CONFERENTE, senha: SENHA_CONFERENTE },
+  })
   const { token: tokenConferente } = await loginConferenteResp.json()
   const authConferente = { Authorization: `Bearer ${tokenConferente}` }
 
@@ -48,13 +50,22 @@ test('Correção de resultado e pedido de reabertura — ciclo completo pela UI'
   const numero = `COR-${Date.now()}`
   const distribuirResp = await api.post('/protocolos/distribuir', {
     headers: authDistribuidora,
-    data: { numero, tipoAtoId, etapa: 'PosConferencia', prioridade: 'Normal', escreventeNome: 'Escrevente Correção E2E' },
+    data: {
+      numero,
+      tipoAtoId,
+      etapa: 'PosConferencia',
+      prioridade: 'Normal',
+      escreventeNome: 'Escrevente Correção E2E',
+    },
   })
   const { protocoloId } = await distribuirResp.json()
 
   await api.post(`/minha-fila/${protocoloId}/pegar`, { headers: authConferente })
   await api.post(`/minha-fila/${protocoloId}/iniciar`, { headers: authConferente })
-  const concluirResp = await api.post(`/minha-fila/${protocoloId}/concluir`, { headers: authConferente, data: { aprovado: true } })
+  const concluirResp = await api.post(`/minha-fila/${protocoloId}/concluir`, {
+    headers: authConferente,
+    data: { aprovado: true },
+  })
   expect(concluirResp.status()).toBe(204)
 
   // Login pela UI como o conferente, agora que o cenário já existe.

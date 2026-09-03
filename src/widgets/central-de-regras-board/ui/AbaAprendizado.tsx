@@ -1,7 +1,13 @@
 import { useEquipes } from '@/entities/equipe'
 import { useEscreventes } from '@/entities/escrevente'
 import { useRegrasAlcada } from '@/entities/regraAlcada'
-import { textoBaseDaSugestao, TIPO_SUGESTAO_LABEL, tituloDaSugestao, useSugestoesHistorico, useSugestoesPendentes } from '@/entities/sugestao'
+import {
+  textoBaseDaSugestao,
+  TIPO_SUGESTAO_LABEL,
+  tituloDaSugestao,
+  useSugestoesHistorico,
+  useSugestoesPendentes,
+} from '@/entities/sugestao'
 import { useTiposAto } from '@/entities/tipoAto'
 import { useAplicarSugestao } from '@/features/sugestao/aplicar'
 import { useDescartarSugestao } from '@/features/sugestao/descartar'
@@ -46,8 +52,16 @@ export const AbaAprendizado = () => {
 
   const kpis = [
     { label: 'Tipos de ato no catálogo', valor: String(tiposAto.length), sub: `${regras.length} regras de alçada` },
-    { label: 'Regras em vigor', valor: String(regras.filter((r) => r.ativa).length + equipes.length * 2), sub: 'alçada e prazo' },
-    { label: 'Propostas na fila', valor: String(pendentes.length), sub: pendentes.length ? 'esperando sua decisão' : 'nada pendente' },
+    {
+      label: 'Regras em vigor',
+      valor: String(regras.filter((r) => r.ativa).length + equipes.length * 2),
+      sub: 'alçada e prazo',
+    },
+    {
+      label: 'Propostas na fila',
+      valor: String(pendentes.length),
+      sub: pendentes.length ? 'esperando sua decisão' : 'nada pendente',
+    },
     {
       label: 'Aplicadas até hoje',
       valor: String(historico.filter((s) => s.status === 'Aplicada').length),
@@ -93,14 +107,23 @@ export const AbaAprendizado = () => {
                   </span>
                 </div>
               </div>
-              <div className="mt-2.5 text-[15px] font-semibold tracking-[-0.01em] text-pretty">{tituloDaSugestao(sugestao, lookups)}</div>
-              <p className="mt-1.5 max-w-[74ch] text-[13px] leading-relaxed text-text-2 text-pretty">{textoBaseDaSugestao(sugestao)}</p>
+              <div className="mt-2.5 text-[15px] font-semibold tracking-[-0.01em] text-pretty">
+                {tituloDaSugestao(sugestao, lookups)}
+              </div>
+              <p className="mt-1.5 max-w-[74ch] text-[13px] leading-relaxed text-pretty text-text-2">
+                {textoBaseDaSugestao(sugestao)}
+              </p>
               <p className="mt-1 font-mono text-[11px] text-muted-foreground">{sugestao.evidencia}</p>
               <div className="mt-3.5 flex gap-1.5">
                 <Button size="sm" onClick={() => aplicar.mutate(sugestao.id)} disabled={aplicar.isPending}>
                   Aplicar
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => descartar.mutate(sugestao.id)} disabled={descartar.isPending}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => descartar.mutate(sugestao.id)}
+                  disabled={descartar.isPending}
+                >
                   Descartar
                 </Button>
               </div>
@@ -112,7 +135,10 @@ export const AbaAprendizado = () => {
       <h2 className="mt-6.5 mb-2.5 text-[15px] font-semibold tracking-[-0.01em]">Histórico de aprendizado</h2>
       <div className="flex flex-col gap-1.5">
         {historico.map((sugestao) => (
-          <div key={sugestao.id} className="flex flex-wrap items-center justify-between gap-3.5 rounded-[10px] border border-border bg-card p-2.75">
+          <div
+            key={sugestao.id}
+            className="flex flex-wrap items-center justify-between gap-3.5 rounded-[10px] border border-border bg-card p-2.75"
+          >
             <div className="min-w-0">
               <div className="text-[13px] font-medium text-pretty">{tituloDaSugestao(sugestao, lookups)}</div>
               <div className="mt-0.5 text-[11.5px] text-muted-foreground">
@@ -122,14 +148,18 @@ export const AbaAprendizado = () => {
             <span
               className={cn(
                 'flex-none rounded-full border px-2.5 py-0.75 text-[11.5px] font-medium',
-                sugestao.status === 'Aplicada' ? 'border-ok-border bg-ok-bg text-ok-fg' : 'border-border bg-card text-text-2',
+                sugestao.status === 'Aplicada'
+                  ? 'border-ok-border bg-ok-bg text-ok-fg'
+                  : 'border-border bg-card text-text-2',
               )}
             >
               {sugestao.status === 'Aplicada' ? 'aplicada' : 'descartada'}
             </span>
           </div>
         ))}
-        {historico.length === 0 && <p className="text-[13px] text-muted-foreground">Nenhuma decisão registrada ainda.</p>}
+        {historico.length === 0 && (
+          <p className="text-[13px] text-muted-foreground">Nenhuma decisão registrada ainda.</p>
+        )}
       </div>
     </div>
   )

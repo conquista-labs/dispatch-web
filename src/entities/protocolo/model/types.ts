@@ -6,7 +6,8 @@ import type { GrupoTipoAto } from '@/entities/tipoAto'
 // conferir o C# primeiro (ver skill new-entity).
 export type Etapa = 'PreConferencia' | 'PosConferencia'
 
-export type StatusProtocolo = 'Pool' | 'Atribuido' | 'Conferindo' | 'Aprovado' | 'Reprovado' | 'Excecao' | 'Descartado' | 'Excluido'
+export type StatusProtocolo =
+  'Pool' | 'Atribuido' | 'Conferindo' | 'Aprovado' | 'Reprovado' | 'Excecao' | 'Descartado' | 'Excluido'
 
 // RF-14/seção 5: as 4 faixas do semáforo de prazo.
 export type FaixaSemaforo = 'Verde' | 'Amarelo' | 'Laranja' | 'Vermelho'
@@ -87,6 +88,19 @@ export type DetalheProtocolo = {
   reabertoEm: string | null
   semaforo: FaixaSemaforo | null
   alcada: AlcadaConferente[]
+  historicoConferencias: HistoricoConferencia[]
+}
+
+// HistoricoConferenciaResponse (Api) — continuidade de conferência: outras linhas com o mesmo
+// Número (RF-07, Numero não é único de propósito, um item pode ter várias linhas ao longo do
+// tempo). Não é RF numerado nem está no protótipo aprovado — pedido do dono, mesmo formato cru
+// do back (front resolve nome do dono/rótulo de status, igual todo o resto do projeto).
+export type HistoricoConferencia = {
+  protocoloId: string
+  andamentoEm: string
+  status: StatusProtocolo
+  donoId: string | null
+  concluidoEm: string | null
 }
 
 // Nomes resolvidos localmente a partir de ProtocoloResumo (que só traz EscreventeId/TipoAtoId

@@ -33,7 +33,9 @@ export const ListaCompletaPoolSheet = ({
   <Sheet open={aberto} onOpenChange={(open) => !open && onFechar()}>
     <SheetContent side="right" className="w-[min(420px,92vw)] gap-0 overflow-y-auto p-0 sm:max-w-[420px]">
       <SheetHeader className="sticky top-0 z-10 border-b border-border bg-background p-5">
-        <SheetTitle className="text-[15px] font-semibold tracking-[-0.01em]">Pool disponível · {protocolos.length}</SheetTitle>
+        <SheetTitle className="text-[15px] font-semibold tracking-[-0.01em]">
+          Pool disponível · {protocolos.length}
+        </SheetTitle>
       </SheetHeader>
 
       <div className="flex flex-col gap-2 p-3.5">

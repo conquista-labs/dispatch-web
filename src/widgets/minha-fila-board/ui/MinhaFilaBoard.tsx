@@ -42,7 +42,11 @@ export const MinhaFilaBoard = () => {
   // também (antes só Distribuição mostrava) — mesmo padrão de "back manda o fato cru, front
   // resolve o nome" já usado lá. Extraído pra `entities/protocolo` — mesma lógica repetida em
   // DistribuicaoBoard/FilaDoConferenteBoard/PainelDetalheProtocolo.
-  const { resolverInfo: resolverInfoProtocolo, nomePorTipoAtoId } = criarResolverInfoProtocolo(escreventes, equipes, tiposAto)
+  const { resolverInfo: resolverInfoProtocolo, nomePorTipoAtoId } = criarResolverInfoProtocolo(
+    escreventes,
+    equipes,
+    tiposAto,
+  )
   const todosOsProtocolos = fila ? [...fila.poolDisponivel, ...fila.atribuidos, ...fila.emConferencia] : []
   const filtroProtocolos = useFiltroProtocolos({
     protocolos: todosOsProtocolos,

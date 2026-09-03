@@ -79,7 +79,9 @@ test('TOTP e recuperação de senha — registrar autenticador e redefinir a sen
 
   await page.getByLabel('Confirme com o código que o app mostra').fill(totpCode(chaveBase32))
   await page.getByRole('button', { name: 'Confirmar registro' }).click()
-  await expect(page.getByText('Autenticador registrado. A partir de agora você recupera a senha sozinho, pelo app.')).toBeVisible()
+  await expect(
+    page.getByText('Autenticador registrado. A partir de agora você recupera a senha sozinho, pelo app.'),
+  ).toBeVisible()
   await page.screenshot({ path: 'e2e/.screenshots/totp-registrar-sucesso-claro.png', fullPage: true })
 
   await page.getByRole('button', { name: 'Ir para o Dashboard' }).click()
@@ -148,7 +150,9 @@ test('TOTP e recuperação de senha — registrar autenticador e redefinir a sen
   await page.getByRole('link', { name: 'Conferentes' }).click()
   const card = page.getByTestId(`conferente-card-${conferenteId}`)
   await Promise.all([
-    page.waitForResponse((res) => res.request().method() === 'DELETE' && res.url().includes(`/conferentes/${conferenteId}`)),
+    page.waitForResponse(
+      (res) => res.request().method() === 'DELETE' && res.url().includes(`/conferentes/${conferenteId}`),
+    ),
     card.getByRole('button', { name: 'Remover' }).click(),
   ])
   await expect(card).toHaveCount(0)

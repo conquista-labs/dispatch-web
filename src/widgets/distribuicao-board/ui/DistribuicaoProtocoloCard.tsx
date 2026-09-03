@@ -51,7 +51,14 @@ type DistribuicaoProtocoloCardProps = {
 // ato/escrevente/equipe) fechado via `info`, resolvido no board (ver DistribuicaoBoard.tsx).
 // Simplificação consciente que continua de fora: o canto de "Concluídos" mostra aprovado/não
 // aprovado em vez do tempo de conferência (sem `ConcluidoEm` no DTO pra calcular duração).
-export const DistribuicaoProtocoloCard = ({ protocolo, now, donoNome, info, variant = 'conferente', onAbrirDetalhe }: DistribuicaoProtocoloCardProps) => {
+export const DistribuicaoProtocoloCard = ({
+  protocolo,
+  now,
+  donoNome,
+  info,
+  variant = 'conferente',
+  onAbrirDetalhe,
+}: DistribuicaoProtocoloCardProps) => {
   const emConferencia = protocolo.status === 'Conferindo' && protocolo.iniciadoEm
   const concluido = protocolo.status === 'Aprovado' || protocolo.status === 'Reprovado'
   const chip = prazoChip(protocolo.semaforo, protocolo.vencimentoEm, now)
@@ -75,9 +82,15 @@ export const DistribuicaoProtocoloCard = ({ protocolo, now, donoNome, info, vari
     >
       <div className="flex items-center justify-between gap-1.5">
         <span className="font-mono text-[12.5px] font-medium">{protocolo.numero}</span>
-        {emConferencia && <span className="font-mono text-[11.5px] font-medium">{formatCronometro(now - new Date(protocolo.iniciadoEm!).getTime())}</span>}
+        {emConferencia && (
+          <span className="font-mono text-[11.5px] font-medium">
+            {formatCronometro(now - new Date(protocolo.iniciadoEm!).getTime())}
+          </span>
+        )}
         {!emConferencia && concluido && (
-          <span className={`text-[11.5px] font-medium ${STATUS_CONCLUIDO_CLASSE[protocolo.status]}`}>{STATUS_CONCLUIDO_LABEL[protocolo.status]}</span>
+          <span className={`text-[11.5px] font-medium ${STATUS_CONCLUIDO_CLASSE[protocolo.status]}`}>
+            {STATUS_CONCLUIDO_LABEL[protocolo.status]}
+          </span>
         )}
         {!emConferencia &&
           !concluido &&
@@ -102,10 +115,12 @@ export const DistribuicaoProtocoloCard = ({ protocolo, now, donoNome, info, vari
           de cima quebrava o card em telas de coluna estreita (achado ao vivo pelo dono). */}
       <div className="mt-0.5 flex items-center gap-1.5">
         {protocolo.prioridade === 'Alta' && (
-          <span className="flex-none rounded-full border border-bad-border bg-bad-bg px-1.5 text-[10.5px] font-semibold text-bad-fg">Alta</span>
+          <span className="flex-none rounded-full border border-bad-border bg-bad-bg px-1.5 text-[10.5px] font-semibold text-bad-fg">
+            Alta
+          </span>
         )}
         <div
-          className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-[11.5px] text-muted-foreground"
+          className="min-w-0 flex-1 overflow-hidden text-[11.5px] text-ellipsis whitespace-nowrap text-muted-foreground"
           title={`${info.escreventeNome ?? '—'} · ${info.equipeNome ?? 'sem equipe'}${variant === 'conferente' ? ` · ${ETAPA_LABEL[protocolo.etapa]}` : ''}`}
         >
           {info.escreventeNome ?? '—'} ·{' '}

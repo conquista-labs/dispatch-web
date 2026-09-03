@@ -17,7 +17,9 @@ export const DistribuicaoPage = () => {
   const [novoProtocoloAberto, setNovoProtocoloAberto] = useState(false)
 
   const ativos = visao ? visao.pool.length + visao.atribuidos.length + visao.emConferencia.length : 0
-  const vencidos = visao ? [...visao.pool, ...visao.atribuidos, ...visao.emConferencia].filter((p) => p.semaforo === 'Vermelho').length : 0
+  const vencidos = visao
+    ? [...visao.pool, ...visao.atribuidos, ...visao.emConferencia].filter((p) => p.semaforo === 'Vermelho').length
+    : 0
 
   return (
     <div className="px-7 pt-6 pb-7">

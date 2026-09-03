@@ -17,7 +17,8 @@ export const AbaPorStatus = ({ visao, conferentes, now, resolverInfo, onAbrirDet
   // RNF-10: nome completo — dois conferentes com o mesmo primeiro nome ficariam
   // indistinguíveis no card de protocolo (mesmo cuidado de AbaPorConferente.tsx).
   const nomePorConferenteId = new Map(conferentes.map((c) => [c.id, c.nome]))
-  const resolverDono = (protocolo: ProtocoloResumo) => (protocolo.donoId ? (nomePorConferenteId.get(protocolo.donoId) ?? null) : null)
+  const resolverDono = (protocolo: ProtocoloResumo) =>
+    protocolo.donoId ? (nomePorConferenteId.get(protocolo.donoId) ?? null) : null
 
   return (
     <div className="flex items-start gap-3">

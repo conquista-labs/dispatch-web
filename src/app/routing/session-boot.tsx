@@ -18,12 +18,8 @@ export const SessionBoot = ({ children }: PropsWithChildren) => {
   }, [data, token, setSession])
 
   if (token && isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center text-sm text-zinc-500">
-        Carregando…
-      </div>
-    )
+    return <div className="flex min-h-screen items-center justify-center text-sm text-zinc-500">Carregando…</div>
   }
 
-  return <>{children}</>
+  return children
 }

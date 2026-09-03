@@ -1,6 +1,6 @@
 import { isAxiosError } from 'axios'
 import { MinusIcon, PlusIcon } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 import type { GrupoTipoAto, TipoAtoComUso } from '@/entities/tipoAto'
 import { GRUPO_LABEL, GRUPOS } from '@/entities/tipoAto'
@@ -36,8 +36,18 @@ export const TipoAtoRow = ({ tipo }: TipoAtoRowProps) => {
   const definirGrupo = useDefinirGrupoTipoAto()
   const remover = useRemoverTipoAto()
 
-  useEffect(() => setNome(tipo.nome), [tipo.nome])
-  useEffect(() => setPesoTexto(String(tipo.pesoComplexidade)), [tipo.pesoComplexidade])
+  // Ajusta o estado local durante o render, sem efeito (achado ligando mais categorias do
+  // oxlint) — mesmo padrão de EquipeCard.tsx.
+  const [nomeRefletido, setNomeRefletido] = useState(tipo.nome)
+  if (tipo.nome !== nomeRefletido) {
+    setNomeRefletido(tipo.nome)
+    setNome(tipo.nome)
+  }
+  const [pesoRefletido, setPesoRefletido] = useState(tipo.pesoComplexidade)
+  if (tipo.pesoComplexidade !== pesoRefletido) {
+    setPesoRefletido(tipo.pesoComplexidade)
+    setPesoTexto(String(tipo.pesoComplexidade))
+  }
 
   const commitNome = () => {
     const aparado = nome.trim()
@@ -80,7 +90,9 @@ export const TipoAtoRow = ({ tipo }: TipoAtoRowProps) => {
       />
 
       <span className="flex-none font-mono text-[11.5px] text-muted-foreground">{tipo.volume} em circulação</span>
-      <span className="flex-none font-mono text-[11.5px] text-muted-foreground">{tipo.conferentesComAlcada} com alçada</span>
+      <span className="flex-none font-mono text-[11.5px] text-muted-foreground">
+        {tipo.conferentesComAlcada} com alçada
+      </span>
 
       <div className="flex flex-none items-center gap-2">
         <span className="text-[11.5px] font-medium text-text-2">Peso</span>
@@ -113,7 +125,9 @@ export const TipoAtoRow = ({ tipo }: TipoAtoRowProps) => {
 
       <Select
         value={tipo.grupo ?? SEM_GRUPO}
-        onValueChange={(valor) => definirGrupo.mutate({ tipoAtoId: tipo.id, grupo: valor === SEM_GRUPO ? null : (valor as GrupoTipoAto) })}
+        onValueChange={(valor) =>
+          definirGrupo.mutate({ tipoAtoId: tipo.id, grupo: valor === SEM_GRUPO ? null : (valor as GrupoTipoAto) })
+        }
       >
         <SelectTrigger size="sm" className="h-7 flex-none text-[11.5px]">
           <SelectValue placeholder="Grupo" />
@@ -139,11 +153,21 @@ export const TipoAtoRow = ({ tipo }: TipoAtoRowProps) => {
         {tipo.ativo ? 'Ativo' : 'Inativo'}
       </button>
 
-      <Button variant="outline" size="sm" onClick={() => remover.mutate(tipo.id)} disabled={remover.isPending} className="flex-none">
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => remover.mutate(tipo.id)}
+        disabled={remover.isPending}
+        className="flex-none"
+      >
         Remover
       </Button>
 
-      {emUso && <p className="w-full text-[12px] text-bad-fg">Em uso — tem protocolo ou regra de alçada apontando pra este tipo.</p>}
+      {emUso && (
+        <p className="w-full text-[12px] text-bad-fg">
+          Em uso — tem protocolo ou regra de alçada apontando pra este tipo.
+        </p>
+      )}
     </SurfaceCard>
   )
 }

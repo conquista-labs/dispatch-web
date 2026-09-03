@@ -8,6 +8,10 @@ export type EditarNivelEJornadaRequest = {
 }
 
 // PUT /conferentes/{id}/nivel-jornada (RF-25/RF-26).
-export const editarNivelEJornada = async ({ conferenteId, nivel, jornadaHoras }: EditarNivelEJornadaRequest): Promise<void> => {
+export const editarNivelEJornada = async ({
+  conferenteId,
+  nivel,
+  jornadaHoras,
+}: EditarNivelEJornadaRequest): Promise<void> => {
   await httpClient.put(`/conferentes/${conferenteId}/nivel-jornada`, { nivel, jornadaHoras })
 }

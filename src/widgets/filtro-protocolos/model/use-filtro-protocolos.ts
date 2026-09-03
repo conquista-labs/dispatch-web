@@ -39,18 +39,31 @@ export const useFiltroProtocolos = ({ protocolos, resolverInfo, equipes, tiposAt
 
   // Contagem sempre contra o conjunto completo não filtrado — "a gestão sabe o tamanho do
   // recorte antes de aplicar" (RF-18e), não o efeito combinado com os outros eixos já ativos.
-  const contarEquipe = (id: string | null) => protocolos.filter((p) => infoPorProtocoloId.get(p.id)!.equipeId === id).length
+  const contarEquipe = (id: string | null) =>
+    protocolos.filter((p) => infoPorProtocoloId.get(p.id)!.equipeId === id).length
   const contarTipoAto = (id: string) => protocolos.filter((p) => p.tipoAtoId === id).length
   const contarPrioridade = (prioridade: Prioridade) => protocolos.filter((p) => p.prioridade === prioridade).length
   const contarUrgente = () =>
-    protocolos.filter((p) => p.prioridade === 'Alta' || (p.vencimentoEm != null && new Date(p.vencimentoEm).getTime() - now < 4 * 60 * 60 * 1000)).length
+    protocolos.filter(
+      (p) =>
+        p.prioridade === 'Alta' ||
+        (p.vencimentoEm !== null && new Date(p.vencimentoEm).getTime() - now < 4 * 60 * 60 * 1000),
+    ).length
 
   const contagens = {
     equipes: [
-      ...equipes.map((e): OpcaoContagem<string | null> => ({ valor: e.id, label: e.nome, contagem: contarEquipe(e.id) })),
+      ...equipes.map((e): OpcaoContagem<string | null> => ({
+        valor: e.id,
+        label: e.nome,
+        contagem: contarEquipe(e.id),
+      })),
       { valor: null, label: 'sem equipe', contagem: contarEquipe(null) },
     ],
-    tiposAto: tiposAto.map((t): OpcaoContagem<string> => ({ valor: t.id, label: t.nome, contagem: contarTipoAto(t.id) })),
+    tiposAto: tiposAto.map((t): OpcaoContagem<string> => ({
+      valor: t.id,
+      label: t.nome,
+      contagem: contarTipoAto(t.id),
+    })),
     prioridades: [
       { valor: 'Alta' as const, label: 'alta', contagem: contarPrioridade('Alta') },
       { valor: 'Normal' as const, label: 'média', contagem: contarPrioridade('Normal') },
@@ -60,15 +73,23 @@ export const useFiltroProtocolos = ({ protocolos, resolverInfo, equipes, tiposAt
   }
 
   const alternarEquipe = (id: string | null) =>
-    setFiltro((atual) => ({ ...atual, equipeIds: atual.equipeIds.includes(id) ? atual.equipeIds.filter((v) => v !== id) : [...atual.equipeIds, id] }))
+    setFiltro((atual) => ({
+      ...atual,
+      equipeIds: atual.equipeIds.includes(id) ? atual.equipeIds.filter((v) => v !== id) : [...atual.equipeIds, id],
+    }))
 
   const alternarTipoAto = (id: string) =>
-    setFiltro((atual) => ({ ...atual, tipoAtoIds: atual.tipoAtoIds.includes(id) ? atual.tipoAtoIds.filter((v) => v !== id) : [...atual.tipoAtoIds, id] }))
+    setFiltro((atual) => ({
+      ...atual,
+      tipoAtoIds: atual.tipoAtoIds.includes(id) ? atual.tipoAtoIds.filter((v) => v !== id) : [...atual.tipoAtoIds, id],
+    }))
 
   const alternarPrioridade = (prioridade: Prioridade) =>
     setFiltro((atual) => ({
       ...atual,
-      prioridades: atual.prioridades.includes(prioridade) ? atual.prioridades.filter((v) => v !== prioridade) : [...atual.prioridades, prioridade],
+      prioridades: atual.prioridades.includes(prioridade)
+        ? atual.prioridades.filter((v) => v !== prioridade)
+        : [...atual.prioridades, prioridade],
     }))
 
   const alternarUrgente = () => setFiltro((atual) => ({ ...atual, urgente: !atual.urgente }))

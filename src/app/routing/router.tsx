@@ -16,10 +16,16 @@ const DistribuicaoPage = lazy(() => import('@/pages/distribuicao').then((m) => (
 const ImportarPage = lazy(() => import('@/pages/importar').then((m) => ({ default: m.ImportarPage })))
 const ConferentesPage = lazy(() => import('@/pages/conferentes').then((m) => ({ default: m.ConferentesPage })))
 const MinhaFilaPage = lazy(() => import('@/pages/minha-fila').then((m) => ({ default: m.MinhaFilaPage })))
-const FilaConferentesPage = lazy(() => import('@/pages/fila-conferentes').then((m) => ({ default: m.FilaConferentesPage })))
-const CentralDeRegrasPage = lazy(() => import('@/pages/central-de-regras').then((m) => ({ default: m.CentralDeRegrasPage })))
+const FilaConferentesPage = lazy(() =>
+  import('@/pages/fila-conferentes').then((m) => ({ default: m.FilaConferentesPage })),
+)
+const CentralDeRegrasPage = lazy(() =>
+  import('@/pages/central-de-regras').then((m) => ({ default: m.CentralDeRegrasPage })),
+)
 const RegistrarTotpPage = lazy(() => import('@/pages/registrar-totp').then((m) => ({ default: m.RegistrarTotpPage })))
-const RecuperarSenhaPage = lazy(() => import('@/pages/recuperar-senha').then((m) => ({ default: m.RecuperarSenhaPage })))
+const RecuperarSenhaPage = lazy(() =>
+  import('@/pages/recuperar-senha').then((m) => ({ default: m.RecuperarSenhaPage })),
+)
 
 // Mesmo texto/classe já usado em todo canto do app enquanto uma query carrega (ver
 // MinhaFilaBoard, DistribuicaoBoard etc.) — consistente com o resto, não é um spinner novo.

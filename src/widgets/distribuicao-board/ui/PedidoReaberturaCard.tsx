@@ -44,7 +44,10 @@ export const PedidoReaberturaCard = ({ pedido, onAbrirDetalhe }: PedidoReabertur
           >
             Negar
           </Button>
-          <Button onClick={() => decidir.mutate({ pedidoId: pedido.pedidoId, aprovar: true })} disabled={decidir.isPending}>
+          <Button
+            onClick={() => decidir.mutate({ pedidoId: pedido.pedidoId, aprovar: true })}
+            disabled={decidir.isPending}
+          >
             Reabrir
           </Button>
         </div>

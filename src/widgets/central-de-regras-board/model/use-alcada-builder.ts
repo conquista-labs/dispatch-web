@@ -52,7 +52,14 @@ type UseAlcadaBuilderParams = {
 // fetch, estado do construtor de regra e a montagem do payload de criação, tudo numa função
 // só, ~300 linhas). Estado + lógica derivada do construtor guiado (RF-32) — o card em si
 // (JSX) fica em AlcadaBuilderCard.tsx.
-export const useAlcadaBuilder = ({ conferentes, equipes, tiposAto, nomePorConferenteId, nomePorTipoAtoId, nomePorEquipeId }: UseAlcadaBuilderParams) => {
+export const useAlcadaBuilder = ({
+  conferentes,
+  equipes,
+  tiposAto,
+  nomePorConferenteId,
+  nomePorTipoAtoId,
+  nomePorEquipeId,
+}: UseAlcadaBuilderParams) => {
   const criar = useCriarRegraAlcada()
   const [aberto, setAberto] = useState(false)
   const [builder, setBuilder] = useState<Builder>(builderVazio(''))
@@ -70,7 +77,9 @@ export const useAlcadaBuilder = ({ conferentes, equipes, tiposAto, nomePorConfer
   const fechar = () => setAberto(false)
 
   const quemTexto =
-    builder.sujeitoTipo === 'nivel' ? `Nível ${NIVEL_LABEL[builder.sujeitoNivel]}` : (nomePorConferenteId.get(builder.sujeitoConferenteId) ?? '…')
+    builder.sujeitoTipo === 'nivel'
+      ? `Nível ${NIVEL_LABEL[builder.sujeitoNivel]}`
+      : (nomePorConferenteId.get(builder.sujeitoConferenteId) ?? '…')
 
   const alvoTexto =
     builder.alvoTipo === 'todos'
@@ -90,7 +99,10 @@ export const useAlcadaBuilder = ({ conferentes, equipes, tiposAto, nomePorConfer
     (builder.sujeitoTipo === 'nivel' || builder.sujeitoConferenteId !== '')
 
   const handleCriarRegra = async () => {
-    const sujeito = builder.sujeitoTipo === 'nivel' ? { sujeitoNivel: builder.sujeitoNivel } : { sujeitoConferenteId: builder.sujeitoConferenteId }
+    const sujeito =
+      builder.sujeitoTipo === 'nivel'
+        ? { sujeitoNivel: builder.sujeitoNivel }
+        : { sujeitoConferenteId: builder.sujeitoConferenteId }
 
     if (builder.alvoTipo === 'todos') {
       await criar.mutateAsync({ ...sujeito, permissao: builder.permissao, alvoTodosOsAtos: true })
@@ -131,5 +143,18 @@ export const useAlcadaBuilder = ({ conferentes, equipes, tiposAto, nomePorConfer
             ? []
             : tiposAto.map((t) => ({ valor: t.id, label: t.nome }))
 
-  return { aberto, builder, setBuilder, abrir, abrirParaCamada, fechar, quemTexto, alvoTexto, podeCriar, alvoOpcoes, handleCriarRegra, criando: criar.isPending }
+  return {
+    aberto,
+    builder,
+    setBuilder,
+    abrir,
+    abrirParaCamada,
+    fechar,
+    quemTexto,
+    alvoTexto,
+    podeCriar,
+    alvoOpcoes,
+    handleCriarRegra,
+    criando: criar.isPending,
+  }
 }

@@ -21,7 +21,14 @@ type AbaPorConferenteProps = {
 // histórico do conferente, não "hoje", e mostrar esse número com o rótulo errado seria pior que
 // não mostrar. Fica pra quando o back expuser isso (mesmo padrão do gap que fechamos pra
 // `IniciadoEm`/cronômetro em Minha fila).
-export const AbaPorConferente = ({ pool, porConferente, conferentes, now, resolverInfo, onAbrirDetalhe }: AbaPorConferenteProps) => (
+export const AbaPorConferente = ({
+  pool,
+  porConferente,
+  conferentes,
+  now,
+  resolverInfo,
+  onAbrirDetalhe,
+}: AbaPorConferenteProps) => (
   <div className="flex items-start gap-3 overflow-x-auto">
     <ProtocoloColuna
       nome="Pool aberto"

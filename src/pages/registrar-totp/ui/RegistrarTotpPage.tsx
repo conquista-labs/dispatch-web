@@ -31,9 +31,13 @@ export const RegistrarTotpPage = () => {
             <RegistroTotp email={usuario.email} papel={usuario.papel} />
           ) : (
             <>
-              <div className="font-mono text-[10.5px] font-medium tracking-[0.06em] text-muted-foreground">PRIMEIRO ACESSO</div>
-              <h1 className="mt-1.5 text-[19px] font-semibold tracking-[-0.02em] text-balance">Entre para registrar seu autenticador</h1>
-              <p className="mt-2 text-[13px] leading-[1.55] text-muted-foreground text-pretty">
+              <div className="font-mono text-[10.5px] font-medium tracking-[0.06em] text-muted-foreground">
+                PRIMEIRO ACESSO
+              </div>
+              <h1 className="mt-1.5 text-[19px] font-semibold tracking-[-0.02em] text-balance">
+                Entre para registrar seu autenticador
+              </h1>
+              <p className="mt-2 text-[13px] leading-[1.55] text-pretty text-muted-foreground">
                 Confirme sua senha antes de configurar o autenticador — é assim que provamos que é você.
               </p>
               <div className="mt-[18px]">
@@ -78,7 +82,11 @@ const RegistroTotp = ({ email, papel }: { email: string; papel: 'Distribuidora' 
   }
 
   if (registrar.isError) {
-    return <p className="mt-4 text-[13px] text-bad-fg">Não foi possível gerar o segredo agora. Tente de novo em instantes.</p>
+    return (
+      <p className="mt-4 text-[13px] text-bad-fg">
+        Não foi possível gerar o segredo agora. Tente de novo em instantes.
+      </p>
+    )
   }
 
   const chaveEmBlocos = registrar.data.chaveBase32.match(/.{1,4}/g)?.join(' ') ?? registrar.data.chaveBase32
@@ -87,9 +95,9 @@ const RegistroTotp = ({ email, papel }: { email: string; papel: 'Distribuidora' 
     <>
       <div className="font-mono text-[10.5px] font-medium tracking-[0.06em] text-muted-foreground">PRIMEIRO ACESSO</div>
       <h1 className="mt-1.5 text-[19px] font-semibold tracking-[-0.02em] text-balance">Registre seu autenticador</h1>
-      <p className="mt-2 text-[13px] leading-[1.55] text-muted-foreground text-pretty">
-        Abra Google Authenticator, Authy ou 1Password no celular e leia o código abaixo. É assim que você recupera a senha
-        sozinho depois, sem depender de ninguém.
+      <p className="mt-2 text-[13px] leading-[1.55] text-pretty text-muted-foreground">
+        Abra Google Authenticator, Authy ou 1Password no celular e leia o código abaixo. É assim que você recupera a
+        senha sozinho depois, sem depender de ninguém.
       </p>
 
       <div className="mt-[18px] flex flex-wrap items-start gap-[18px]">
@@ -101,9 +109,7 @@ const RegistroTotp = ({ email, papel }: { email: string; papel: 'Distribuidora' 
           <div className="mt-[7px] rounded-[7px] border border-border bg-background p-2.5 font-mono text-[13px] leading-[1.6] font-medium break-all text-foreground">
             {chaveEmBlocos}
           </div>
-          <div className="mt-2.5 text-[11.5px] leading-[1.5] text-muted-foreground">
-            Conta: {email} · Dispatch
-          </div>
+          <div className="mt-2.5 text-[11.5px] leading-[1.5] text-muted-foreground">Conta: {email} · Dispatch</div>
         </div>
       </div>
 
@@ -117,7 +123,7 @@ const RegistroTotp = ({ email, papel }: { email: string; papel: 'Distribuidora' 
           onChange={(event) => setCodigo(event.target.value.replace(/\D/g, '').slice(0, 6))}
           placeholder="000000"
           disabled={feito}
-          className="w-full rounded-lg border border-border bg-card py-[13px] text-center font-mono text-2xl font-semibold text-foreground outline-none tracking-[0.32em] focus:border-primary disabled:opacity-60"
+          className="w-full rounded-lg border border-border bg-card py-[13px] text-center font-mono text-2xl font-semibold tracking-[0.32em] text-foreground outline-none focus:border-primary disabled:opacity-60"
         />
       </div>
 
@@ -144,15 +150,19 @@ const RegistroTotp = ({ email, papel }: { email: string; papel: 'Distribuidora' 
       </button>
       {!feito && (
         <div className="mt-3.5 flex justify-center">
-          <button type="button" onClick={() => navigate(ROUTES.login)} className="p-0.5 text-[12.5px] font-medium text-text-2 hover:text-foreground">
+          <button
+            type="button"
+            onClick={() => navigate(ROUTES.login)}
+            className="p-0.5 text-[12.5px] font-medium text-text-2 hover:text-foreground"
+          >
             Voltar para entrar
           </button>
         </div>
       )}
 
-      <p className="mt-4 px-0.5 text-[11.5px] leading-[1.55] text-muted-foreground text-pretty">
-        A chave fica só no seu celular. O Dispatch guarda dela apenas o necessário para validar o código — e não envia nada
-        por e-mail ou SMS.
+      <p className="mt-4 px-0.5 text-[11.5px] leading-[1.55] text-pretty text-muted-foreground">
+        A chave fica só no seu celular. O Dispatch guarda dela apenas o necessário para validar o código — e não envia
+        nada por e-mail ou SMS.
       </p>
     </>
   )
