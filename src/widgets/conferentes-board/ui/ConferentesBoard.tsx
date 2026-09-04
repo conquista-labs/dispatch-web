@@ -53,7 +53,7 @@ export const ConferentesBoard = () => {
 
   return (
     <div>
-      <div className="grid grid-cols-4 gap-2">
+      <div className="grid grid-cols-4 gap-2 max-mobile:grid-cols-2">
         <Kpi label="Na escala hoje" valor={`${ativos.length} de ${conferentes.length}`} />
         <Kpi label="Capacidade do dia" valor={`${capacidadeDoDia} atos`} />
         <Kpi

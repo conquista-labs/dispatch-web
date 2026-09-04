@@ -58,7 +58,12 @@ export const ProtocoloCard = ({
       <ObservacaoField protocoloId={protocolo.id} observacao={protocolo.observacao} somenteLeitura={somenteLeitura} />
 
       {!somenteLeitura && onAcao && (
-        <Button variant={acaoVariante} onClick={onAcao} disabled={acaoDesabilitada} className="mt-1.5 w-full">
+        <Button
+          variant={acaoVariante}
+          onClick={onAcao}
+          disabled={acaoDesabilitada}
+          className="mt-1.5 w-full max-mobile:h-11 max-mobile:text-[14px]"
+        >
           {acaoLabel}
         </Button>
       )}

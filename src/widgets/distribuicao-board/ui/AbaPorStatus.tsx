@@ -21,7 +21,10 @@ export const AbaPorStatus = ({ visao, conferentes, now, resolverInfo, onAbrirDet
     protocolo.donoId ? (nomePorConferenteId.get(protocolo.donoId) ?? null) : null
 
   return (
-    <div className="flex items-start gap-3">
+    // RNF-13 — colunas elásticas (variant="status") tinham só min-w-0 (encolhem até sumir em
+    // tela estreita); ganharam um piso (min-w-[220px] em ProtocoloColuna) + overflow-x-auto
+    // aqui, mesmo padrão já certo em AbaPorConferente.tsx — rola em vez de espremer.
+    <div className="flex items-start gap-3 overflow-x-auto">
       <ProtocoloColuna
         nome="Pool"
         protocolos={visao.pool}

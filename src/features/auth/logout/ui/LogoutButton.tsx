@@ -3,8 +3,16 @@ import { useNavigate } from 'react-router-dom'
 
 import { useSessionStore } from '@/entities/usuario'
 import { ROUTES } from '@/shared/config/routes'
+import { cn } from '@/shared/lib/utils'
 
-export const LogoutButton = () => {
+type LogoutButtonProps = {
+  // Default cobre o rodapé da sidebar (bloco de largura total, alinhado à esquerda) — a barra
+  // superior mobile (RNF-13) passa uma classe compacta, não faz sentido "Sair" ocupar a largura
+  // toda ao lado do toggle de tema.
+  className?: string
+}
+
+export const LogoutButton = ({ className }: LogoutButtonProps = {}) => {
   const clearSession = useSessionStore((state) => state.clearSession)
   const queryClient = useQueryClient()
   const navigate = useNavigate()
@@ -23,7 +31,10 @@ export const LogoutButton = () => {
   return (
     <button
       onClick={handleLogout}
-      className="w-full rounded-md px-2.5 py-1.5 text-left text-[12.5px] text-text-2 hover:bg-secondary hover:text-foreground"
+      className={cn(
+        'w-full rounded-md px-2.5 py-1.5 text-left text-[12.5px] text-text-2 hover:bg-secondary hover:text-foreground',
+        className,
+      )}
     >
       Sair
     </button>

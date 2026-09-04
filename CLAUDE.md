@@ -1790,3 +1790,104 @@ Regras em vigor (as duas telas mais recentemente mexidas nesta sessão, maior ri
 uma classe Tailwind reordenada de um jeito que colidisse com outra via `twMerge`), nos dois
 temas — nenhuma diferença visual, incluindo os elementos mais sensíveis a essa reordenação
 (`prefLabel`+pills de Conferentes, seção "Operação" derivada de `useConfiguracao()`).
+
+## RNF-13 (responsivo abaixo de 760px, app inteiro) + RF-24g (Minha fila em abas) + "N feitos hoje"
+
+Dois itens de backlog fechados juntos. Antes de implementar, verifiquei a fidelidade do próprio
+protótipo aprovado nessa faixa de largura (pedido explícito do dono) — abri `Dispatch.dc.html`
+via Playwright em 390px e naveguei Login, Dashboard, Distribuição, Minha fila, Conferentes,
+Central de Regras (as 5 abas + as 3 sub-abas de Alçada), Importar e o painel de detalhe.
+**Achado real no protótipo, não repetido aqui**: em Alçada → Camadas, a tabela "O que cada um
+alcança hoje" não tem rolagem própria — o `scrollWidth` do documento inteiro (521px) excede o
+`clientWidth` (390px), e simulando o scroll de verdade (`window.scrollTo`) a página inteira
+desliza pra lado, arrastando até a barra de navegação fixa junto. A Matriz, do lado, resolve
+isso certo com `overflow-x-auto` contido. Implementei com o padrão correto desde o início.
+
+**Mecanismo de breakpoint** (`app/styles/index.css` + `shared/lib/use-is-mobile.ts`, novo):
+`--breakpoint-mobile: 760px` dentro do `@theme inline` já existente — Tailwind v4 gera
+`mobile:`/`max-mobile:` automaticamente a partir disso (confirmado inspecionando o CSS
+compilado: `@media (width>=760px)`/`@media not all and (width>=760px)`), mesmo mecanismo que já
+gera `max-sm:`/`max-md:` pros breakpoints padrão. `useIsMobile()` (hook JS, mesmo molde de
+`use-now.ts`: `matchMedia` + listener `change` + cleanup) só entra quando a árvore de
+componentes ou a quantidade de itens renderizados muda de verdade (troca de estrutura, não só
+classe) — os dois lugares comentam um apontando pro outro, já que o número 760 não pode vir de
+uma constante JS compartilhada com o CSS.
+
+**`AppShell.tsx`** — abaixo de 760px, a sidebar de 224px vira um header sticky (logo + toggle de
+tema + Sair) mais uma `<nav>` sticky com os mesmos itens de navegação como chips roláveis
+horizontalmente (`overflow-x-auto whitespace-nowrap`), badge de contagem reaproveitado dentro do
+chip. O card de sessão (nome/papel) fica de fora no mobile — confirmado que o próprio protótipo
+aprovado também não mostra isso na barra mobile, não é omissão. `LogoutButton` ganhou uma prop
+`className` opcional (default cobre o rodapé da sidebar, `w-full text-left`) pra caber compacto
+ao lado do toggle de tema na barra mobile.
+
+**RF-24g — Minha fila e Fila do conferente**: `FilaColunas.tsx` (novo,
+`widgets/minha-fila-board/ui/`, exportado no barrel e reaproveitado por
+`fila-do-conferente-board` do mesmo jeito que `ProtocoloCard`/`EmConferenciaCard` já eram) —
+recebe as 3 colunas (Pool/Minhas/Conferência) como children + suas contagens; desktop continua
+`flex` lado a lado (comportamento de sempre); mobile vira abas com contador (mesmo padrão visual
+de pill-tabs já usado em Central de Regras/Distribuição), só a ativa renderiza. Isso substituiu
+a montagem de 3 colunas que estava duplicada em `MinhaFilaBoard.tsx`/`FilaDoConferenteBoard.tsx`.
+`MAX_POOL_VISIVEL_MOBILE = 8` (novo em `lib/constantes.ts`) — RF-24g pede 8 no mobile (valor
+literal do requisito, não uma proporção do `MAX_POOL_VISIVEL` de desktop, que já diverge do
+protótipo por decisão anterior registrada). Alvo de toque 44px nos 4 botões de ação que o
+requisito cita por nome (Pegar este/Iniciar conferência/Aprovar/Não aprovar — confirmado
+lendo a lógica-fonte do protótipo, `padAcao`/`fonteAcao` só se aplicam a esses 4) via
+`max-mobile:h-11 max-mobile:text-[14px]` direto no `<Button>` — os botões secundários de
+`ConcluidosHojeList.tsx` (Corrigir/Pedir reabertura/Cancelar pedido) ficam de fora de propósito,
+não fazem parte do requisito literal. Confirmado por medição real (`boundingBox().height`):
+exatamente 44px.
+
+**RNF-13 no resto do app** — tudo `max-mobile:`/`mobile:` puro (CSS, sem hook JS):
+- **Grids de KPI** (4-5 colunas fixas → `max-mobile:grid-cols-2`): Dashboard (as duas visões),
+  Conferentes, Central de Regras → Aprendizado.
+- **Blocos de 2 colunas**: `AbaPrazos.tsx` (equipes) estava fixo em `grid-cols-2` sem nenhum
+  breakpoint, ganhou `max-mobile:grid-cols-1`. Dois blocos já usavam `md:grid-cols-2` (768px, 8px
+  de diferença do 760px pedido) — trocados pra `mobile:grid-cols-2`, pra não ter dois cortes de
+  largura ligeiramente diferentes coexistindo no mesmo app.
+- **Tiras de pills/abas** (Dashboard, Central de Regras — 5 abas, maior risco — Alçada,
+  Distribuição): ganharam `overflow-x-auto` no container e `flex-none whitespace-nowrap` em cada
+  botão — sem isso os itens de texto longo simplesmente quebravam linha dentro do próprio botão
+  (flexbox permite texto encolher/wrap antes de estourar), ficando cramped mas sem overflow real
+  de documento; com a mudança, rolam de verdade, como o requisito pede.
+- **Tabelas/grades largas**: a tabela shadcn de `VisaoGestao.tsx` (Dashboard) já tinha rolagem
+  própria embutida no componente `Table` (`shared/ui/table.tsx` sempre envolve num
+  `overflow-x-auto` — achado ao investigar, não precisou de mudança nenhuma). "O que cada um
+  alcança hoje" (Central de Regras → Camadas) ganhou `overflow-x-auto` + `min-w-max` nas linhas —
+  **exatamente o bug achado no protótipo**, aqui com o padrão certo desde o início.
+  `AbaPorStatus.tsx` (Distribuição) era o maior gap real: colunas `min-w-0 flex-1` que espremiam
+  em vez de rolar (diferente de `AbaPorConferente.tsx`, que já tinha `overflow-x-auto` certo) —
+  `ProtocoloColuna.tsx` (variant "status") ganhou um piso `min-w-[220px]` e o container ganhou
+  `overflow-x-auto`, mesmo padrão que "Por conferente" já usava.
+- **`DistribuicaoPage.tsx`**: achado no caminho, não estava na lista original — o cabeçalho
+  (título + 3 botões: Redistribuir pool/Novo protocolo/Importar relatório) não tinha
+  `flex-wrap`, estourando a página inteira em 390px (mesma classe de bug do achado no protótipo).
+  Corrigido com `flex-wrap` no container + `max-mobile:w-full` no grupo de botões (sem isso, um
+  filho `flex-shrink:0` nunca é convidado a encolher/quebrar linha mesmo dentro de um pai
+  `flex-wrap`).
+- **`BarraDeFiltros.tsx`**: input de busca (`min-w-[220px]`) ganhou `max-mobile:min-w-0
+  max-mobile:basis-full` — empilha em linha própria em vez de forçar overflow ao lado do
+  DatePicker/botão Filtros.
+- Sheets (`PainelDetalheProtocolo`, `PainelFiltros`) e popovers já usavam `min(Npx, 92vw)` —
+  confirmado responsivos por conta própria, nenhum ajuste necessário.
+
+**"N feitos hoje" + tempo de conferência** (item de backlog separado, fechado na mesma rodada) —
+back já expõe `ConcluidoEm`/`Duracao`/`ConcluidosHojePorConferente` (ver `dispatch-api/CLAUDE.md`,
+mesma seção). `AbaPorConferente.tsx` monta o subtítulo com `Analista {nível} · {N} feitos hoje`
+quando o conferente tem pelo menos 1 concluído hoje (map por `conferenteId`, mesmo padrão de
+lookup do resto do projeto); `DistribuicaoProtocoloCard.tsx` troca o canto do card concluído
+(antes "Aprovado"/"Não aprovado") por `formatDuracaoConcluida(duracao)` (já existia em
+`shared/lib/format.ts`, reaproveitado de `ConcluidosHojeList`) — o texto aprovado/reprovado
+já vivia na linha de meta/dono (`sufixoConcluido`), não precisou de lugar novo, só parou de
+ficar duplicado com o canto.
+
+Verificado nos dois temas via Playwright em 390px, todas as telas tocadas (checando
+`document.documentElement.scrollWidth <= clientWidth` em cada uma — mesma medição usada na
+auditoria do protótipo) e em 1280px (confirmando zero regressão de desktop): AppShell
+(chips rolando, navegação funcionando), Minha fila/Fila do conferente (abas trocando, 8 itens +
+"+N protocolos", botão de 44px confirmado por medição), Dashboard, Conferentes, Distribuição (3
+abas), Central de Regras (5 abas + Alçada completo). Fluxo real ponta a ponta (não só fake) pro
+"N feitos hoje": criar protocolo manual → pegar/iniciar/concluir como conferente de teste →
+confirmar "· 1 feitos hoje" no card certo e "324 min"/"0 min" no canto do card concluído. Suíte
+e2e permanente rodada de novo depois de todas as fases — mesmas 7 falhas pré-existentes (specs
+de verificação visual pontual sem dado re-semeado), nenhuma nova.

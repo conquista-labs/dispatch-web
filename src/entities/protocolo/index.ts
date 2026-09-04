@@ -1,5 +1,6 @@
 export type {
   AlcadaConferente,
+  ConcluidosHojePorConferente,
   DetalheProtocolo,
   Etapa,
   FaixaSemaforo,

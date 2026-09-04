@@ -89,7 +89,7 @@ export const DistribuicaoBoard = () => {
 
   return (
     <div>
-      <div className="inline-flex gap-0.5 rounded-lg bg-secondary p-0.75">
+      <div className="inline-flex max-w-full gap-0.5 overflow-x-auto rounded-lg bg-secondary p-0.75">
         {(
           [
             ['conferente', 'Por conferente'],
@@ -101,7 +101,7 @@ export const DistribuicaoBoard = () => {
             key={valor}
             onClick={() => setAba(valor)}
             className={cn(
-              'rounded-md px-3 py-1.5 text-[13px] font-medium text-muted-foreground',
+              'flex-none rounded-md px-3 py-1.5 text-[13px] font-medium whitespace-nowrap text-muted-foreground',
               aba === valor && 'bg-card text-foreground shadow-sm',
             )}
           >
@@ -128,6 +128,7 @@ export const DistribuicaoBoard = () => {
           <AbaPorConferente
             pool={visaoFiltrada.pool}
             porConferente={visaoFiltrada.porConferente}
+            concluidosHojePorConferente={visao.concluidosHojePorConferente}
             conferentes={conferentesNaEscala}
             now={now}
             resolverInfo={resolverInfoProtocolo}

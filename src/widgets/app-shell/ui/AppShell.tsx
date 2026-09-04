@@ -6,6 +6,7 @@ import { type Papel, useSessionStore } from '@/entities/usuario'
 import { LogoutButton } from '@/features/auth/logout'
 import { ROUTES } from '@/shared/config/routes'
 import { useThemeStore } from '@/shared/lib/theme-store'
+import { useIsMobile } from '@/shared/lib/use-is-mobile'
 import { cn } from '@/shared/lib/utils'
 import { Logo } from '@/shared/ui/logo'
 
@@ -50,6 +51,7 @@ export const AppShell = () => {
   const usuario = useSessionStore((state) => state.usuario)
   const tema = useThemeStore((state) => state.tema)
   const toggleTema = useThemeStore((state) => state.toggleTema)
+  const mobile = useIsMobile()
 
   const ehDistribuidora = usuario?.papel === 'Distribuidora'
   const { data: visao } = useVisaoDistribuicao({ enabled: ehDistribuidora })
@@ -69,6 +71,63 @@ export const AppShell = () => {
       return { texto: String(sugestoesPendentes.length), tom: 'neutro' }
     }
     return null
+  }
+
+  // RNF-13 — abaixo de 760px a sidebar dá lugar a uma barra superior fixa + uma tira de chips
+  // roláveis (confirmado navegando o protótipo aprovado de verdade, não só o texto do
+  // requisito). O card "Sessão" (nome/papel) fica de fora aqui de propósito — o protótipo
+  // também não mostra isso na barra mobile, só logo/tema/sair; não é uma omissão, é fidelidade.
+  if (mobile) {
+    return (
+      <div className="flex min-h-screen flex-col">
+        <header className="sticky top-0 z-10 flex items-center justify-between gap-2 border-b border-border bg-card px-3.5 py-2.5">
+          <div className="flex items-center gap-2">
+            <Logo size="sm" />
+            <span className="text-[14.5px] font-semibold tracking-[-0.01em]">Dispatch</span>
+          </div>
+          <div className="flex flex-none items-center gap-1">
+            <button
+              onClick={toggleTema}
+              aria-label="Alternar tema"
+              className="flex size-9 flex-none items-center justify-center rounded-md text-text-2 hover:bg-secondary hover:text-foreground"
+            >
+              <span
+                className="block size-3.5 flex-none rounded-full border-[1.5px] border-current"
+                style={{ background: 'linear-gradient(90deg, currentColor 50%, transparent 50%)' }}
+              />
+            </button>
+            <LogoutButton className="w-auto rounded-md px-2.5 py-2 text-center" />
+          </div>
+        </header>
+
+        <nav className="sticky top-[53px] z-10 flex flex-none gap-1.5 overflow-x-auto border-b border-border bg-card px-3 py-2 whitespace-nowrap">
+          {itensNav.map((item) => {
+            const badge = badgeDoItem(item.to)
+            return (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                className={({ isActive }) =>
+                  cn(
+                    'flex flex-none items-center gap-1.5 rounded-full border px-3 py-2 text-[13px] transition-colors',
+                    isActive
+                      ? 'border-foreground bg-foreground font-semibold text-background'
+                      : 'border-border font-normal text-text-3',
+                  )
+                }
+              >
+                <span>{item.label}</span>
+                {badge && <NavBadge texto={badge.texto} tom={badge.tom} />}
+              </NavLink>
+            )
+          })}
+        </nav>
+
+        <main className="min-w-0 flex-1">
+          <Outlet />
+        </main>
+      </div>
+    )
   }
 
   return (

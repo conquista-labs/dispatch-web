@@ -71,7 +71,7 @@ export const AbaAprendizado = () => {
 
   return (
     <div>
-      <div className="mt-4.5 grid grid-cols-4 gap-2">
+      <div className="mt-4.5 grid grid-cols-4 gap-2 max-mobile:grid-cols-2">
         {kpis.map((kpi) => (
           <SurfaceCard key={kpi.label} className="p-3.5">
             <div className="text-[11.5px] font-medium text-text-2">{kpi.label}</div>

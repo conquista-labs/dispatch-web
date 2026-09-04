@@ -38,7 +38,7 @@ export const VisaoGestao = ({ dashboard, periodoLabel }: VisaoGestaoProps) => {
 
   return (
     <div>
-      <div className="grid grid-cols-4 gap-2">
+      <div className="grid grid-cols-4 gap-2 max-mobile:grid-cols-2">
         <KpiCard label="Atos conferidos" valor={String(kpis.atosConferidos)} sub={periodoLabel} />
         <KpiCard
           label="Dentro do prazo"
@@ -111,7 +111,7 @@ export const VisaoGestao = ({ dashboard, periodoLabel }: VisaoGestaoProps) => {
         quem faz venda e compra, então o score corrige isso.
       </p>
 
-      <div className="mt-6.5 grid grid-cols-1 gap-2 md:grid-cols-2">
+      <div className="mt-6.5 grid grid-cols-1 gap-2 mobile:grid-cols-2">
         <div className="rounded-[10px] border border-border bg-card p-4 shadow-sm">
           <div className="text-[13.5px] font-semibold">Cumprimento de prazo por equipe</div>
           <div className="mt-[3px] mb-3 text-[11.5px] text-muted-foreground">

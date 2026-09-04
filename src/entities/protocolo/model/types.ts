@@ -37,6 +37,10 @@ export type ProtocoloResumo = {
   semaforo: FaixaSemaforo | null
   // RF-21: só existe depois de IniciarConferencia — front calcula o cronômetro ao vivo com isso.
   iniciadoEm: string | null
+  // "N feitos hoje"/tempo de conferência (aba "Por status" → Concluídos) — só existem depois
+  // de ConcluirConferencia, nulos em qualquer status antes disso.
+  concluidoEm: string | null
+  duracao: string | null
 }
 
 // GrupoPorConferenteResponse (Api) — VisaoDistribuicaoResponse (RF-13). Não carrega nome do
@@ -46,6 +50,15 @@ export type GrupoPorConferente = {
   protocolos: ProtocoloResumo[]
 }
 
+// ConcluidosHojePorConferenteResponse (Api) — contagem de concluídos hoje por conferente,
+// usada só pelo "N feitos hoje" do subtítulo do card (aba "Por conferente"). Diferente de
+// `concluidos` abaixo (todo o histórico, usado pela aba "Por status") — quem não concluiu
+// nada hoje simplesmente não aparece na lista.
+export type ConcluidosHojePorConferente = {
+  conferenteId: string
+  total: number
+}
+
 export type VisaoDistribuicao = {
   pool: ProtocoloResumo[]
   atribuidos: ProtocoloResumo[]
@@ -53,6 +66,7 @@ export type VisaoDistribuicao = {
   concluidos: ProtocoloResumo[]
   excecoes: ProtocoloResumo[]
   porConferente: GrupoPorConferente[]
+  concluidosHojePorConferente: ConcluidosHojePorConferente[]
 }
 
 // AlcadaConferenteResponse (Api) — "quem pode conferir este ato especificamente" (RF-18a).

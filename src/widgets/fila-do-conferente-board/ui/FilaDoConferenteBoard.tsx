@@ -4,13 +4,16 @@ import { useEquipes } from '@/entities/equipe'
 import { useEscreventes } from '@/entities/escrevente'
 import { criarResolverInfoProtocolo, useConcluidosHojeDoConferente, useFilaDoConferente } from '@/entities/protocolo'
 import { useTiposAto } from '@/entities/tipoAto'
+import { useIsMobile } from '@/shared/lib/use-is-mobile'
 import { useNow } from '@/shared/lib/use-now'
 import { BarraDeFiltros, useFiltroProtocolos } from '@/widgets/filtro-protocolos'
 import {
   ConcluidosHojeList,
   EmConferenciaCard,
+  FilaColunas,
   ListaCompletaPoolSheet,
   MAX_POOL_VISIVEL,
+  MAX_POOL_VISIVEL_MOBILE,
   ProtocoloCard,
 } from '@/widgets/minha-fila-board'
 
@@ -37,6 +40,8 @@ export const FilaDoConferenteBoard = ({ conferenteId }: FilaDoConferenteBoardPro
   const { data: equipes } = useEquipes()
   const { data: tiposAto } = useTiposAto()
   const now = useNow()
+  const mobile = useIsMobile()
+  const maxPoolVisivel = mobile ? MAX_POOL_VISIVEL_MOBILE : MAX_POOL_VISIVEL
   const [listaCompletaAberta, setListaCompletaAberta] = useState(false)
 
   // RF-24f: mesmo filtro de Minha fila — a Distribuidora acompanhando a fila de alguém também
@@ -82,91 +87,103 @@ export const FilaDoConferenteBoard = ({ conferenteId }: FilaDoConferenteBoardPro
         <BarraDeFiltros {...filtroProtocolos} subtitulo="aplicados às três colunas da fila dele" />
       </div>
 
-      <div className="mt-4 flex items-start gap-3">
-        <div className="min-w-0 flex-1">
-          <div className="flex justify-between px-0.5 pb-0.5">
-            <strong className="text-[13.5px] font-semibold">Pool disponível</strong>
-            <span className="font-mono text-[11px] text-muted-foreground">{filaFiltrada.poolDisponivel.length}</span>
-          </div>
-          <div className="flex flex-col gap-2">
-            {filaFiltrada.poolDisponivel.slice(0, MAX_POOL_VISIVEL).map((protocolo) => (
-              <ProtocoloCard
-                key={protocolo.id}
-                protocolo={protocolo}
+      <FilaColunas
+        poolTotal={filaFiltrada.poolDisponivel.length}
+        pool={
+          <>
+            <div className="flex justify-between px-0.5 pb-0.5">
+              <strong className="text-[13.5px] font-semibold">Pool disponível</strong>
+              <span className="font-mono text-[11px] text-muted-foreground">{filaFiltrada.poolDisponivel.length}</span>
+            </div>
+            <div className="flex flex-col gap-2">
+              {filaFiltrada.poolDisponivel.slice(0, maxPoolVisivel).map((protocolo) => (
+                <ProtocoloCard
+                  key={protocolo.id}
+                  protocolo={protocolo}
+                  now={now}
+                  info={resolverInfoProtocolo(protocolo)}
+                  somenteLeitura
+                />
+              ))}
+              {filaFiltrada.poolDisponivel.length > maxPoolVisivel && (
+                <button
+                  type="button"
+                  onClick={() => setListaCompletaAberta(true)}
+                  className="rounded-[10px] border border-dashed border-border p-2 text-center text-xs text-muted-foreground hover:border-muted-foreground/40 hover:text-text-2"
+                >
+                  + {filaFiltrada.poolDisponivel.length - maxPoolVisivel} protocolos
+                </button>
+              )}
+              {filaFiltrada.poolDisponivel.length === 0 && (
+                <div className="rounded-[10px] border border-dashed border-border p-4 text-center text-xs text-muted-foreground">
+                  nada no pool dentro da alçada dele
+                </div>
+              )}
+            </div>
+            <ListaCompletaPoolSheet
+              aberto={listaCompletaAberta}
+              onFechar={() => setListaCompletaAberta(false)}
+              protocolos={filaFiltrada.poolDisponivel}
+              now={now}
+              resolverInfo={resolverInfoProtocolo}
+              somenteLeitura
+            />
+          </>
+        }
+        minhasTotal={filaFiltrada.atribuidos.length}
+        minhas={
+          <>
+            <div className="flex justify-between px-0.5 pb-0.5">
+              <strong className="text-[13.5px] font-semibold">Atribuídas</strong>
+              <span className="font-mono text-[11px] text-muted-foreground">{filaFiltrada.atribuidos.length}</span>
+            </div>
+            <div className="flex flex-col gap-2">
+              {filaFiltrada.atribuidos.map((protocolo) => (
+                <ProtocoloCard
+                  key={protocolo.id}
+                  protocolo={protocolo}
+                  now={now}
+                  info={resolverInfoProtocolo(protocolo)}
+                  somenteLeitura
+                />
+              ))}
+              {filaFiltrada.atribuidos.length === 0 && (
+                <div className="rounded-[10px] border border-dashed border-border p-4 text-center text-xs text-muted-foreground">
+                  nada atribuído
+                </div>
+              )}
+            </div>
+          </>
+        }
+        conferenciaTotal={filaFiltrada.emConferencia.length}
+        conferencia={
+          <>
+            <div className="flex justify-between px-0.5 pb-0.5">
+              <strong className="text-[13.5px] font-semibold">Em conferência</strong>
+              <span className="font-mono text-[11px] text-muted-foreground">{filaFiltrada.emConferencia.length}</span>
+            </div>
+            <div className="flex flex-col gap-2">
+              {filaFiltrada.emConferencia.map((protocolo) => (
+                <EmConferenciaCard key={protocolo.id} protocolo={protocolo} now={now} somenteLeitura />
+              ))}
+              {filaFiltrada.emConferencia.length === 0 && (
+                <div className="rounded-[10px] border border-dashed border-border p-4 text-center text-xs text-muted-foreground">
+                  ninguém conferindo agora
+                </div>
+              )}
+            </div>
+
+            {concluidos && (
+              <ConcluidosHojeList
+                concluidos={concluidos}
                 now={now}
-                info={resolverInfoProtocolo(protocolo)}
+                nomePorTipoAtoId={nomePorTipoAtoId}
                 somenteLeitura
               />
-            ))}
-            {filaFiltrada.poolDisponivel.length > MAX_POOL_VISIVEL && (
-              <button
-                type="button"
-                onClick={() => setListaCompletaAberta(true)}
-                className="rounded-[10px] border border-dashed border-border p-2 text-center text-xs text-muted-foreground hover:border-muted-foreground/40 hover:text-text-2"
-              >
-                + {filaFiltrada.poolDisponivel.length - MAX_POOL_VISIVEL} protocolos
-              </button>
             )}
-            {filaFiltrada.poolDisponivel.length === 0 && (
-              <div className="rounded-[10px] border border-dashed border-border p-4 text-center text-xs text-muted-foreground">
-                nada no pool dentro da alçada dele
-              </div>
-            )}
-          </div>
-          <ListaCompletaPoolSheet
-            aberto={listaCompletaAberta}
-            onFechar={() => setListaCompletaAberta(false)}
-            protocolos={filaFiltrada.poolDisponivel}
-            now={now}
-            resolverInfo={resolverInfoProtocolo}
-            somenteLeitura
-          />
-        </div>
-
-        <div className="min-w-0 flex-1">
-          <div className="flex justify-between px-0.5 pb-0.5">
-            <strong className="text-[13.5px] font-semibold">Atribuídas</strong>
-            <span className="font-mono text-[11px] text-muted-foreground">{filaFiltrada.atribuidos.length}</span>
-          </div>
-          <div className="flex flex-col gap-2">
-            {filaFiltrada.atribuidos.map((protocolo) => (
-              <ProtocoloCard
-                key={protocolo.id}
-                protocolo={protocolo}
-                now={now}
-                info={resolverInfoProtocolo(protocolo)}
-                somenteLeitura
-              />
-            ))}
-            {filaFiltrada.atribuidos.length === 0 && (
-              <div className="rounded-[10px] border border-dashed border-border p-4 text-center text-xs text-muted-foreground">
-                nada atribuído
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="min-w-0 flex-1">
-          <div className="flex justify-between px-0.5 pb-0.5">
-            <strong className="text-[13.5px] font-semibold">Em conferência</strong>
-            <span className="font-mono text-[11px] text-muted-foreground">{filaFiltrada.emConferencia.length}</span>
-          </div>
-          <div className="flex flex-col gap-2">
-            {filaFiltrada.emConferencia.map((protocolo) => (
-              <EmConferenciaCard key={protocolo.id} protocolo={protocolo} now={now} somenteLeitura />
-            ))}
-            {filaFiltrada.emConferencia.length === 0 && (
-              <div className="rounded-[10px] border border-dashed border-border p-4 text-center text-xs text-muted-foreground">
-                ninguém conferindo agora
-              </div>
-            )}
-          </div>
-
-          {concluidos && (
-            <ConcluidosHojeList concluidos={concluidos} now={now} nomePorTipoAtoId={nomePorTipoAtoId} somenteLeitura />
-          )}
-        </div>
-      </div>
+          </>
+        }
+      />
     </div>
   )
 }

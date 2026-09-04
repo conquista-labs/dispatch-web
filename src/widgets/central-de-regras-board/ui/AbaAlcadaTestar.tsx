@@ -179,7 +179,7 @@ export const AbaAlcadaTestar = ({ conferentes, tiposAto, equipes }: AbaAlcadaTes
             </div>
           </div>
 
-          <div className="mt-2 grid grid-cols-1 gap-2 md:grid-cols-2">
+          <div className="mt-2 grid grid-cols-1 gap-2 mobile:grid-cols-2">
             <div className="rounded-[10px] border border-border bg-card p-3.5">
               <div className="mb-2 text-[13px] font-semibold">Podem conferir</div>
               {habilitados.map((a) => (

@@ -155,7 +155,12 @@ export const AbaAlcadaCamadas = ({
       </div>
 
       <h2 className="mt-6.5 mb-2.5 text-[15px] font-semibold tracking-[-0.01em]">O que cada um alcança hoje</h2>
-      <SurfaceCard className="p-4">
+      {/* RNF-13 — rolagem própria e contida (achado no protótipo aprovado: essa mesma tabela
+          lá estoura a página inteira em telas estreitas, arrastando até a barra fixa do topo,
+          em vez de rolar só ela; aqui entra certo desde o início, mesmo padrão que a Matriz, do
+          lado, já usa). `min-w-max` em cada linha evita que ela esprema as colunas em vez de
+          rolar. */}
+      <SurfaceCard className="overflow-x-auto p-4">
         {conferentes.map((c) => {
           const a = alcancePorConferenteId.get(c.id)
           const qtd = a?.tiposPermitidosIds.length ?? 0
@@ -165,7 +170,7 @@ export const AbaAlcadaCamadas = ({
               : 'nenhuma etapa liberada'
           const largura = totalTipos > 0 ? Math.round((qtd / totalTipos) * 100) : 0
           return (
-            <div key={c.id} className={cn('flex items-start gap-3 py-1.5', !c.ativo && 'opacity-50')}>
+            <div key={c.id} className={cn('flex min-w-max items-start gap-3 py-1.5', !c.ativo && 'opacity-50')}>
               <span className="w-[130px] flex-none text-[13px] text-pretty">{c.nome}</span>
               <span className="mt-1 w-[110px] flex-none text-[11.5px] text-text-2">
                 Analista {NIVEL_LABEL[c.nivel]}

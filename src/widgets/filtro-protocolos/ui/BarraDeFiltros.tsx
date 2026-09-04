@@ -35,7 +35,7 @@ export const BarraDeFiltros = (props: BarraDeFiltrosProps) => {
         value={filtro.texto}
         onChange={(event) => setTexto(event.target.value)}
         placeholder="Buscar protocolo, tipo de ato, escrevente, equipe…"
-        className="min-w-[220px] flex-1"
+        className="min-w-[220px] flex-1 max-mobile:min-w-0 max-mobile:basis-full"
       />
       <DatePicker
         value={filtro.data ? chaveParaData(filtro.data) : null}

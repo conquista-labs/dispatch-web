@@ -23,7 +23,12 @@ export const DistribuicaoPage = () => {
 
   return (
     <div className="px-7 pt-6 pb-7">
-      <div className="flex items-start justify-between gap-4">
+      {/* RNF-13 — "cabeçalhos quebram em linha" abaixo de 760px: sem flex-wrap aqui, os 3
+          botões (Redistribuir pool/Novo protocolo/Importar relatório) nunca cabiam ao lado do
+          título em tela estreita e estouravam a página inteira, arrastando até a barra de
+          navegação fixa (mesmo tipo de bug achado no protótipo aprovado, seção Central de
+          Regras → Alçada → Camadas). */}
+      <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="m-0 text-xl font-semibold tracking-[-0.015em]">Distribuição</h1>
           {visao && (
@@ -33,7 +38,7 @@ export const DistribuicaoPage = () => {
             </p>
           )}
         </div>
-        <div className="flex flex-none gap-2">
+        <div className="flex flex-none flex-wrap gap-2 max-mobile:w-full">
           {/* RF-16: indicador de carregamento no próprio botão — já tinha disabled, faltava o
               feedback visual de "está rodando" (spinner + texto muda). */}
           <Button variant="outline" onClick={() => redistribuir.mutate()} disabled={redistribuir.isPending}>

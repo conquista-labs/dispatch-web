@@ -48,10 +48,15 @@ export const EmConferenciaCard = ({
 
       {!somenteLeitura && onAprovar && onReprovar && (
         <div className="mt-2 flex gap-1.5">
-          <Button onClick={onAprovar} disabled={desabilitado} className="flex-1">
+          <Button onClick={onAprovar} disabled={desabilitado} className="flex-1 max-mobile:h-11 max-mobile:text-[14px]">
             Aprovar
           </Button>
-          <Button variant="destructive" onClick={onReprovar} disabled={desabilitado} className="flex-1">
+          <Button
+            variant="destructive"
+            onClick={onReprovar}
+            disabled={desabilitado}
+            className="flex-1 max-mobile:h-11 max-mobile:text-[14px]"
+          >
             Não aprovar
           </Button>
         </div>

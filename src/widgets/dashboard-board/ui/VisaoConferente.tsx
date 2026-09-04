@@ -47,7 +47,7 @@ export const VisaoConferente = ({ dashboard }: VisaoConferenteProps) => {
 
   return (
     <div className="max-w-[900px]">
-      <div className="grid grid-cols-5 gap-2">
+      <div className="grid grid-cols-5 gap-2 max-mobile:grid-cols-2">
         <KpiCard label="Atos conferidos" valor={String(kpis.atosConferidos)} sub="no período" />
         <KpiCard
           label="Dentro do prazo"
@@ -79,7 +79,7 @@ export const VisaoConferente = ({ dashboard }: VisaoConferenteProps) => {
         </div>
         <Progress value={meu.score} className="mt-2 h-2" />
 
-        <div className="mt-4 grid grid-cols-4 gap-3">
+        <div className="mt-4 grid grid-cols-4 gap-3 max-mobile:grid-cols-2">
           {parcelas.map((p) => (
             <div key={p.label}>
               <div className="text-[11.5px] font-medium text-text-2">{p.label}</div>

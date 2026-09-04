@@ -1,6 +1,6 @@
 import { prazoChip, type InfoProtocolo, type ProtocoloResumo } from '@/entities/protocolo'
 import { ObservacaoField } from '@/features/protocolo/definir-observacao'
-import { formatCronometro } from '@/shared/lib/format'
+import { formatCronometro, formatDuracaoConcluida } from '@/shared/lib/format'
 import { Chip } from '@/shared/ui/chip'
 import { SurfaceCard } from '@/shared/ui/surface-card'
 
@@ -12,11 +12,6 @@ const ETAPA_LABEL: Record<ProtocoloResumo['etapa'], string> = {
 const STATUS_CONCLUIDO_LABEL: Record<string, string> = {
   Aprovado: 'Aprovado',
   Reprovado: 'Não aprovado',
-}
-
-const STATUS_CONCLUIDO_CLASSE: Record<string, string> = {
-  Aprovado: 'text-ok-fg',
-  Reprovado: 'text-bad-fg',
 }
 
 // Aba "Por status" mostra o valor de tempo como texto simples colorido (sem pill) — mesma cor
@@ -49,8 +44,6 @@ type DistribuicaoProtocoloCardProps = {
 // Card reaproveitado pelas abas "Por conferente" e "Por status" (RF-13/RF-14) — o card inteiro
 // é pintado pela faixa do semáforo (SurfaceCard `tom`), igual Minha fila. RF-14 (tipo de
 // ato/escrevente/equipe) fechado via `info`, resolvido no board (ver DistribuicaoBoard.tsx).
-// Simplificação consciente que continua de fora: o canto de "Concluídos" mostra aprovado/não
-// aprovado em vez do tempo de conferência (sem `ConcluidoEm` no DTO pra calcular duração).
 export const DistribuicaoProtocoloCard = ({
   protocolo,
   now,
@@ -88,8 +81,8 @@ export const DistribuicaoProtocoloCard = ({
           </span>
         )}
         {!emConferencia && concluido && (
-          <span className={`text-[11.5px] font-medium ${STATUS_CONCLUIDO_CLASSE[protocolo.status]}`}>
-            {STATUS_CONCLUIDO_LABEL[protocolo.status]}
+          <span className="font-mono text-[11.5px] font-medium text-muted-foreground">
+            {protocolo.duracao ? formatDuracaoConcluida(protocolo.duracao) : '—'}
           </span>
         )}
         {!emConferencia &&

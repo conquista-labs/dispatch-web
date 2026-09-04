@@ -69,7 +69,7 @@ export const AbaAlcada = () => {
         )}
       </div>
 
-      <div className="my-3.5 inline-flex gap-0.5 rounded-lg bg-secondary p-0.75">
+      <div className="my-3.5 inline-flex max-w-full gap-0.5 overflow-x-auto rounded-lg bg-secondary p-0.75">
         {(
           [
             ['camadas', 'Camadas'],
@@ -81,7 +81,7 @@ export const AbaAlcada = () => {
             key={valor}
             onClick={() => setSubAba(valor)}
             className={cn(
-              'rounded-md px-3 py-1.5 text-[13px] font-medium text-muted-foreground',
+              'flex-none rounded-md px-3 py-1.5 text-[13px] font-medium whitespace-nowrap text-muted-foreground',
               subAba === valor && 'bg-card text-foreground shadow-sm',
             )}
           >

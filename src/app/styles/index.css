@@ -21,6 +21,12 @@ body {
   --font-sans: 'Instrument Sans Variable', ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'JetBrains Mono Variable', ui-monospace, monospace;
 
+  /* RNF-13/RF-24g — único breakpoint customizado do projeto (os outros usos de sm/md/lg são o
+     padrão do Tailwind). Gera `mobile:`/`max-mobile:` automaticamente. Esse número (760) também
+     vive em shared/lib/use-is-mobile.ts, pros casos que precisam de JS (não só classe) — os dois
+     lugares têm que concordar, cada um comenta apontando pro outro. */
+  --breakpoint-mobile: 760px;
+
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);

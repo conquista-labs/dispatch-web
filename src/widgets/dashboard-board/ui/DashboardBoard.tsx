@@ -20,13 +20,13 @@ export const DashboardBoard = ({ souGestao }: DashboardBoardProps) => {
 
   return (
     <div>
-      <div className="inline-flex gap-0.5 rounded-lg bg-secondary p-0.75">
+      <div className="inline-flex max-w-full gap-0.5 overflow-x-auto rounded-lg bg-secondary p-0.75">
         {PERIODOS.map((valor) => (
           <button
             key={valor}
             onClick={() => setPeriodo(valor)}
             className={cn(
-              'rounded-md px-3 py-1.5 text-[13px] font-medium text-muted-foreground',
+              'flex-none rounded-md px-3 py-1.5 text-[13px] font-medium whitespace-nowrap text-muted-foreground',
               periodo === valor && 'bg-card text-foreground shadow-sm',
             )}
           >

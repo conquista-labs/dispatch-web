@@ -45,7 +45,9 @@ export const ProtocoloColuna = ({
   const [listaCompletaAberta, setListaCompletaAberta] = useState(false)
 
   return (
-    <div className={cn('flex flex-col gap-2', variant === 'conferente' ? 'w-[206px] flex-none' : 'min-w-0 flex-1')}>
+    <div
+      className={cn('flex flex-col gap-2', variant === 'conferente' ? 'w-[206px] flex-none' : 'min-w-[220px] flex-1')}
+    >
       {variant === 'conferente' ? (
         <div className="rounded-[10px] border border-border bg-card p-2.5 shadow-sm">
           {/* RNF-10: nome completo, sem truncar/cortar pro primeiro nome — dois conferentes

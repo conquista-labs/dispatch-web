@@ -1,11 +1,17 @@
 import { NIVEL_LABEL, type Conferente } from '@/entities/conferente'
-import type { GrupoPorConferente, InfoProtocolo, ProtocoloResumo } from '@/entities/protocolo'
+import type {
+  ConcluidosHojePorConferente,
+  GrupoPorConferente,
+  InfoProtocolo,
+  ProtocoloResumo,
+} from '@/entities/protocolo'
 
 import { ProtocoloColuna } from './ProtocoloColuna'
 
 type AbaPorConferenteProps = {
   pool: ProtocoloResumo[]
   porConferente: GrupoPorConferente[]
+  concluidosHojePorConferente: ConcluidosHojePorConferente[]
   conferentes: Conferente[]
   now: number
   resolverInfo: (protocolo: ProtocoloResumo) => InfoProtocolo
@@ -15,49 +21,52 @@ type AbaPorConferenteProps = {
 // RF-13/RF-14 — "Pool aberto" + uma coluna por conferente. `porConferente` só traz quem já tem
 // algo atribuído; conferentes sem nada aparecem do mesmo jeito (coluna vazia), então a lista
 // de colunas vem de entities/conferente, não de porConferente.
-//
-// Simplificação consciente: sem "· N feitos hoje" no subtítulo (protótipo mostra isso ao lado
-// do nível). `ProtocoloResumo` não tem `ConcluidoEm` — só dá pra contar "concluídos" de todo o
-// histórico do conferente, não "hoje", e mostrar esse número com o rótulo errado seria pior que
-// não mostrar. Fica pra quando o back expuser isso (mesmo padrão do gap que fechamos pra
-// `IniciadoEm`/cronômetro em Minha fila).
 export const AbaPorConferente = ({
   pool,
   porConferente,
+  concluidosHojePorConferente,
   conferentes,
   now,
   resolverInfo,
   onAbrirDetalhe,
-}: AbaPorConferenteProps) => (
-  <div className="flex items-start gap-3 overflow-x-auto">
-    <ProtocoloColuna
-      nome="Pool aberto"
-      sub="sem dono — quem tem alçada para o ato pega"
-      protocolos={pool}
-      now={now}
-      mensagemVazia="pool vazio"
-      variant="conferente"
-      resolverInfo={resolverInfo}
-      onAbrirDetalhe={onAbrirDetalhe}
-    />
+}: AbaPorConferenteProps) => {
+  const feitosHojePorConferenteId = new Map(concluidosHojePorConferente.map((c) => [c.conferenteId, c.total]))
 
-    {conferentes.map((conferente) => {
-      const grupo = porConferente.find((g) => g.conferenteId === conferente.id)
-      return (
-        <ProtocoloColuna
-          key={conferente.id}
-          // RNF-10: nome completo — dois conferentes com o mesmo primeiro nome ficariam
-          // indistinguíveis nesta coluna (a tela mais usada do sistema).
-          nome={conferente.nome}
-          sub={conferente.naEscala ? `Analista ${NIVEL_LABEL[conferente.nivel]}` : 'ausente hoje — não recebe'}
-          protocolos={grupo?.protocolos ?? []}
-          now={now}
-          mensagemVazia={conferente.naEscala ? 'fila vazia' : 'ausente'}
-          variant="conferente"
-          resolverInfo={resolverInfo}
-          onAbrirDetalhe={onAbrirDetalhe}
-        />
-      )
-    })}
-  </div>
-)
+  return (
+    <div className="flex items-start gap-3 overflow-x-auto">
+      <ProtocoloColuna
+        nome="Pool aberto"
+        sub="sem dono — quem tem alçada para o ato pega"
+        protocolos={pool}
+        now={now}
+        mensagemVazia="pool vazio"
+        variant="conferente"
+        resolverInfo={resolverInfo}
+        onAbrirDetalhe={onAbrirDetalhe}
+      />
+
+      {conferentes.map((conferente) => {
+        const grupo = porConferente.find((g) => g.conferenteId === conferente.id)
+        const feitosHoje = feitosHojePorConferenteId.get(conferente.id)
+        const sub = conferente.naEscala
+          ? `Analista ${NIVEL_LABEL[conferente.nivel]}${feitosHoje ? ` · ${feitosHoje} feitos hoje` : ''}`
+          : 'ausente hoje — não recebe'
+        return (
+          <ProtocoloColuna
+            key={conferente.id}
+            // RNF-10: nome completo — dois conferentes com o mesmo primeiro nome ficariam
+            // indistinguíveis nesta coluna (a tela mais usada do sistema).
+            nome={conferente.nome}
+            sub={sub}
+            protocolos={grupo?.protocolos ?? []}
+            now={now}
+            mensagemVazia={conferente.naEscala ? 'fila vazia' : 'ausente'}
+            variant="conferente"
+            resolverInfo={resolverInfo}
+            onAbrirDetalhe={onAbrirDetalhe}
+          />
+        )
+      })}
+    </div>
+  )
+}

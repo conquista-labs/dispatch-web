@@ -84,7 +84,7 @@ export const AbaPrazos = () => {
         </div>
       )}
 
-      <div className="mt-3.5 grid grid-cols-2 gap-2">
+      <div className="mt-3.5 grid grid-cols-2 gap-2 max-mobile:grid-cols-1">
         {equipes.map((equipe) => (
           <EquipeCard
             key={equipe.id}
