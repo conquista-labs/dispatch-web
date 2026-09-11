@@ -100,22 +100,55 @@ export const AlcadaBuilderCard = ({ builder: b, conferentes }: AlcadaBuilderCard
           />
         ))}
       </div>
-      {b.builder.alvoTipo !== 'todos' && (
-        <div className="mt-1.5 pl-[68px]">
-          <SeletorMultiplo
-            selecionados={b.builder.alvoSelecionados}
-            opcoes={b.alvoOpcoes}
-            onAlternar={(valor) =>
-              b.setBuilder((atual) => ({
-                ...atual,
-                alvoSelecionados: atual.alvoSelecionados.includes(valor)
-                  ? atual.alvoSelecionados.filter((v) => v !== valor)
-                  : [...atual.alvoSelecionados, valor],
-              }))
-            }
-            placeholder="buscar tipo de ato, equipe, grupo…"
-          />
+      {b.builder.alvoTipo === 'equipeEtapa' ? (
+        // Motor v4 — dois seletores lado a lado (equipe, depois etapa) em vez de um só com as
+        // duas coisas cruzadas num valor composto: o dono achou o select único longo demais e
+        // sem indicação de qual dimensão cada opção representava.
+        <div className="mt-1.5 flex flex-wrap items-start gap-3 pl-[68px]">
+          <div>
+            <span className="mb-1 block text-[11px] text-text-2">Equipe</span>
+            <SeletorMultiplo
+              selecionados={b.builder.alvoSelecionados}
+              opcoes={b.alvoOpcoes}
+              onAlternar={(valor) =>
+                b.setBuilder((atual) => ({
+                  ...atual,
+                  alvoSelecionados: atual.alvoSelecionados.includes(valor)
+                    ? atual.alvoSelecionados.filter((v) => v !== valor)
+                    : [...atual.alvoSelecionados, valor],
+                }))
+              }
+              placeholder="buscar equipe…"
+            />
+          </div>
+          <div>
+            <span className="mb-1 block text-[11px] text-text-2">Etapa</span>
+            <SeletorMultiplo
+              selecionados={b.builder.equipeEEtapaEtapas}
+              opcoes={b.etapaOpcoes}
+              onAlternar={b.alternarEtapaEquipeEEtapa}
+              placeholder="buscar etapa…"
+            />
+          </div>
         </div>
+      ) : (
+        b.builder.alvoTipo !== 'todos' && (
+          <div className="mt-1.5 pl-[68px]">
+            <SeletorMultiplo
+              selecionados={b.builder.alvoSelecionados}
+              opcoes={b.alvoOpcoes}
+              onAlternar={(valor) =>
+                b.setBuilder((atual) => ({
+                  ...atual,
+                  alvoSelecionados: atual.alvoSelecionados.includes(valor)
+                    ? atual.alvoSelecionados.filter((v) => v !== valor)
+                    : [...atual.alvoSelecionados, valor],
+                }))
+              }
+              placeholder="buscar tipo de ato, equipe, grupo…"
+            />
+          </div>
+        )
       )}
 
       <div className="mt-3.5 flex gap-1.5">

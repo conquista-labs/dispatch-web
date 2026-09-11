@@ -1952,3 +1952,36 @@ o conferente Júnior barrado com o motivo "equipe fora da alçada nesta etapa" e
 correspondente — nos dois temas. `npx tsc -b`, `npm run build`, `npm run test` (42/42, 2 novos
 em `frase.test.ts`) e `npm run lint` limpos. Suíte permanente (`auth`/`session-isolation`/
 `cursor`/`login`) verde.
+
+## Seletor de "equipe não faz etapa" redesenhado — dois selects em vez de um cruzado
+
+O dono usou a feature em produção e achou o seletor confuso: era um `SeletorMultiplo` só, com
+o produto cartesiano equipe×etapa já cruzado num valor composto (`"Equipe RIO ·
+pré-conferência"`, `"Equipe RIO · pós-conferência"`, uma opção por combinação) — pedido dele:
+"não era mais fácil ter um [seletor] por equipe lá em cima e aí o select trazer etapa pós e
+pré?". Virou exatamente isso: dois `SeletorMultiplo` lado a lado, cada um com seu rótulo
+("Equipe"/"Etapa") — o de equipe reaproveita as mesmas opções do alvo "equipe" puro (já
+incluindo "sem equipe"), o de etapa é só as 2 opções fixas (pré/pós).
+
+- `useAlcadaBuilder`: `Builder` ganhou `equipeEEtapaEtapas: Etapa[]` (dimensão separada de
+  `alvoSelecionados`, que passou a guardar só as equipes pra esse alvo — mesmo formato que já
+  usava pro alvo "equipe" puro, sem valor composto). O valor composto com separador `"::"` saiu
+  inteiro (não precisa mais — cada dimensão tem seu próprio array agora). `combosEquipeEEtapa`
+  (produto cartesiano das duas seleções) é calculado uma vez e reaproveitado tanto pelo preview
+  (`alvoTexto`) quanto pela criação de verdade (`handleCriarRegra`) — evita computar a mesma
+  combinação duas vezes com lógica potencialmente divergente. `setAlvoTipo` zera as duas
+  dimensões ao trocar de alvo (antes só zerava `alvoSelecionados`).
+- `AlcadaBuilderCard.tsx`: quando `alvoTipo === 'equipeEtapa'`, renderiza os dois seletores
+  lado a lado (`flex flex-wrap items-start gap-3`), cada um com um rótulo pequeno acima
+  (`text-[11px] text-text-2`) — para os outros alvos, continua o único seletor de sempre.
+
+Selecionar N equipes × M etapas ainda cria N×M regras (uma por combinação, mesmo padrão de
+"uma regra por alvo selecionado" que já vale pros outros alvos — o back continua XOR de um alvo
+só por regra).
+
+Verificado via Playwright (screenshot temporário, apagado depois): abrir o construtor, escolher
+"equipe não faz etapa…", selecionar "Equipe RIO" no seletor de Equipe e "pré-conferência" no de
+Etapa (dois cliques em dois dropdowns distintos, cada um com seu próprio campo de busca), preview
+mostrando a frase certa, criar a regra e confirmar via API que persistiu com `alvoEquipeId`/
+`alvoEtapa` corretos — nos dois temas. `npx tsc -b`, `npm run build`, `npm run test` (42/42) e
+`npm run lint` limpos. Suíte permanente verde.

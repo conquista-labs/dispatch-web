@@ -13,11 +13,6 @@ import type { Camada } from '../ui/AbaAlcadaCamadas'
 export type SujeitoTipo = 'nivel' | 'pessoa'
 export type AlvoTipo = 'tipo' | 'etapa' | 'equipe' | 'todos' | 'grupo' | 'equipeEtapa'
 
-// Motor v4 — separador do valor composto usado pelo alvo "equipe + etapa" (equipeId ?? SEM_EQUIPE
-// e a etapa, colados numa string só pra caber no mecanismo de multi-seleção existente, que só
-// aceita string[]). "::" não aparece em nenhum Guid nem em nenhum valor de Etapa.
-const SEPARADOR_EQUIPE_ETAPA = '::'
-
 type Builder = {
   sujeitoTipo: SujeitoTipo
   sujeitoNivel: Nivel
@@ -25,6 +20,13 @@ type Builder = {
   permissao: PermissaoRegra
   alvoTipo: AlvoTipo
   alvoSelecionados: string[]
+  // Motor v4 — o alvo "equipe não faz etapa" é 2 dimensões (equipe × etapa), não uma lista só
+  // como os outros alvos. `alvoSelecionados` guarda as equipes (mesmo formato do alvo "equipe"
+  // puro, reaproveitado); esta guarda as etapas escolhidas separadamente — dois seletores lado
+  // a lado em vez de um só combinando as duas coisas num valor composto (achado pelo dono: o
+  // select único de "equipe · etapa" cruzadas ficava longo e sem indicação de qual dimensão
+  // cada opção representava).
+  equipeEEtapaEtapas: Etapa[]
 }
 
 const builderVazio = (primeiroConferenteId: string): Builder => ({
@@ -34,6 +36,7 @@ const builderVazio = (primeiroConferenteId: string): Builder => ({
   permissao: 'Permite',
   alvoTipo: 'tipo',
   alvoSelecionados: [],
+  equipeEEtapaEtapas: [],
 })
 
 // Pré-seleção do construtor a partir dos botões "Nova regra de X" de cada camada (aba
@@ -88,7 +91,16 @@ export const useAlcadaBuilder = ({
       ...atual,
       alvoTipo,
       alvoSelecionados: [],
+      equipeEEtapaEtapas: [],
       permissao: alvoTipo === 'equipeEtapa' ? 'Nega' : atual.permissao,
+    }))
+
+  const alternarEtapaEquipeEEtapa = (etapa: Etapa) =>
+    setBuilder((atual) => ({
+      ...atual,
+      equipeEEtapaEtapas: atual.equipeEEtapaEtapas.includes(etapa)
+        ? atual.equipeEEtapaEtapas.filter((e) => e !== etapa)
+        : [...atual.equipeEEtapaEtapas, etapa],
     }))
 
   const fechar = () => setAberto(false)
@@ -98,31 +110,43 @@ export const useAlcadaBuilder = ({
       ? `Nível ${NIVEL_LABEL[builder.sujeitoNivel]}`
       : (nomePorConferenteId.get(builder.sujeitoConferenteId) ?? '…')
 
-  const textoEquipeEtapa = (valor: string) => {
-    const [equipeId, etapa] = valor.split(SEPARADOR_EQUIPE_ETAPA)
-    const nomeEquipe =
-      equipeId === SEM_EQUIPE ? 'de escreventes sem equipe' : `da equipe ${nomePorEquipeId.get(equipeId) ?? equipeId}`
-    return `fazer ${ETAPA_LABEL[etapa as Etapa]} ${nomeEquipe}`
-  }
+  const nomeDaEquipe = (valor: string) =>
+    valor === SEM_EQUIPE ? 'de escreventes sem equipe' : `da equipe ${nomePorEquipeId.get(valor) ?? valor}`
+
+  // Motor v4 — combinações equipe×etapa (o back só aceita uma regra por combinação, RF-31),
+  // reaproveitada tanto pelo preview (alvoTexto) quanto pela criação de verdade
+  // (handleCriarRegra) pra não duplicar a mesma lógica de produto cartesiano duas vezes.
+  const combosEquipeEEtapa = builder.alvoSelecionados.flatMap((equipeValor) =>
+    builder.equipeEEtapaEtapas.map((etapa) => ({ equipeValor, etapa })),
+  )
 
   const alvoTexto =
     builder.alvoTipo === 'todos'
       ? 'conferir todos os atos'
-      : builder.alvoSelecionados.length === 0
-        ? '…'
-        : builder.alvoTipo === 'etapa'
-          ? `fazer ${builder.alvoSelecionados.map((e) => ETAPA_LABEL[e as Etapa]).join(' e ')}`
-          : builder.alvoTipo === 'equipe'
-            ? `conferir atos ${builder.alvoSelecionados.map((v) => (v === SEM_EQUIPE ? 'de escreventes sem equipe' : `da equipe ${nomePorEquipeId.get(v) ?? v}`)).join(' e ')}`
-            : builder.alvoTipo === 'grupo'
-              ? `conferir atos de ${builder.alvoSelecionados.map((g) => GRUPO_LABEL[g as GrupoTipoAto]).join(' e ')}`
-              : builder.alvoTipo === 'equipeEtapa'
-                ? builder.alvoSelecionados.map(textoEquipeEtapa).join(' e ')
+      : builder.alvoTipo === 'equipeEtapa'
+        ? combosEquipeEEtapa.length === 0
+          ? '…'
+          : combosEquipeEEtapa
+              .map(({ equipeValor, etapa }) => `fazer ${ETAPA_LABEL[etapa]} ${nomeDaEquipe(equipeValor)}`)
+              .join(' e ')
+        : builder.alvoSelecionados.length === 0
+          ? '…'
+          : builder.alvoTipo === 'etapa'
+            ? `fazer ${builder.alvoSelecionados.map((e) => ETAPA_LABEL[e as Etapa]).join(' e ')}`
+            : builder.alvoTipo === 'equipe'
+              ? `conferir atos ${builder.alvoSelecionados.map(nomeDaEquipe).join(' e ')}`
+              : builder.alvoTipo === 'grupo'
+                ? `conferir atos de ${builder.alvoSelecionados.map((g) => GRUPO_LABEL[g as GrupoTipoAto]).join(' e ')}`
                 : `conferir ${builder.alvoSelecionados.map((id) => nomePorTipoAtoId.get(id) ?? id).join(', ')}`
 
   const podeCriar =
-    (builder.alvoTipo === 'todos' || builder.alvoSelecionados.length > 0) &&
-    (builder.sujeitoTipo === 'nivel' || builder.sujeitoConferenteId !== '')
+    builder.alvoTipo === 'todos'
+      ? true
+      : builder.alvoTipo === 'equipeEtapa'
+        ? combosEquipeEEtapa.length > 0
+        : builder.alvoSelecionados.length > 0
+
+  const podeCriarComSujeito = podeCriar && (builder.sujeitoTipo === 'nivel' || builder.sujeitoConferenteId !== '')
 
   const handleCriarRegra = async () => {
     const sujeito =
@@ -136,24 +160,29 @@ export const useAlcadaBuilder = ({
       return
     }
 
+    if (builder.alvoTipo === 'equipeEtapa') {
+      await Promise.all(
+        combosEquipeEEtapa.map(({ equipeValor, etapa }) =>
+          criar.mutateAsync({
+            ...sujeito,
+            permissao: 'Nega',
+            alvoEhEquipeEEtapa: true,
+            alvoEquipeId: equipeValor === SEM_EQUIPE ? null : equipeValor,
+            alvoEtapa: etapa,
+          }),
+        ),
+      )
+      setAberto(false)
+      return
+    }
+
     // Protótipo permite selecionar vários alvos numa tacada só; o back só aceita um alvo por
     // regra (RF-31: alvo é XOR etapa/tipo/equipe/grupo/todos) — cria uma regra por alvo
     // selecionado pra preservar a mesma UX sem inventar um conceito de "regra composta" que
     // não existe no domínio.
     await Promise.all(
-      builder.alvoSelecionados.map((valor) => {
-        if (builder.alvoTipo === 'equipeEtapa') {
-          const [equipeId, etapa] = valor.split(SEPARADOR_EQUIPE_ETAPA)
-          return criar.mutateAsync({
-            ...sujeito,
-            permissao: 'Nega',
-            alvoEhEquipeEEtapa: true,
-            alvoEquipeId: equipeId === SEM_EQUIPE ? null : equipeId,
-            alvoEtapa: etapa as Etapa,
-          })
-        }
-
-        return criar.mutateAsync({
+      builder.alvoSelecionados.map((valor) =>
+        criar.mutateAsync({
           ...sujeito,
           permissao: builder.permissao,
           ...(builder.alvoTipo === 'etapa'
@@ -163,45 +192,44 @@ export const useAlcadaBuilder = ({
               : builder.alvoTipo === 'grupo'
                 ? { alvoGrupo: valor as GrupoTipoAto }
                 : { alvoTipoAtoId: valor }),
-        })
-      }),
+        }),
+      ),
     )
     setAberto(false)
   }
 
   const ETAPAS = ['PreConferencia', 'PosConferencia'] as const
+  const etapaOpcoes = ETAPAS.map((e) => ({ valor: e, label: ETAPA_LABEL[e] }))
+  const equipeOpcoes = [
+    ...equipes.map((e) => ({ valor: e.id, label: e.nome })),
+    { valor: SEM_EQUIPE, label: 'sem equipe' },
+  ]
 
   const alvoOpcoes =
     builder.alvoTipo === 'etapa'
-      ? ETAPAS.map((e) => ({ valor: e, label: ETAPA_LABEL[e] }))
-      : builder.alvoTipo === 'equipe'
-        ? [...equipes.map((e) => ({ valor: e.id, label: e.nome })), { valor: SEM_EQUIPE, label: 'sem equipe' }]
+      ? etapaOpcoes
+      : builder.alvoTipo === 'equipe' || builder.alvoTipo === 'equipeEtapa'
+        ? equipeOpcoes
         : builder.alvoTipo === 'grupo'
           ? GRUPOS.map((g) => ({ valor: g, label: GRUPO_LABEL[g] }))
-          : builder.alvoTipo === 'equipeEtapa'
-            ? [...equipes.map((e) => ({ id: e.id, nome: e.nome })), { id: SEM_EQUIPE, nome: 'sem equipe' }].flatMap(
-                (e) =>
-                  ETAPAS.map((etapa) => ({
-                    valor: `${e.id}${SEPARADOR_EQUIPE_ETAPA}${etapa}`,
-                    label: `${e.nome} · ${ETAPA_LABEL[etapa]}`,
-                  })),
-              )
-            : builder.alvoTipo === 'todos'
-              ? []
-              : tiposAto.map((t) => ({ valor: t.id, label: t.nome }))
+          : builder.alvoTipo === 'todos'
+            ? []
+            : tiposAto.map((t) => ({ valor: t.id, label: t.nome }))
 
   return {
     aberto,
     builder,
     setBuilder,
     setAlvoTipo,
+    alternarEtapaEquipeEEtapa,
     abrir,
     abrirParaCamada,
     fechar,
     quemTexto,
     alvoTexto,
-    podeCriar,
+    podeCriar: podeCriarComSujeito,
     alvoOpcoes,
+    etapaOpcoes,
     handleCriarRegra,
     criando: criar.isPending,
   }
