@@ -11,7 +11,12 @@ import { SEM_EQUIPE } from '../lib/sem-equipe'
 import type { Camada } from '../ui/AbaAlcadaCamadas'
 
 export type SujeitoTipo = 'nivel' | 'pessoa'
-export type AlvoTipo = 'tipo' | 'etapa' | 'equipe' | 'todos' | 'grupo'
+export type AlvoTipo = 'tipo' | 'etapa' | 'equipe' | 'todos' | 'grupo' | 'equipeEtapa'
+
+// Motor v4 — separador do valor composto usado pelo alvo "equipe + etapa" (equipeId ?? SEM_EQUIPE
+// e a etapa, colados numa string só pra caber no mecanismo de multi-seleção existente, que só
+// aceita string[]). "::" não aparece em nenhum Guid nem em nenhum valor de Etapa.
+const SEPARADOR_EQUIPE_ETAPA = '::'
 
 type Builder = {
   sujeitoTipo: SujeitoTipo
@@ -74,12 +79,31 @@ export const useAlcadaBuilder = ({
     setAberto(true)
   }
 
+  // Motor v4 — o alvo equipe+etapa só existe como Nega (ver CLAUDE.md do back, "Motor de
+  // alçada v4": permitir isso entraria na lista fechada por dimensão, um efeito colateral
+  // desproporcional pra uma exceção pontual). Travar a permissão aqui evita o usuário bater
+  // no 400 do back sem entender por quê.
+  const setAlvoTipo = (alvoTipo: AlvoTipo) =>
+    setBuilder((atual) => ({
+      ...atual,
+      alvoTipo,
+      alvoSelecionados: [],
+      permissao: alvoTipo === 'equipeEtapa' ? 'Nega' : atual.permissao,
+    }))
+
   const fechar = () => setAberto(false)
 
   const quemTexto =
     builder.sujeitoTipo === 'nivel'
       ? `Nível ${NIVEL_LABEL[builder.sujeitoNivel]}`
       : (nomePorConferenteId.get(builder.sujeitoConferenteId) ?? '…')
+
+  const textoEquipeEtapa = (valor: string) => {
+    const [equipeId, etapa] = valor.split(SEPARADOR_EQUIPE_ETAPA)
+    const nomeEquipe =
+      equipeId === SEM_EQUIPE ? 'de escreventes sem equipe' : `da equipe ${nomePorEquipeId.get(equipeId) ?? equipeId}`
+    return `fazer ${ETAPA_LABEL[etapa as Etapa]} ${nomeEquipe}`
+  }
 
   const alvoTexto =
     builder.alvoTipo === 'todos'
@@ -92,7 +116,9 @@ export const useAlcadaBuilder = ({
             ? `conferir atos ${builder.alvoSelecionados.map((v) => (v === SEM_EQUIPE ? 'de escreventes sem equipe' : `da equipe ${nomePorEquipeId.get(v) ?? v}`)).join(' e ')}`
             : builder.alvoTipo === 'grupo'
               ? `conferir atos de ${builder.alvoSelecionados.map((g) => GRUPO_LABEL[g as GrupoTipoAto]).join(' e ')}`
-              : `conferir ${builder.alvoSelecionados.map((id) => nomePorTipoAtoId.get(id) ?? id).join(', ')}`
+              : builder.alvoTipo === 'equipeEtapa'
+                ? builder.alvoSelecionados.map(textoEquipeEtapa).join(' e ')
+                : `conferir ${builder.alvoSelecionados.map((id) => nomePorTipoAtoId.get(id) ?? id).join(', ')}`
 
   const podeCriar =
     (builder.alvoTipo === 'todos' || builder.alvoSelecionados.length > 0) &&
@@ -115,8 +141,19 @@ export const useAlcadaBuilder = ({
     // selecionado pra preservar a mesma UX sem inventar um conceito de "regra composta" que
     // não existe no domínio.
     await Promise.all(
-      builder.alvoSelecionados.map((valor) =>
-        criar.mutateAsync({
+      builder.alvoSelecionados.map((valor) => {
+        if (builder.alvoTipo === 'equipeEtapa') {
+          const [equipeId, etapa] = valor.split(SEPARADOR_EQUIPE_ETAPA)
+          return criar.mutateAsync({
+            ...sujeito,
+            permissao: 'Nega',
+            alvoEhEquipeEEtapa: true,
+            alvoEquipeId: equipeId === SEM_EQUIPE ? null : equipeId,
+            alvoEtapa: etapa as Etapa,
+          })
+        }
+
+        return criar.mutateAsync({
           ...sujeito,
           permissao: builder.permissao,
           ...(builder.alvoTipo === 'etapa'
@@ -126,27 +163,38 @@ export const useAlcadaBuilder = ({
               : builder.alvoTipo === 'grupo'
                 ? { alvoGrupo: valor as GrupoTipoAto }
                 : { alvoTipoAtoId: valor }),
-        }),
-      ),
+        })
+      }),
     )
     setAberto(false)
   }
 
+  const ETAPAS = ['PreConferencia', 'PosConferencia'] as const
+
   const alvoOpcoes =
     builder.alvoTipo === 'etapa'
-      ? (['PreConferencia', 'PosConferencia'] as const).map((e) => ({ valor: e, label: ETAPA_LABEL[e] }))
+      ? ETAPAS.map((e) => ({ valor: e, label: ETAPA_LABEL[e] }))
       : builder.alvoTipo === 'equipe'
         ? [...equipes.map((e) => ({ valor: e.id, label: e.nome })), { valor: SEM_EQUIPE, label: 'sem equipe' }]
         : builder.alvoTipo === 'grupo'
           ? GRUPOS.map((g) => ({ valor: g, label: GRUPO_LABEL[g] }))
-          : builder.alvoTipo === 'todos'
-            ? []
-            : tiposAto.map((t) => ({ valor: t.id, label: t.nome }))
+          : builder.alvoTipo === 'equipeEtapa'
+            ? [...equipes.map((e) => ({ id: e.id, nome: e.nome })), { id: SEM_EQUIPE, nome: 'sem equipe' }].flatMap(
+                (e) =>
+                  ETAPAS.map((etapa) => ({
+                    valor: `${e.id}${SEPARADOR_EQUIPE_ETAPA}${etapa}`,
+                    label: `${e.nome} · ${ETAPA_LABEL[etapa]}`,
+                  })),
+              )
+            : builder.alvoTipo === 'todos'
+              ? []
+              : tiposAto.map((t) => ({ valor: t.id, label: t.nome }))
 
   return {
     aberto,
     builder,
     setBuilder,
+    setAlvoTipo,
     abrir,
     abrirParaCamada,
     fechar,

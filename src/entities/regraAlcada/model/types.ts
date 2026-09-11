@@ -14,7 +14,9 @@ export type OrigemRegra = 'Manual' | 'Aprendida'
 // SujeitoAlcada/AlvoAlcada do back. `alvoEhEquipe` existe porque "equipe" aceita
 // `alvoEquipeId: null` como valor válido ("sem equipe", RF-29a) — sem o flag não daria pra
 // diferenciar "regra de equipe = sem equipe" de "não é regra de equipe" só olhando pra
-// `alvoEquipeId`.
+// `alvoEquipeId`. `alvoEhEquipeEEtapa` (Motor v4) reaproveita `alvoEquipeId`/`alvoEtapa` pra um
+// 6º alvo combinado (equipe inteira não passa por uma etapa inteira) — só aceito com
+// `permissao: 'Nega'` (ver CLAUDE.md do back, "Motor de alçada v4", pro motivo da restrição).
 export type RegraAlcada = {
   id: string
   sujeitoNivel: Nivel | null
@@ -26,6 +28,7 @@ export type RegraAlcada = {
   alvoEquipeId: string | null
   alvoTodosOsAtos: boolean
   alvoGrupo: GrupoTipoAto | null
+  alvoEhEquipeEEtapa: boolean
   origem: OrigemRegra
   ativa: boolean
   usos: number
@@ -41,12 +44,13 @@ export type CriarRegraAlcadaRequest = {
   alvoEquipeId?: string | null
   alvoTodosOsAtos?: boolean
   alvoGrupo?: GrupoTipoAto
+  alvoEhEquipeEEtapa?: boolean
 }
 
 // Motor v3 — qual dimensão motivou um bloqueio (DecisaoAlcada.Motivo no back). Só pista de UX,
 // não faz parte da decisão em si — o nome próprio que completa a frase ("Testamento fora da
 // alçada") mora no front, que já tem o lookup pronto (mesmo padrão de fraseDaRegra).
-export type MotivoAlcada = 'Etapa' | 'Tipo' | 'Grupo' | 'Equipe' | 'Geral' | 'Reservado'
+export type MotivoAlcada = 'Etapa' | 'Tipo' | 'Grupo' | 'Equipe' | 'Geral' | 'Reservado' | 'EquipeEEtapa'
 
 export type PassoTrilha = {
   camada: string

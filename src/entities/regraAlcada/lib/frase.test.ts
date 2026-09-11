@@ -21,6 +21,7 @@ const novaRegra = (sobrescreve: Partial<RegraAlcada> = {}): RegraAlcada => ({
   alvoEquipeId: null,
   alvoTodosOsAtos: false,
   alvoGrupo: null,
+  alvoEhEquipeEEtapa: false,
   origem: 'Manual',
   ativa: true,
   usos: 0,
@@ -71,6 +72,34 @@ describe('fraseDaRegra — alvo (Permite/Nega)', () => {
   it('todos os atos (alçada plena)', () => {
     const frase = fraseDaRegra(novaRegra({ sujeitoNivel: 'Senior', alvoTodosOsAtos: true }), lookups)
     expect(frase).toBe('Nível Sênior pode conferir todos os atos')
+  })
+
+  it('equipe + etapa (Motor v4) com equipe', () => {
+    const frase = fraseDaRegra(
+      novaRegra({
+        sujeitoNivel: 'Junior',
+        permissao: 'Nega',
+        alvoEhEquipeEEtapa: true,
+        alvoEquipeId: 'e1',
+        alvoEtapa: 'PreConferencia',
+      }),
+      lookups,
+    )
+    expect(frase).toBe('Nível Júnior não pode fazer pré-conferência da equipe Equipe e1')
+  })
+
+  it('equipe + etapa (Motor v4) sem equipe', () => {
+    const frase = fraseDaRegra(
+      novaRegra({
+        sujeitoNivel: 'Junior',
+        permissao: 'Nega',
+        alvoEhEquipeEEtapa: true,
+        alvoEquipeId: null,
+        alvoEtapa: 'PosConferencia',
+      }),
+      lookups,
+    )
+    expect(frase).toBe('Nível Júnior não pode fazer pós-conferência de escreventes sem equipe')
   })
 })
 

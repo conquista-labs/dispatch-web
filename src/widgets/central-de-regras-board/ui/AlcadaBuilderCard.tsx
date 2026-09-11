@@ -64,16 +64,22 @@ export const AlcadaBuilderCard = ({ builder: b, conferentes }: AlcadaBuilderCard
 
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <span className="w-[60px] flex-none text-[11.5px] font-medium text-text-2">Permissão</span>
-        <SeletorUnico
-          valor={b.builder.permissao}
-          opcoes={(['Permite', 'Nega', 'Reserva'] as const).map((permissao) => ({
-            valor: permissao,
-            label: PERMISSAO_LABEL[permissao],
-          }))}
-          onSelecionar={(permissao) => b.setBuilder((atual) => ({ ...atual, permissao }))}
-          placeholder="buscar permissão…"
-        />
-        {(['grupo', 'tipo', 'etapa', 'equipe', 'todos'] as const).map((tipo) => (
+        {b.builder.alvoTipo === 'equipeEtapa' ? (
+          // Motor v4 — este alvo só aceita Nega (ver useAlcadaBuilder.setAlvoTipo), então o
+          // seletor fica travado em vez de oferecer uma opção que o back sempre rejeitaria.
+          <span className="text-[13px] text-text-2">{PERMISSAO_LABEL.Nega} (fixo pra este alvo)</span>
+        ) : (
+          <SeletorUnico
+            valor={b.builder.permissao}
+            opcoes={(['Permite', 'Nega', 'Reserva'] as const).map((permissao) => ({
+              valor: permissao,
+              label: PERMISSAO_LABEL[permissao],
+            }))}
+            onSelecionar={(permissao) => b.setBuilder((atual) => ({ ...atual, permissao }))}
+            placeholder="buscar permissão…"
+          />
+        )}
+        {(['grupo', 'tipo', 'etapa', 'equipe', 'equipeEtapa', 'todos'] as const).map((tipo) => (
           <PillToggle
             key={tipo}
             label={
@@ -85,10 +91,12 @@ export const AlcadaBuilderCard = ({ builder: b, conferentes }: AlcadaBuilderCard
                     ? 'fazer a etapa…'
                     : tipo === 'equipe'
                       ? 'conferir atos da equipe…'
-                      : 'conferir todos os atos'
+                      : tipo === 'equipeEtapa'
+                        ? 'equipe não faz etapa…'
+                        : 'conferir todos os atos'
             }
             selecionado={b.builder.alvoTipo === tipo}
-            onClick={() => b.setBuilder((atual) => ({ ...atual, alvoTipo: tipo, alvoSelecionados: [] }))}
+            onClick={() => b.setAlvoTipo(tipo)}
           />
         ))}
       </div>

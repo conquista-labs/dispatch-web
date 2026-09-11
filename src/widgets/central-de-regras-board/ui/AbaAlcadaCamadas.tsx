@@ -1,3 +1,5 @@
+import { useState } from 'react'
+
 import { NIVEL_LABEL, type AlcanceDoConferente, type Conferente } from '@/entities/conferente'
 import { ETAPA_LABEL } from '@/entities/protocolo'
 import { fraseDaRegra, type RegraAlcada } from '@/entities/regraAlcada'
@@ -5,6 +7,7 @@ import { useAlterarStatusRegraAlcada } from '@/features/regra-alcada/alterar-sta
 import { useRemoverRegraAlcada } from '@/features/regra-alcada/remover'
 import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/ui/button'
+import { Input } from '@/shared/ui/input'
 import { SurfaceCard } from '@/shared/ui/surface-card'
 
 export type Camada = 'nivel' | 'equipe' | 'pessoa'
@@ -33,7 +36,7 @@ const CAMADAS: Camada[] = ['nivel', 'equipe', 'pessoa']
 // "Base por nível"; pessoa-sujeito com alvo equipe é "Ajuste por equipe"; o resto de pessoa é
 // "Exceção por pessoa". Puramente pra agrupar a leitura aqui, não decide alçada nenhuma.
 const camadaDe = (regra: RegraAlcada): Camada =>
-  regra.sujeitoNivel ? 'nivel' : regra.alvoEhEquipe ? 'equipe' : 'pessoa'
+  regra.sujeitoNivel ? 'nivel' : regra.alvoEhEquipe || regra.alvoEhEquipeEEtapa ? 'equipe' : 'pessoa'
 
 type AbaAlcadaCamadasProps = {
   regras: RegraAlcada[]
@@ -63,20 +66,41 @@ export const AbaAlcadaCamadas = ({
   const remover = useRemoverRegraAlcada()
   const alcancePorConferenteId = new Map(alcance.map((a) => [a.conferenteId, a]))
 
+  // Achado com o dono: com uma regra por alvo selecionado no construtor (ver CLAUDE.md — o
+  // back só aceita um alvo por regra), "Base por nível" facilmente passa de 80 linhas — sem
+  // filtro/rolagem própria a tela inteira virava uma página só de scroll. `nomesDaFrase` reusa
+  // o mesmo texto já montado pra exibir, não recalcula nada novo pra filtrar.
+  const [busca, setBusca] = useState('')
+  const nomesDaFrase = {
+    nomeConferente: (id: string) => nomePorConferenteId.get(id) ?? '—',
+    nomeTipoAto: (id: string) => nomePorTipoAtoId.get(id) ?? '—',
+    nomeEquipe: (id: string) => nomePorEquipeId.get(id) ?? '—',
+  }
+  const q = busca.trim().toLowerCase()
+  const passaNaBusca = (regra: RegraAlcada) => !q || fraseDaRegra(regra, nomesDaFrase).toLowerCase().includes(q)
+
   return (
     <div>
+      <Input
+        value={busca}
+        onChange={(e) => setBusca(e.target.value)}
+        placeholder="buscar por nível, pessoa, tipo de ato, equipe…"
+        className="mb-3"
+      />
+
       <div className="flex flex-col gap-3">
         {CAMADAS.map((camada) => {
-          const regrasDaCamada = regras.filter((r) => camadaDe(r) === camada)
+          const todasDaCamada = regras.filter((r) => camadaDe(r) === camada)
+          const regrasDaCamada = todasDaCamada.filter(passaNaBusca)
           const info = CAMADA_INFO[camada]
           const cobertas =
             camada === 'nivel'
-              ? conferentes.filter((c) => regrasDaCamada.some((r) => r.ativa && r.sujeitoNivel === c.nivel)).length
+              ? conferentes.filter((c) => todasDaCamada.some((r) => r.ativa && r.sujeitoNivel === c.nivel)).length
               : null
           const resumo =
             camada === 'nivel'
               ? `${cobertas} de ${conferentes.length} pessoas cobertas`
-              : `${regrasDaCamada.filter((r) => r.ativa).length} ativa(s)`
+              : `${todasDaCamada.filter((r) => r.ativa).length} ativa(s)`
 
           return (
             <div key={camada} className="overflow-hidden rounded-[10px] border border-border bg-card shadow-sm">
@@ -100,7 +124,11 @@ export const AbaAlcadaCamadas = ({
                 </Button>
               </div>
 
-              <div className="flex flex-col gap-1.5 p-2">
+              {/* Rolagem própria (achado pelo dono: "Base por nível" passa de 80 regras quando o
+                  construtor cria uma por tipo de ato selecionado) — cada camada rola dentro de
+                  si mesma em vez de esticar a página inteira, mesmo espírito do que já foi
+                  corrigido pra "O que cada um alcança hoje" mais abaixo. */}
+              <div className="flex max-h-[420px] flex-col gap-1.5 overflow-y-auto p-2">
                 {regrasDaCamada.map((regra) => (
                   <SurfaceCard
                     key={regra.id}
@@ -110,13 +138,7 @@ export const AbaAlcadaCamadas = ({
                     )}
                   >
                     <div className="min-w-0 flex-1">
-                      <div className="text-[13px] font-medium text-pretty">
-                        {fraseDaRegra(regra, {
-                          nomeConferente: (id) => nomePorConferenteId.get(id) ?? '—',
-                          nomeTipoAto: (id) => nomePorTipoAtoId.get(id) ?? '—',
-                          nomeEquipe: (id) => nomePorEquipeId.get(id) ?? '—',
-                        })}
-                      </div>
+                      <div className="text-[13px] font-medium text-pretty">{fraseDaRegra(regra, nomesDaFrase)}</div>
                       <div className="mt-1 font-mono text-[10.5px] text-muted-foreground">
                         {regra.origem === 'Manual' ? 'definida por você' : 'aprendida'}
                       </div>
@@ -145,7 +167,9 @@ export const AbaAlcadaCamadas = ({
                 ))}
                 {regrasDaCamada.length === 0 && (
                   <div className="rounded-[8px] border border-dashed border-border p-3.5 text-center text-[12px] text-muted-foreground">
-                    nenhuma regra nesta camada — quem chegar aqui herda a camada de cima
+                    {todasDaCamada.length === 0
+                      ? 'nenhuma regra nesta camada — quem chegar aqui herda a camada de cima'
+                      : 'nenhuma regra bate com a busca'}
                   </div>
                 )}
               </div>

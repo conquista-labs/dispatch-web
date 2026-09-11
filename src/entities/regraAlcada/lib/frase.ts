@@ -38,17 +38,21 @@ export const fraseDaRegra = (regra: RegraAlcada, lookups: LookupsFraseRegra): st
     return `Só ${quem} confere ${objeto}`
   }
 
-  const alvo = regra.alvoEtapa
-    ? `fazer ${ETAPA_LABEL[regra.alvoEtapa]}`
-    : regra.alvoTipoAtoId
-      ? `conferir ${lookups.nomeTipoAto(regra.alvoTipoAtoId)}`
-      : regra.alvoEhEquipe
-        ? `conferir atos ${regra.alvoEquipeId ? `da equipe ${lookups.nomeEquipe(regra.alvoEquipeId)}` : 'de escreventes sem equipe'}`
-        : regra.alvoGrupo
-          ? `conferir atos de ${GRUPO_LABEL[regra.alvoGrupo]}`
-          : regra.alvoTodosOsAtos
-            ? 'conferir todos os atos'
-            : '—'
+  // Motor v4 — alvo combinado equipe+etapa (checado antes de `alvoEtapa` sozinho, já que a
+  // linha reaproveita a mesma coluna: uma regra "normal" de etapa nunca tem esse flag).
+  const alvo = regra.alvoEhEquipeEEtapa
+    ? `fazer ${ETAPA_LABEL[regra.alvoEtapa!]} ${regra.alvoEquipeId ? `da equipe ${lookups.nomeEquipe(regra.alvoEquipeId)}` : 'de escreventes sem equipe'}`
+    : regra.alvoEtapa
+      ? `fazer ${ETAPA_LABEL[regra.alvoEtapa]}`
+      : regra.alvoTipoAtoId
+        ? `conferir ${lookups.nomeTipoAto(regra.alvoTipoAtoId)}`
+        : regra.alvoEhEquipe
+          ? `conferir atos ${regra.alvoEquipeId ? `da equipe ${lookups.nomeEquipe(regra.alvoEquipeId)}` : 'de escreventes sem equipe'}`
+          : regra.alvoGrupo
+            ? `conferir atos de ${GRUPO_LABEL[regra.alvoGrupo]}`
+            : regra.alvoTodosOsAtos
+              ? 'conferir todos os atos'
+              : '—'
 
   return `${quem} ${PERMISSAO_LABEL[regra.permissao]} ${alvo}`
 }

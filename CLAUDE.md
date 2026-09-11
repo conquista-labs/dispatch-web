@@ -1891,3 +1891,64 @@ abas), Central de Regras (5 abas + Alçada completo). Fluxo real ponta a ponta (
 confirmar "· 1 feitos hoje" no card certo e "324 min"/"0 min" no canto do card concluído. Suíte
 e2e permanente rodada de novo depois de todas as fases — mesmas 7 falhas pré-existentes (specs
 de verificação visual pontual sem dado re-semeado), nenhuma nova.
+
+## Central de Regras — Alçada: filtro/rolagem em Camadas + "equipe não faz etapa" (Motor v4)
+
+Dois pedidos feitos numa sessão de teste real com um conferente. Item 1 é UI pura, sem mudança
+de back: com uma regra por alvo selecionado no construtor (limitação conhecida — o back só
+aceita um alvo por regra), selecionar vários tipos de ato de uma vez pra um nível gera dezenas
+de regras, e "Base por nível" facilmente passa de 80 cards. `AbaAlcadaCamadas.tsx` ganhou um
+campo de busca (filtra por `fraseDaRegra(regra).toLowerCase().includes(busca)`, mesmo padrão
+simples já usado em `AbaAlcadaMatriz.tsx`) e cada camada ganhou rolagem própria
+(`max-h-[420px] overflow-y-auto`) em vez de esticar a página inteira — mesmo espírito já
+corrigido antes em "O que cada um alcança hoje". Contadores dos cabeçalhos continuam refletindo
+o total real da camada, não o filtrado.
+
+Item 2 é a extensão do motor (ver `dispatch-api/CLAUDE.md`, "Motor de alçada v4", pro desenho
+completo e pro bug real de mapeamento achado no caminho):
+
+- `entities/regraAlcada` — `RegraAlcada`/`CriarRegraAlcadaRequest` ganham `alvoEhEquipeEEtapa`;
+  `MotivoAlcada` ganha `'EquipeEEtapa'` (`MOTIVO_ALCADA_LABEL`: "equipe fora da alçada nesta
+  etapa"). `fraseDaRegra` ganha um ramo checado **antes** do ramo de etapa simples (a regra
+  reaproveita a mesma coluna `alvoEtapa` — sem checar `alvoEhEquipeEEtapa` primeiro, uma regra
+  do alvo novo cairia no ramo de etapa antiga por engano): "fazer {etapa} da equipe {nome}" /
+  "fazer {etapa} de escreventes sem equipe".
+- `widgets/central-de-regras-board/model/use-alcada-builder.ts` — `AlvoTipo` ganha
+  `'equipeEtapa'`. `alvoOpcoes` pra esse tipo é o produto cartesiano equipes×2 etapas (+"sem
+  equipe"), valor composto (`${equipeId ?? SEM_EQUIPE}::${etapa}`, separador `"::"` — não
+  aparece em Guid nem em valor de `Etapa`) — cabe no mecanismo de multi-seleção existente
+  (`alvoSelecionados: string[]`) sem mudar o formato do estado do builder. Novo `setAlvoTipo`
+  (substitui o `setBuilder` direto que os outros pills ainda usam) trava `permissao: 'Nega'`
+  assim que esse alvo é escolhido — mesmo raciocínio da restrição do back (evita o usuário
+  bater no 400 sem entender por quê); `AlcadaBuilderCard.tsx` mostra "não pode (fixo pra este
+  alvo)" no lugar do seletor de permissão quando esse alvo está ativo, em vez de deixar o
+  seletor visível e simplesmente ignorar o valor escolhido.
+- `AbaAlcadaCamadas.tsx` — `camadaDe` (réplica local do `ResolvedorAlcada.CamadaDe` do back, só
+  pra agrupar a leitura) ganhou `|| regra.alvoEhEquipeEEtapa` na condição de `Camada.Equipe`,
+  espelhando o back exatamente (mesmo que o caso de uso real — sujeito nível — já caia em
+  `Camada.Nivel` antes disso).
+
+**Bug real achado num teste de comportamento real pela UI, não pelo `tsc`/build/lint nem pelo
+`curl` de smoke test do back**: documentado a fundo em `dispatch-api/CLAUDE.md` ("Motor de
+alçada v4") — `GET /regras-alcada` devolvia `alvoEtapa`/`alvoEquipeId` nulos pra esse alvo
+mesmo com a linha persistida certa no Postgres, porque `ParaResponse` só extraía esses campos
+via cast pro tipo antigo (`PorEtapa`/`PorEquipeDeEscrevente`). Só apareceu como
+`fraseDaRegra` virando "Nível Júnior não pode fazer undefined de escreventes sem equipe" depois
+de criar a regra pela UI de verdade — o preview do builder (que lê o estado JS local, não a
+resposta da API) mostrava a frase certa antes de criar, o que por um instante pareceu um bug de
+front; comparar a frase pré-criação com a frase pós-refetch foi o que isolou que o problema
+era na resposta do back, não no cálculo da frase em si.
+
+**Achado de teste, não de produto**: nome de tipo de ato sai normalizado pelo back (Title Case
+por palavra — "E2E" pode virar "E2e"); qualquer teste que crie um tipo via API e depois procure
+o pill exato pelo nome original precisa usar busca sem `exact`, não replicar a normalização.
+
+Verificado via Playwright (screenshot temporário, apagado depois — cenário próprio via API:
+equipe + conferente Júnior na escala + tipo de ato dedicados, pra não colidir com regras amplas
+já existentes no banco local de dev, tipo "Nível Júnior não pode conferir atos de Notariais"):
+criar a regra pelo construtor (pill "equipe não faz etapa…", permissão travada, frase certa no
+preview), ela aparecer em "Base por nível" com a frase certa, e o simulador "Testar" mostrando
+o conferente Júnior barrado com o motivo "equipe fora da alçada nesta etapa" e a trilha
+correspondente — nos dois temas. `npx tsc -b`, `npm run build`, `npm run test` (42/42, 2 novos
+em `frase.test.ts`) e `npm run lint` limpos. Suíte permanente (`auth`/`session-isolation`/
+`cursor`/`login`) verde.

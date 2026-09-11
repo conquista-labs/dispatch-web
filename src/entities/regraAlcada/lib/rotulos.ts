@@ -17,4 +17,5 @@ export const MOTIVO_ALCADA_LABEL: Record<MotivoAlcada, string> = {
   Equipe: 'escrevente sem equipe habilitada fora da alçada',
   Geral: 'barrado por regra',
   Reservado: 'reservado a outra pessoa',
+  EquipeEEtapa: 'equipe fora da alçada nesta etapa',
 }
