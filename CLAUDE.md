@@ -1985,3 +1985,24 @@ Etapa (dois cliques em dois dropdowns distintos, cada um com seu próprio campo 
 mostrando a frase certa, criar a regra e confirmar via API que persistiu com `alvoEquipeId`/
 `alvoEtapa` corretos — nos dois temas. `npx tsc -b`, `npm run build`, `npm run test` (42/42) e
 `npm run lint` limpos. Suíte permanente verde.
+
+**Segunda rodada, achado pelo dono usando a tela de verdade**: "Quem" (Por nível/Por pessoa)
+continuava trocável com esse alvo selecionado — combinar "Por pessoa" com "equipe não faz
+etapa" gera uma frase ambígua ("Aglaé Zuzarte não pode fazer pré-conferência da equipe X" —
+de quem é essa equipe, da pessoa ou do escrevente?). A "equipe" do alvo sempre foi a do
+**escrevente** cujo ato está sendo conferido, nunca do sujeito da regra — mas nada na tela
+deixava isso claro, e o desenho original da feature (ver seção acima, "Novo alvo, não novo
+sujeito") sempre foi pensado só pra "por nível" mesmo; permitir "por pessoa" era um buraco
+aberto sem querer, não uma capacidade pretendida.
+
+**Fix**: `setAlvoTipo` (mesmo `useAlcadaBuilder`) agora também força `sujeitoTipo: 'nivel'`
+junto com `permissao: 'Nega'` ao entrar nesse alvo. `AlcadaBuilderCard.tsx` — a linha "Quem"
+troca o toggle "Por nível"/"Por pessoa" por um texto fixo ("Por nível (fixo pra este alvo)"),
+mesmo padrão visual já usado pra "Permissão". Sair desse alvo devolve o toggle normal.
+
+Verificado via Playwright (temporário) + inspeção direta de classe CSS (não só screenshot —
+pills muito próximos são difíceis de julgar visualmente em baixa resolução, achado ao investigar
+uma dúvida do dono que acabou sendo falso alarme): "Por pessoa" escolhido antes → trocar pro
+alvo "equipe não faz etapa…" remove os dois toggles e mostra o texto fixo; trocar de volta pra
+outro alvo devolve o toggle. `npx tsc -b`, `npm run build`, `npm run test` (42/42) e `npm run
+lint` limpos. Suíte permanente verde.

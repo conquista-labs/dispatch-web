@@ -85,7 +85,11 @@ export const useAlcadaBuilder = ({
   // Motor v4 — o alvo equipe+etapa só existe como Nega (ver CLAUDE.md do back, "Motor de
   // alçada v4": permitir isso entraria na lista fechada por dimensão, um efeito colateral
   // desproporcional pra uma exceção pontual). Travar a permissão aqui evita o usuário bater
-  // no 400 do back sem entender por quê.
+  // no 400 do back sem entender por quê. Sujeito também trava em "por nível" — o desenho
+  // original da feature é sempre "ninguém desse nível faz X da equipe Y" (a "equipe" aqui é a
+  // do escrevente cujo ato está sendo conferido, não do sujeito da regra); combinar "por
+  // pessoa" com esse alvo deixava a frase ambígua sobre de quem era a equipe (achado pelo
+  // dono usando a tela: "a regra é por nível, por pessoa ou é por equipe?").
   const setAlvoTipo = (alvoTipo: AlvoTipo) =>
     setBuilder((atual) => ({
       ...atual,
@@ -93,6 +97,7 @@ export const useAlcadaBuilder = ({
       alvoSelecionados: [],
       equipeEEtapaEtapas: [],
       permissao: alvoTipo === 'equipeEtapa' ? 'Nega' : atual.permissao,
+      sujeitoTipo: alvoTipo === 'equipeEtapa' ? 'nivel' : atual.sujeitoTipo,
     }))
 
   const alternarEtapaEquipeEEtapa = (etapa: Etapa) =>

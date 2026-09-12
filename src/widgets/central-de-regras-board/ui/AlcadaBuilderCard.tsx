@@ -29,20 +29,27 @@ export const AlcadaBuilderCard = ({ builder: b, conferentes }: AlcadaBuilderCard
 
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <span className="w-[60px] flex-none text-[11.5px] font-medium text-text-2">Quem</span>
-        {(['nivel', 'pessoa'] as const).map((tipo) => (
-          <PillToggle
-            key={tipo}
-            label={tipo === 'nivel' ? 'Por nível' : 'Por pessoa'}
-            selecionado={b.builder.sujeitoTipo === tipo}
-            onClick={() =>
-              b.setBuilder((atual) => ({
-                ...atual,
-                sujeitoTipo: tipo,
-                sujeitoConferenteId: tipo === 'pessoa' ? (conferentes[0]?.id ?? '') : atual.sujeitoConferenteId,
-              }))
-            }
-          />
-        ))}
+        {b.builder.alvoTipo === 'equipeEtapa' ? (
+          // Motor v4 — este alvo só existe "por nível" (ver useAlcadaBuilder.setAlvoTipo pro
+          // motivo: a "equipe" do alvo já é a do escrevente, misturar com "por pessoa" deixava
+          // ambíguo de quem era a equipe na frase).
+          <span className="text-[13px] text-text-2">Por nível (fixo pra este alvo)</span>
+        ) : (
+          (['nivel', 'pessoa'] as const).map((tipo) => (
+            <PillToggle
+              key={tipo}
+              label={tipo === 'nivel' ? 'Por nível' : 'Por pessoa'}
+              selecionado={b.builder.sujeitoTipo === tipo}
+              onClick={() =>
+                b.setBuilder((atual) => ({
+                  ...atual,
+                  sujeitoTipo: tipo,
+                  sujeitoConferenteId: tipo === 'pessoa' ? (conferentes[0]?.id ?? '') : atual.sujeitoConferenteId,
+                }))
+              }
+            />
+          ))
+        )}
       </div>
       <div className="mt-1.5 pl-[68px]">
         {b.builder.sujeitoTipo === 'nivel' ? (
