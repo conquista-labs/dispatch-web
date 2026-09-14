@@ -1,3 +1,4 @@
+import { LogOutIcon } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 
@@ -10,9 +11,11 @@ type LogoutButtonProps = {
   // superior mobile (RNF-13) passa uma classe compacta, não faz sentido "Sair" ocupar a largura
   // toda ao lado do toggle de tema.
   className?: string
+  // Rail recolhido da sidebar (shared/lib/sidebar-store.ts) — largura não sobra pro texto "Sair".
+  iconOnly?: boolean
 }
 
-export const LogoutButton = ({ className }: LogoutButtonProps = {}) => {
+export const LogoutButton = ({ className, iconOnly = false }: LogoutButtonProps = {}) => {
   const clearSession = useSessionStore((state) => state.clearSession)
   const queryClient = useQueryClient()
   const navigate = useNavigate()
@@ -31,12 +34,14 @@ export const LogoutButton = ({ className }: LogoutButtonProps = {}) => {
   return (
     <button
       onClick={handleLogout}
+      title={iconOnly ? 'Sair' : undefined}
       className={cn(
         'w-full rounded-md px-2.5 py-1.5 text-left text-[12.5px] text-text-2 hover:bg-secondary hover:text-foreground',
+        iconOnly && 'flex items-center justify-center px-0',
         className,
       )}
     >
-      Sair
+      {iconOnly ? <LogOutIcon className="size-4" /> : 'Sair'}
     </button>
   )
 }
