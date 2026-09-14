@@ -4,16 +4,19 @@ import { useSugestoesPendentes } from '@/entities/sugestao'
 import { cn } from '@/shared/lib/utils'
 
 import { AbaAlcada } from './AbaAlcada'
+import { AbaConfiguracao } from './AbaConfiguracao'
 import { AbaPrazos } from './AbaPrazos'
 import { AbaAprendizado } from './AbaAprendizado'
 import { AbaRegrasEmVigor } from './AbaRegrasEmVigor'
 import { AbaTiposDeAto } from './AbaTiposDeAto'
 
-type Aba = 'vigor' | 'aprendizado' | 'alcada' | 'tipos' | 'prazos'
+type Aba = 'vigor' | 'aprendizado' | 'alcada' | 'tipos' | 'prazos' | 'config'
 
-// As 5 abas de "Central de regras" (RF-30b a RF-41) — protótipo aprovado, Dispatch.dc.html,
-// `isInteligencia`/`abasRegras`. "Regras em vigor" é a aba padrão (mesmo default do protótipo
-// v2 — mudou de "Aprendizado" pra essa quando o dono atualizou o protótipo).
+// As 6 abas de "Central de regras" (RF-30b a RF-41 + seção 8) — protótipo aprovado,
+// Dispatch.dc.html, `isInteligencia`/`abasRegras`. "Regras em vigor" é a aba padrão (mesmo
+// default do protótipo v2 — mudou de "Aprendizado" pra essa quando o dono atualizou o
+// protótipo). "Configuração" é a mais nova, adicionada quando o protótipo ganhou a aba
+// `config` de verdade (os 12 parâmetros da seção 8, antes só editáveis via curl/Swagger).
 export const CentralDeRegrasBoard = () => {
   const [aba, setAba] = useState<Aba>('vigor')
   const { data: pendentes } = useSugestoesPendentes()
@@ -28,6 +31,7 @@ export const CentralDeRegrasBoard = () => {
             ['alcada', 'Alçada'],
             ['tipos', 'Tipos de ato'],
             ['prazos', 'Prazos por equipe'],
+            ['config', 'Configuração'],
           ] as const
         ).map(([valor, label]) => (
           <button
@@ -48,12 +52,14 @@ export const CentralDeRegrasBoard = () => {
           onIrParaAlcada={() => setAba('alcada')}
           onIrParaTipos={() => setAba('tipos')}
           onIrParaPrazos={() => setAba('prazos')}
+          onIrParaConfig={() => setAba('config')}
         />
       )}
       {aba === 'aprendizado' && <AbaAprendizado />}
       {aba === 'alcada' && <AbaAlcada />}
       {aba === 'tipos' && <AbaTiposDeAto />}
       {aba === 'prazos' && <AbaPrazos />}
+      {aba === 'config' && <AbaConfiguracao />}
     </div>
   )
 }

@@ -18,6 +18,7 @@ type AbaRegrasEmVigorProps = {
   onIrParaAlcada: () => void
   onIrParaTipos: () => void
   onIrParaPrazos: () => void
+  onIrParaConfig: () => void
 }
 
 const plural = (n: number, um: string, muitos: string) => `${n} ${n === 1 ? um : muitos}`
@@ -31,8 +32,14 @@ const plural = (n: number, um: string, muitos: string) => `${n} ${n === 1 ? um :
 // (Híbrido — é o único que o motor sabe fazer, não existe toggle de configuração ainda), e o
 // limite de simultâneos + faixas do semáforo, agora lidos de GET /config (tabela `config`,
 // seção 8 — antes eram hardcoded, texto fixo aqui teria ficado desatualizado assim que alguém
-// editasse via PUT /config).
-export const AbaRegrasEmVigor = ({ onIrParaAlcada, onIrParaTipos, onIrParaPrazos }: AbaRegrasEmVigorProps) => {
+// editasse via PUT /config). "Editar operação" agora navega pra aba Configuração de verdade
+// (antes não tinha pra onde ir — a tela não existia).
+export const AbaRegrasEmVigor = ({
+  onIrParaAlcada,
+  onIrParaTipos,
+  onIrParaPrazos,
+  onIrParaConfig,
+}: AbaRegrasEmVigorProps) => {
   const { data: regras } = useRegrasAlcada()
   const { data: conferentes } = useConferentes()
   const { data: tiposAto } = useTiposAto()
@@ -118,7 +125,7 @@ export const AbaRegrasEmVigor = ({ onIrParaAlcada, onIrParaTipos, onIrParaPrazos
       onEditar: onIrParaPrazos,
     },
     { nome: 'Catálogo de atos', itens: catalogoItens, editarLabel: 'Editar tipos', onEditar: onIrParaTipos },
-    { nome: 'Operação', itens: operacaoItens },
+    { nome: 'Operação', itens: operacaoItens, editarLabel: 'Editar operação', onEditar: onIrParaConfig },
   ]
 
   return (

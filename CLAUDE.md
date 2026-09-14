@@ -2044,3 +2044,59 @@ Verificado via Playwright: "Quem" não aparece mais com esse alvo selecionado; c
 ("Equipe X" + "pré-conferência") gera exatamente 3 regras (uma por nível, confirmado via API);
 preview mostra "Ninguém confere pré-conferência da equipe X" antes mesmo de criar. `npx tsc
 -b`, `npm run build`, `npm run test` (42/42) e `npm run lint` limpos. Suíte permanente verde.
+
+## Configuração do sistema (seção 8) — nova aba na Central de Regras
+
+O dono reexportou o protótipo (`Dispatch.dc.html`) com uma aba "Configuração" de verdade
+(`abasRegras`, `configVals`/`cfgErros`) — o back já tinha `GET/PUT /config` prontos desde a
+sessão anterior, mas sem nenhuma tela (editável só via curl/Swagger, decisão consciente
+documentada no `dispatch-api/CLAUDE.md`). Fechado o gap.
+
+- **`entities/configuracao`** ganha `AtualizarConfiguracaoRequest` (mesmo shape de
+  `Configuracao` — os 12 campos juntos, sem PATCH parcial). **`features/configuracao/atualizar`**
+  (novo) — `PUT /config`, invalida `CONFIGURACAO_QUERY_KEY` no sucesso.
+- **`AbaConfiguracao.tsx`** (novo, `widgets/central-de-regras-board/ui/`) — rascunho local até
+  "Salvar configuração" (mesmo padrão de outros formulários do projeto que não fazem PATCH
+  parcial); erro por campo validado no **cliente primeiro**, espelhando exatamente as regras do
+  back (`cfgErros`, incluindo a nova validação cruzada — ver `dispatch-api/CLAUDE.md`, mesma
+  seção). O back só devolve UM motivo por vez (`ValorInvalido(string)`), não por campo — por
+  isso a validação client-side é a fonte primária da UX de erro; um 400 do back (caso
+  inesperado, ex.: corrida entre duas edições) vira aviso geral no topo, não por campo, já que
+  não dá pra mapear com segurança um motivo solto pra um campo específico.
+- **3 seções, 12 campos**, replicados do protótipo (`configVals`): "Semáforo de prazo"
+  (faixaAtencaoMinutos/faixaUrgenteMinutos), "Distribuição e conferência"
+  (limiteDeAtosSimultaneos/janelaDeCorrecaoMinutos/tempoMedioPorAtoMinutos), "Aprendizado" (os 7
+  limiares do módulo de sugestões). Três tipos de campo, cada um com o controle certo (achado
+  comparando com o protótipo real via Playwright, não só o markup — a primeira versão usava um
+  único stepper em minutos crus pra tudo, bem menos fiel):
+  - **`dur`** (as 3 faixas de tempo) — **dois steppers lado a lado** (horas, minutos), não um
+    campo só em minutos — mesma UX do protótipo (`configVals.dur`), bem mais legível pra "4h" ou
+    "15min" do que "240". Rótulo formatado à direita via `formatDuracaoCurta` (já existia,
+    `shared/lib/format.ts`).
+  - **`num`** (casos, dias, atos, min) — um stepper só, com a unidade ao lado.
+  - **`pct`** (os 2 limiares em percentual) — **slider nativo (`<input type="range">`) + caixa
+    com o número**, igual o protótipo faz (`onRange`) — guarda fração 0–1 no back, edita 0–100
+    no campo (mesmo padrão de "front multiplica por 100" do índice de confiança da sugestão).
+  - `MiniStepper` (componente local, não compartilhado) generaliza o −/valor/+ pros 3 tipos —
+    mesmo padrão visual de `TipoAtoRow`/`DateTimePicker`, mas nenhum dos dois reaproveitado
+    direto (ambos específicos demais do próprio contexto — clamp de 2 dígitos, decimais).
+- **`AbaRegrasEmVigor.tsx`** — o grupo "Operação" ganhou `onEditar`/`editarLabel`("Editar
+  operação"), navegando pra essa aba nova (antes só tinha o texto estático "configuração do
+  sistema", sem lugar pra ir).
+- **`CentralDeRegrasBoard.tsx`** — 6ª aba, mesma ordem do protótipo reexportado
+  (`abasRegras`: vigor/aprendizado/alçada/tipos/prazos/**config**).
+
+**Achado de passagem, não corrigido ainda**: o protótipo reexportado também ampliou o resumo
+"Operação" da aba "Regras em vigor" de 3 pra 6 itens (adiciona "Correção de resultado pelo
+conferente: 15 min", "Capacidade estimada usa 18 min por ato", "Aprendizado: descarte lembrado
+por 30 dias") — `AbaRegrasEmVigor.tsx` ainda só mostra os 3 originais. Fica registrado como
+próximo passo de fidelidade, fora do escopo desta rodada (que era a tela de Configuração em si).
+
+Verificado via Playwright, **abrindo o protótipo real (`file://`) lado a lado** (pedido
+explícito do dono depois de eu ter feito a primeira versão só pelo markup — o resultado
+divergia bastante do real, mesma lição já registrada antes nesta sessão: nunca confiar só na
+leitura do `.dc.html`, navegar de verdade): os 3 tipos de campo, os 3 rascunhos/estados
+("nada alterado" → sujo → erro → salvo), a validação cruzada rejeitando e aceitando depois da
+correção, e o `PUT /config` persistindo de verdade (confirmado lendo o valor de volta via API).
+`npx tsc -b`, `npm run build`, `npm run test` (42/42) e `npm run lint` limpos. Suíte permanente
+verde.

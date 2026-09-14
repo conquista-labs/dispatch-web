@@ -1,6 +1,4 @@
-// Espelha ConfiguracaoResponse (ConfiguracaoEndpoints.cs) — seção 8 do documento de
-// requisitos. Só leitura por enquanto (GET /config) — o PUT existe no back mas ainda não tem
-// tela própria no front (decisão consciente, ver dispatch-api/CLAUDE.md).
+// Espelha ConfiguracaoResponse (ConfiguracaoEndpoints.cs) — seção 8 do documento de requisitos.
 export type Configuracao = {
   faixaAtencaoMinutos: number
   faixaUrgenteMinutos: number
@@ -15,3 +13,8 @@ export type Configuracao = {
   limiarRiscoQualidadeCasos: number
   limiarRiscoQualidadeReprovacao: number
 }
+
+// Mesmo shape de Configuracao — os 12 campos juntos, sem edição parcial (mesmo padrão de PUT
+// já usado em Equipe/TipoAto). Tipo próprio (não um alias de Configuracao) só pra deixar
+// explícito, no ponto de uso, que é o payload de escrita.
+export type AtualizarConfiguracaoRequest = Configuracao
