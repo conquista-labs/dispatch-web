@@ -8,7 +8,7 @@ import { Carregando } from '@/shared/ui/carregando'
 
 import { EquipeCard } from './EquipeCard'
 import { NovaEquipeDialog } from './NovaEquipeDialog'
-import { PillToggle } from '@/shared/ui/pill-toggle'
+import { SeletorUnico } from '@/shared/ui/seletor-unico'
 
 // RF-35 a RF-38 — equipes, prazo por etapa e alocação de escreventes órfãos.
 export const AbaPrazos = () => {
@@ -58,16 +58,17 @@ export const AbaPrazos = () => {
           <div className="mt-0.75 text-[12.5px] text-warn-fg">
             Os protocolos deles entram com o prazo padrão D+1. Selecione o nome e mova para a equipe certa.
           </div>
-          <div className="mt-2.5 flex flex-wrap gap-1.5">
-            {semEquipe.map((esc) => (
-              <PillToggle
-                key={esc.id}
-                redondo
-                label={esc.nome}
-                selecionado={escreventeSelecionadoId === esc.id}
-                onClick={() => toggleSelecao(esc.id)}
-              />
-            ))}
+          {/* RNF-11 — combobox com busca (protótipo reexportado: dc-import Combo, "buscar
+              escrevente…"), não mais pills — a lista de órfãos cresce junto com o cartório.
+              Seleção única direta (não toggle): desmarcar já tem o botão "Cancelar" logo
+              abaixo quando alguém está selecionado. */}
+          <div className="mt-2.5">
+            <SeletorUnico
+              valor={escreventeSelecionadoId}
+              opcoes={semEquipe.map((esc) => ({ valor: esc.id as string | null, label: esc.nome }))}
+              onSelecionar={(id) => setEscreventeSelecionadoId(id)}
+              placeholder="buscar escrevente…"
+            />
           </div>
         </div>
       )}

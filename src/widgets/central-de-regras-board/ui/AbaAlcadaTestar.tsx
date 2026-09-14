@@ -17,6 +17,7 @@ import { criarNomesDaCentralDeRegras } from '../lib/nomes'
 import { SEM_EQUIPE } from '../lib/sem-equipe'
 import { Carregando } from '@/shared/ui/carregando'
 import { PillToggle } from '@/shared/ui/pill-toggle'
+import { SeletorUnico } from '@/shared/ui/seletor-unico'
 
 const PRIORIDADES: Prioridade[] = ['Alta', 'Normal', 'Baixa']
 
@@ -97,40 +98,36 @@ export const AbaAlcadaTestar = ({ conferentes, tiposAto, equipes }: AbaAlcadaTes
         </div>
         <div className="mt-2.5 flex flex-wrap items-start gap-2">
           <span className="w-16 flex-none pt-1 text-[11.5px] font-medium text-text-2">Equipe</span>
-          <div className="flex flex-wrap gap-1.5">
-            <PillToggle
-              redondo
-              label="sem equipe"
-              selecionado={equipeSelecionada === SEM_EQUIPE}
-              onClick={() => setEquipeSelecionada(SEM_EQUIPE)}
-            />
-            {equipes.map((e) => (
-              <PillToggle
-                key={e.id}
-                redondo
-                label={e.nome}
-                selecionado={equipeSelecionada === e.id}
-                onClick={() => setEquipeSelecionada(e.id)}
-              />
-            ))}
-          </div>
+          {/* RNF-11 — combobox com busca (protótipo reexportado: dc-import Combo, "buscar
+              equipe…"), não mais pills — lista cresce junto com o cartório. */}
+          <SeletorUnico
+            valor={equipeSelecionada}
+            opcoes={[
+              { valor: SEM_EQUIPE, label: 'sem equipe' },
+              ...equipes.map((e) => ({ valor: e.id, label: e.nome })),
+            ]}
+            onSelecionar={setEquipeSelecionada}
+            placeholder="buscar equipe…"
+          />
         </div>
         <div className="mt-2.5 flex flex-wrap items-start gap-2">
           <span className="w-16 flex-none pt-1 text-[11.5px] font-medium text-text-2">Tipo</span>
-          <div className="flex max-h-[92px] flex-1 flex-wrap gap-1.5 overflow-y-auto">
-            {tiposAto.map((t) => (
-              <PillToggle
-                key={t.id}
-                redondo
-                label={t.nome}
-                selecionado={tipoAtoId === t.id}
-                onClick={() => setTipoAtoId(t.id)}
-              />
-            ))}
-          </div>
+          {/* RNF-11 — idem (protótipo: "buscar tipo de ato…") — até 39 tipos de ato hoje,
+              exatamente o caso que RNF-11 pede pra sair de pills. */}
+          <SeletorUnico
+            valor={tipoAtoId}
+            opcoes={tiposAto.map((t) => ({ valor: t.id as string | null, label: t.nome }))}
+            onSelecionar={setTipoAtoId}
+            placeholder="buscar tipo de ato…"
+          />
         </div>
         {/* RF-34: o destino (pool/atribuído/exceção) depende de urgência, não só de quem tem
             alçada — sem esse campo o simulador não tinha como bater com o motor de verdade. */}
+        {/* Continua pill (conjunto fixo de 3, RNF-11 não exige combobox aqui) — divergência
+            deliberada do protótipo reexportado, que removeu esse campo do simulador: sem
+            prioridade o destino nunca reflete urgência (RF-34, já corrigido antes nesta sessão
+            — "Fix: simulador roda o motor de verdade"), então tirar o campo reabriria aquele
+            bug. Fica mantido mesmo divergindo do protótipo. */}
         <div className="mt-2.5 flex flex-wrap items-start gap-2">
           <span className="w-16 flex-none pt-1 text-[11.5px] font-medium text-text-2">Prioridade</span>
           <div className="flex flex-wrap gap-1.5">

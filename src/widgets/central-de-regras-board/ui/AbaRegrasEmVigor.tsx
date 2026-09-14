@@ -104,6 +104,9 @@ export const AbaRegrasEmVigor = ({
     })),
   ]
 
+  // 6 itens (era 3) — protótipo reexportado ampliou o resumo de Operação com mais 3 linhas que
+  // já tinham dado (config lida de GET /config, mesmo padrão dos 3 originais): janela de
+  // correção, tempo médio por ato (capacidade estimada) e memória do descarte de sugestões.
   const operacaoItens: ItemVigor[] = [
     { frase: 'Modo de distribuição: Híbrido', detalhe: 'urgentes recebem dono; o resto fica no pool' },
     {
@@ -113,6 +116,18 @@ export const AbaRegrasEmVigor = ({
     {
       frase: `Semáforo: amarelo abaixo de ${configuracao.faixaAtencaoMinutos / 60}h, laranja abaixo de ${configuracao.faixaUrgenteMinutos}min`,
       detalhe: 'vermelho quando o vencimento passa',
+    },
+    {
+      frase: `Correção de resultado pelo conferente: ${configuracao.janelaDeCorrecaoMinutos} min após concluir`,
+      detalhe: 'depois disso, só reabertura autorizada pela distribuidora',
+    },
+    {
+      frase: `Capacidade estimada usa ${configuracao.tempoMedioPorAtoMinutos} min por ato`,
+      detalhe: 'base do número de atos que cabem no dia',
+    },
+    {
+      frase: `Aprendizado: descarte lembrado por ${configuracao.diasDeMemoriaDescarte} dias`,
+      detalhe: 'sugestão recusada não volta nesse período',
     },
   ]
 

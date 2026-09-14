@@ -2086,12 +2086,6 @@ documentada no `dispatch-api/CLAUDE.md`). Fechado o gap.
 - **`CentralDeRegrasBoard.tsx`** — 6ª aba, mesma ordem do protótipo reexportado
   (`abasRegras`: vigor/aprendizado/alçada/tipos/prazos/**config**).
 
-**Achado de passagem, não corrigido ainda**: o protótipo reexportado também ampliou o resumo
-"Operação" da aba "Regras em vigor" de 3 pra 6 itens (adiciona "Correção de resultado pelo
-conferente: 15 min", "Capacidade estimada usa 18 min por ato", "Aprendizado: descarte lembrado
-por 30 dias") — `AbaRegrasEmVigor.tsx` ainda só mostra os 3 originais. Fica registrado como
-próximo passo de fidelidade, fora do escopo desta rodada (que era a tela de Configuração em si).
-
 Verificado via Playwright, **abrindo o protótipo real (`file://`) lado a lado** (pedido
 explícito do dono depois de eu ter feito a primeira versão só pelo markup — o resultado
 divergia bastante do real, mesma lição já registrada antes nesta sessão: nunca confiar só na
@@ -2100,3 +2094,34 @@ leitura do `.dc.html`, navegar de verdade): os 3 tipos de campo, os 3 rascunhos/
 correção, e o `PUT /config` persistindo de verdade (confirmado lendo o valor de volta via API).
 `npx tsc -b`, `npm run build`, `npm run test` (42/42) e `npm run lint` limpos. Suíte permanente
 verde.
+
+## Fechando o resto do gap-analysis do protótipo reexportado (RNF-11 + resumo "Operação")
+
+Depois da tela de Configuração acima, dois itens menores que o mesmo gap-analysis tinha achado:
+
+- **Resumo "Operação" de 3 pra 6 itens** (`AbaRegrasEmVigor.tsx`) — adicionados "Correção de
+  resultado pelo conferente: 15 min", "Capacidade estimada usa 18 min por ato" e "Aprendizado:
+  descarte lembrado por 30 dias", todos derivados do mesmo `useConfiguracao()` que os 3 itens
+  originais já usavam — nenhuma chamada nova.
+- **RNF-11/RNF-12 (seletor com busca) faltando em dois lugares**: o simulador "Testar" da aba
+  Alçada (`AbaAlcadaTestar.tsx`) e a lista de "escreventes sem equipe" em `AbaPrazos.tsx` ainda
+  usavam `PillToggle` pra listas que crescem com o cartório (equipes, tipos de ato,
+  escreventes) — o padrão estabelecido (`SeletorUnico`) já cobria isso em outros lugares da
+  Central de Regras, só não tinha chegado aqui ainda.
+  - `AbaAlcadaTestar.tsx`: Equipe e Tipo de ato viraram `SeletorUnico` (`placeholder="buscar
+    equipe…"` / `"buscar tipo de ato…"`). Etapa (2 opções) e Prioridade (3 opções) continuam
+    `PillToggle` — conjunto pequeno e fixo, mesma exceção documentada pra RNF-11 em outros
+    seletores deste projeto. **Prioridade mantida de propósito mesmo o protótipo reexportado
+    tendo removido esse campo do simulador** — sem ela o destino calculado (pool/atribuído/
+    exceção) não reflete urgência corretamente (RF-34, o motor real decide primeiro por
+    `Protocolo.Urgente`), reabriria o bug já corrigido em "Fix: simulador Testar... agora roda
+    o motor de verdade" (ver `dispatch-api/CLAUDE.md`, mesma seção) — divergência deliberada do
+    protótipo, documentada em comentário no próprio componente.
+  - `AbaPrazos.tsx`: "Escreventes sem equipe" virou um `SeletorUnico` de seleção direta (não
+    toggle — desmarcar já é coberto pelo botão "Cancelar" existente). Os chips de escrevente
+    *dentro* de cada `EquipeCard` continuam pills — lista curta por equipe, não o mesmo caso de
+    RNF-11 (que é sobre listas que crescem com o cartório inteiro).
+
+Verificado via Playwright: busca filtrando corretamente em ambos os seletores, popover abrindo/
+fechando, seleção persistindo no builder/no destino previsto. `npx tsc --noEmit`, `npm run
+build` e `npm run lint` limpos.
