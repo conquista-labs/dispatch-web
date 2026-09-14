@@ -8,6 +8,8 @@ export type SimularProtocoloManualParams = {
   escreventeNome: string
   etapa: Etapa
   prioridade: Prioridade
+  /** "Hora de entrada" (RF-18f) — só no modo criação. ISO 8601. Ausente = back assume "agora". */
+  andamentoEm?: string
 }
 
 // POST /protocolos/manual/simular (RF-18f) — prévia sem persistir, chamada ao vivo enquanto o

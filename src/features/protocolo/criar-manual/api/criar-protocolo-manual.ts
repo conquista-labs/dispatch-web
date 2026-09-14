@@ -9,6 +9,8 @@ export type CriarProtocoloManualParams = {
   etapa: Etapa
   prioridade: Prioridade
   observacao: string | null
+  /** "Hora de entrada" (RF-18f) — quando o ato chegou de verdade, se não foi agora mesmo. ISO 8601. */
+  andamentoEm: string
 }
 
 // POST /protocolos/manual (RF-18f) — 409 se o número já existir (o front trata via

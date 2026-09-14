@@ -2125,3 +2125,49 @@ Depois da tela de Configuração acima, dois itens menores que o mesmo gap-analy
 Verificado via Playwright: busca filtrando corretamente em ambos os seletores, popover abrindo/
 fechando, seleção persistindo no builder/no destino previsto. `npx tsc --noEmit`, `npm run
 build` e `npm run lint` limpos.
+
+## Dois bugs reportados no modal "Novo protocolo": campo de hora de entrada + scroll do Popover
+
+Dois problemas relatados pelo dono usando a tela de verdade.
+
+**1. Faltava campo pra "hora de entrada" na criação manual.** A importação já lê isso do
+relatório (`dataHoraAndamento`), mas `ProtocoloManualDialog.tsx` sempre deixava
+`CriarProtocoloManual` assumir "agora" como `AndamentoEm` (ver `dispatch-api/CLAUDE.md`, mesma
+seção) — sem jeito de registrar um ato que chegou antes do momento em que a distribuidora está
+digitando. Campo novo, **só no modo criação** (`!editando` — em edição a referência real é o
+`AndamentoEm` original do protocolo, que este modal não toca), reaproveitando o
+`DateTimePicker` já existente (`shared/ui/datetime-picker.tsx`, mesmo componente do passo
+"Linha de corte" da importação) — sem inventar um seletor novo. Estado local (`andamentoEm:
+Date`) resetado pra "agora" toda vez que o modal abre pra criar (mesmo `useEffect` que já
+resetava o resto do formulário). A prévia ao vivo (`useSimularProtocoloManual`) só manda
+`andamentoEm` no modo criação — em edição continua sem mandar (mesmo comportamento de antes,
+"agora" implícito no back), pra não contaminar a prévia de edição com um valor perdido de uma
+sessão de criação anterior. Sem campo nenhum no protótipo aprovado pra isso — divergência
+deliberada, pedido direto do dono, não fidelidade a nada existente.
+
+**2. Scroll não funcionava na lista de escreventes dentro do modal.** Reproduzido via
+Playwright antes de tentar qualquer correção (`page.mouse.wheel` sobre o `PopoverContent` do
+`SeletorUnico` — `scrollTop` ficava travado em 0 mesmo com `overflow-y-auto` certo e
+`el.scrollTop = 300` funcionando via JS direto). Causa: `ProtocoloManualDialog` é **o único
+lugar do projeto** onde um `Popover` (via `SeletorUnico`) fica aninhado dentro de um `Dialog`
+(shadcn/Radix) — todo outro uso de `SeletorUnico`/`SeletorMultiplo` está direto numa página, sem
+Dialog por cima. Radix `Dialog` trava o scroll da página inteira enquanto aberto (`<body
+data-scroll-locked>`), e esse travamento intercepta o wheel de qualquer `Popover` aninhado
+mesmo com CSS de overflow correto, porque o conteúdo do Popover é portalizado pra `<body>`,
+fora da árvore DOM do Dialog — confirmado isolando cada hipótese via Playwright
+(`elementFromPoint` no centro do popover batia certo, `overflow-y` computado era `auto`,
+`el.scrollTop` direto funcionava, só o `wheel` de verdade não movia nada).
+
+**Fix, no componente compartilhado** (`shared/ui/popover.tsx`, `PopoverContent`) — não só no
+`SeletorUnico`, pra proteger qualquer Popover futuro que caia no mesmo padrão: `onWheel`
+manual que só intervém quando `document.body.hasAttribute('data-scroll-locked')` (o travamento
+do Radix está de fato ativo), aplicando `scrollTop += deltaY` via JS e suprimindo o
+comportamento nativo. Fora de um Dialog (a grande maioria dos usos hoje —
+`AbaAlcadaTestar`/`AbaPrazos`/Central de Regras em geral) o guard nunca dispara, scroll nativo
+continua exatamente como antes — verificado via Playwright nos dois cenários (dentro do modal:
+`data-scroll-locked` presente, `scrollTop` avança 0→300→600 a cada wheel; fora de um Dialog:
+sem o atributo, scroll nativo intacto).
+
+`npx tsc --noEmit`, `npm run build` e `npm run lint` limpos. Verificado via Playwright: campo
+"Hora de entrada" visível só na criação, com a hora atual pré-preenchida; scroll funcionando de
+verdade na lista de escreventes dentro do modal.

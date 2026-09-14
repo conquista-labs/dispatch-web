@@ -17,6 +17,7 @@ import { useCriarProtocoloManual } from '@/features/protocolo/criar-manual'
 import { useEditarProtocoloManual } from '@/features/protocolo/editar-manual'
 import { formatDataHora } from '@/shared/lib/format'
 import { Button } from '@/shared/ui/button'
+import { DateTimePicker } from '@/shared/ui/datetime-picker'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Input } from '@/shared/ui/input'
 import { Label } from '@/shared/ui/label'
@@ -75,6 +76,10 @@ export const ProtocoloManualDialog = ({
   const criar = useCriarProtocoloManual()
   const editar = useEditarProtocoloManual()
   const [form, setForm] = useState(formVazio)
+  // "Hora de entrada" (RF-18f) — só existe no modo criação; a importação já lê isso do
+  // relatório, mas o cadastro manual sempre assumia "agora" sem deixar a distribuidora corrigir
+  // um ato que chegou antes. Reseta pra "agora" toda vez que o modal abre pra criar (abaixo).
+  const [andamentoEm, setAndamentoEm] = useState(new Date())
 
   useEffect(() => {
     if (!aberto) return
@@ -92,6 +97,7 @@ export const ProtocoloManualDialog = ({
       })
     } else {
       setForm(formVazio)
+      setAndamentoEm(new Date())
     }
     // `!!escreventes` (não o array inteiro) — dispara de novo quando a lista carrega pela
     // primeira vez (corrige o nome do escrevente pré-preenchido), sem resetar o formulário a
@@ -107,6 +113,9 @@ export const ProtocoloManualDialog = ({
       escreventeNome: form.escreventeNome.trim(),
       etapa: form.etapa,
       prioridade: form.prioridade,
+      // Só no modo criação — em edição a referência real é o AndamentoEm original do
+      // protocolo (que este modal não mexe), não faz sentido simular com o estado local daqui.
+      ...(editando ? {} : { andamentoEm: andamentoEm.toISOString() }),
     },
     podeSimular,
   )
@@ -145,6 +154,7 @@ export const ProtocoloManualDialog = ({
           etapa: form.etapa,
           prioridade: form.prioridade,
           observacao: form.observacao.trim() || null,
+          andamentoEm: andamentoEm.toISOString(),
         },
         { onSuccess: onFechar },
       )
@@ -202,6 +212,16 @@ export const ProtocoloManualDialog = ({
               </div>
             </div>
           </div>
+
+          {!editando && (
+            <div className="flex flex-col gap-1.5">
+              <Label>Hora de entrada</Label>
+              <DateTimePicker value={andamentoEm} onChange={setAndamentoEm} />
+              <span className="text-[11px] text-muted-foreground">
+                quando o ato chegou de verdade — ajuste se não foi agora mesmo
+              </span>
+            </div>
+          )}
 
           <div className="flex flex-col gap-1.5">
             <Label>Tipo de ato</Label>
