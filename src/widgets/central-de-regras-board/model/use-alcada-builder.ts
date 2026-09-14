@@ -1,6 +1,14 @@
 import { useState } from 'react'
 
 import { NIVEL_LABEL, type Conferente, type Nivel } from '@/entities/conferente'
+// Motor v4 — "equipe não faz etapa" precisa valer pra TODO MUNDO, não só um nível: o domínio
+// não tem sujeito "todos os níveis" (decisão consciente, ver CLAUDE.md do back — mudança maior
+// que tocaria ValePara/CamadaDe/discriminador de persistência do sujeito), então "ninguém pode"
+// é simulado criando uma regra Nega por nível, pros 3 de uma vez. Achado pelo dono usando a
+// tela em produção: criar só pra um nível deixava os outros dois ainda com acesso — o request
+// original nunca foi "só o Júnior não pode", sempre foi "esse ato da equipe X não passa por
+// essa etapa, ponto".
+const NIVEIS_PARA_EQUIPE_E_ETAPA: Nivel[] = ['Junior', 'Pleno', 'Senior']
 import type { Equipe } from '@/entities/equipe'
 import { ETAPA_LABEL, type Etapa } from '@/entities/protocolo'
 import type { PermissaoRegra } from '@/entities/regraAlcada'
@@ -131,8 +139,10 @@ export const useAlcadaBuilder = ({
       : builder.alvoTipo === 'equipeEtapa'
         ? combosEquipeEEtapa.length === 0
           ? '…'
-          : combosEquipeEEtapa
-              .map(({ equipeValor, etapa }) => `fazer ${ETAPA_LABEL[etapa]} ${nomeDaEquipe(equipeValor)}`)
+          : // Frase por conta própria (não "Nível X não pode…") — esse alvo é sempre "ninguém,
+            // independente de nível" (mesmo molde de Reserva em fraseDaRegra: "Só X confere Y").
+            combosEquipeEEtapa
+              .map(({ equipeValor, etapa }) => `Ninguém confere ${ETAPA_LABEL[etapa]} ${nomeDaEquipe(equipeValor)}`)
               .join(' e ')
         : builder.alvoSelecionados.length === 0
           ? '…'
@@ -166,15 +176,19 @@ export const useAlcadaBuilder = ({
     }
 
     if (builder.alvoTipo === 'equipeEtapa') {
+      // Ignora `sujeito` de propósito — esse alvo sempre cria pros 3 níveis juntos, "ninguém"
+      // não depende de nível/pessoa nenhum (ver NIVEIS_PARA_EQUIPE_E_ETAPA acima).
       await Promise.all(
-        combosEquipeEEtapa.map(({ equipeValor, etapa }) =>
-          criar.mutateAsync({
-            ...sujeito,
-            permissao: 'Nega',
-            alvoEhEquipeEEtapa: true,
-            alvoEquipeId: equipeValor === SEM_EQUIPE ? null : equipeValor,
-            alvoEtapa: etapa,
-          }),
+        NIVEIS_PARA_EQUIPE_E_ETAPA.flatMap((nivel) =>
+          combosEquipeEEtapa.map(({ equipeValor, etapa }) =>
+            criar.mutateAsync({
+              sujeitoNivel: nivel,
+              permissao: 'Nega',
+              alvoEhEquipeEEtapa: true,
+              alvoEquipeId: equipeValor === SEM_EQUIPE ? null : equipeValor,
+              alvoEtapa: etapa,
+            }),
+          ),
         ),
       )
       setAberto(false)

@@ -24,50 +24,59 @@ export const AlcadaBuilderCard = ({ builder: b, conferentes }: AlcadaBuilderCard
   return (
     <SurfaceCard className="mb-3.5 border-foreground p-4">
       <div className="text-[14.5px] font-semibold tracking-[-0.01em]">
-        {b.quemTexto} {PERMISSAO_LABEL[b.builder.permissao]} {b.alvoTexto}
+        {b.builder.alvoTipo === 'equipeEtapa'
+          ? // Frase própria, já completa (não "Quem + Permissão + Alvo") — esse alvo é sempre
+            // "ninguém, independente de nível", então "Quem" não participa da composição.
+            b.alvoTexto
+          : `${b.quemTexto} ${PERMISSAO_LABEL[b.builder.permissao]} ${b.alvoTexto}`}
       </div>
 
-      <div className="mt-3 flex flex-wrap items-center gap-2">
-        <span className="w-[60px] flex-none text-[11.5px] font-medium text-text-2">Quem</span>
-        {b.builder.alvoTipo === 'equipeEtapa' ? (
-          // Motor v4 — este alvo só existe "por nível" (ver useAlcadaBuilder.setAlvoTipo pro
-          // motivo: a "equipe" do alvo já é a do escrevente, misturar com "por pessoa" deixava
-          // ambíguo de quem era a equipe na frase).
-          <span className="text-[13px] text-text-2">Por nível (fixo pra este alvo)</span>
-        ) : (
-          (['nivel', 'pessoa'] as const).map((tipo) => (
-            <PillToggle
-              key={tipo}
-              label={tipo === 'nivel' ? 'Por nível' : 'Por pessoa'}
-              selecionado={b.builder.sujeitoTipo === tipo}
-              onClick={() =>
-                b.setBuilder((atual) => ({
-                  ...atual,
-                  sujeitoTipo: tipo,
-                  sujeitoConferenteId: tipo === 'pessoa' ? (conferentes[0]?.id ?? '') : atual.sujeitoConferenteId,
-                }))
-              }
-            />
-          ))
-        )}
-      </div>
-      <div className="mt-1.5 pl-[68px]">
-        {b.builder.sujeitoTipo === 'nivel' ? (
-          <SeletorUnico
-            valor={b.builder.sujeitoNivel}
-            opcoes={NIVEIS.map((nivel) => ({ valor: nivel, label: NIVEL_LABEL[nivel] }))}
-            onSelecionar={(nivel) => b.setBuilder((atual) => ({ ...atual, sujeitoNivel: nivel }))}
-            placeholder="buscar conferente ou nível…"
-          />
-        ) : (
-          <SeletorUnico
-            valor={b.builder.sujeitoConferenteId}
-            opcoes={conferentes.map((c) => ({ valor: c.id, label: c.nome }))}
-            onSelecionar={(id) => b.setBuilder((atual) => ({ ...atual, sujeitoConferenteId: id }))}
-            placeholder="buscar conferente ou nível…"
-          />
-        )}
-      </div>
+      {b.builder.alvoTipo === 'equipeEtapa' ? (
+        // Motor v4 — sem seção "Quem": esse alvo cria a negação pros 3 níveis de uma vez (ver
+        // useAlcadaBuilder.handleCriarRegra) — escolher um nível aqui não faria sentido, porque
+        // o resultado nunca depende de nível nenhum.
+        <p className="mt-3 max-w-[60ch] text-[11.5px] text-pretty text-muted-foreground">
+          Essa regra vale pra qualquer nível — cria a negação pros 3 juntos (Júnior, Pleno, Sênior), sem precisar
+          escolher quem.
+        </p>
+      ) : (
+        <>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <span className="w-[60px] flex-none text-[11.5px] font-medium text-text-2">Quem</span>
+            {(['nivel', 'pessoa'] as const).map((tipo) => (
+              <PillToggle
+                key={tipo}
+                label={tipo === 'nivel' ? 'Por nível' : 'Por pessoa'}
+                selecionado={b.builder.sujeitoTipo === tipo}
+                onClick={() =>
+                  b.setBuilder((atual) => ({
+                    ...atual,
+                    sujeitoTipo: tipo,
+                    sujeitoConferenteId: tipo === 'pessoa' ? (conferentes[0]?.id ?? '') : atual.sujeitoConferenteId,
+                  }))
+                }
+              />
+            ))}
+          </div>
+          <div className="mt-1.5 pl-[68px]">
+            {b.builder.sujeitoTipo === 'nivel' ? (
+              <SeletorUnico
+                valor={b.builder.sujeitoNivel}
+                opcoes={NIVEIS.map((nivel) => ({ valor: nivel, label: NIVEL_LABEL[nivel] }))}
+                onSelecionar={(nivel) => b.setBuilder((atual) => ({ ...atual, sujeitoNivel: nivel }))}
+                placeholder="buscar conferente ou nível…"
+              />
+            ) : (
+              <SeletorUnico
+                valor={b.builder.sujeitoConferenteId}
+                opcoes={conferentes.map((c) => ({ valor: c.id, label: c.nome }))}
+                onSelecionar={(id) => b.setBuilder((atual) => ({ ...atual, sujeitoConferenteId: id }))}
+                placeholder="buscar conferente ou nível…"
+              />
+            )}
+          </div>
+        </>
+      )}
 
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <span className="w-[60px] flex-none text-[11.5px] font-medium text-text-2">Permissão</span>

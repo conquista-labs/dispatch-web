@@ -2006,3 +2006,41 @@ uma dúvida do dono que acabou sendo falso alarme): "Por pessoa" escolhido antes
 alvo "equipe não faz etapa…" remove os dois toggles e mostra o texto fixo; trocar de volta pra
 outro alvo devolve o toggle. `npx tsc -b`, `npm run build`, `npm run test` (42/42) e `npm run
 lint` limpos. Suíte permanente verde.
+
+**Terceira rodada, gap real achado pelo dono usando a feature em produção**: ele criou a
+primeira regra de verdade ("Quinto Andar não passa por pré-conferência") escolhendo "Nível
+Júnior" no "Quem" — e só depois percebeu que a regra criada só bloqueava Júnior; Pleno e Sênior
+continuavam conferindo normalmente. O pedido original nunca foi "só o Júnior não pode", sempre
+foi "esse ato dessa equipe não passa por essa etapa, ponto, independente de quem". Isso não era
+bug de UI — é o design documentado no back (`dispatch-api/CLAUDE.md`, "Motor de alçada v4":
+"a distribuidora expressa 'ninguém' criando uma regra Nega por nível") tomando forma exatamente
+como decidido, só que a tela não deixava claro que era preciso repetir a criação 3 vezes (uma
+por nível) pra ter o efeito completo — e sozinha, ela nunca fazia isso por conta própria.
+
+**Fix**: em vez de exigir 3 cliques manuais, o alvo "equipe não faz etapa" agora cria a negação
+pros 3 níveis de uma vez, numa ação só — sem precisar de sujeito universal novo no domínio (a
+decisão de não criar isso continua de pé, ver `dispatch-api/CLAUDE.md`). Mudanças em
+`useAlcadaBuilder`:
+
+- `handleCriarRegra` (ramo `equipeEtapa`) ignora `sujeitoTipo`/`sujeitoNivel` do builder e cria
+  `combosEquipeEEtapa.length × 3` regras (uma por combinação equipe×etapa, vezes os 3 níveis —
+  `NIVEIS_PARA_EQUIPE_E_ETAPA`), todas via `Promise.all`.
+- `alvoTexto` ganhou frase própria pra esse alvo — "Ninguém confere {etapa} da equipe {nome}"
+  (mesmo molde de Reserva em `fraseDaRegra`: "Só X confere Y") — em vez de compor com
+  `quemTexto`/`PERMISSAO_LABEL` como os outros alvos fazem.
+
+`AlcadaBuilderCard.tsx`: a seção "Quem" inteira (toggle Por nível/Por pessoa + o seletor de
+nível/pessoa embaixo) **desaparece** quando esse alvo está selecionado — não faz sentido
+escolher nível pra uma ação que sempre cria pros 3. No lugar, um parágrafo explica: "Essa regra
+vale pra qualquer nível — cria a negação pros 3 juntos (Júnior, Pleno, Sênior), sem precisar
+escolher quem." A frase de preview no topo do card também troca de composição (`quemTexto +
+permissão + alvoTexto`) pra só `alvoTexto` sozinho, já que ele mesmo é a frase completa agora.
+
+**Dado real em produção corrigido junto** (fora do código, direto via API): a regra que o dono
+tinha criado só pra Júnior ganhou as duas que faltavam (Pleno, Sênior) pra fechar o efeito
+pretendido imediatamente, sem esperar o deploy do fix.
+
+Verificado via Playwright: "Quem" não aparece mais com esse alvo selecionado; criar a regra
+("Equipe X" + "pré-conferência") gera exatamente 3 regras (uma por nível, confirmado via API);
+preview mostra "Ninguém confere pré-conferência da equipe X" antes mesmo de criar. `npx tsc
+-b`, `npm run build`, `npm run test` (42/42) e `npm run lint` limpos. Suíte permanente verde.
