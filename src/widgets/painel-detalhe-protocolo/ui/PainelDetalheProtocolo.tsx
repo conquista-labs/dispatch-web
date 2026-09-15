@@ -9,6 +9,7 @@ import {
   ETAPA_LABEL,
   PRIORIDADE_LABEL,
   prazoChip,
+  PrazoTooltip,
   TIPO_PRAZO_LABEL,
   useDetalheProtocolo,
   type AlcadaConferente,
@@ -209,7 +210,9 @@ export const PainelDetalheProtocolo = ({ protocoloId, onFechar }: PainelDetalheP
               <>
                 <div className="flex flex-wrap gap-1.5">
                   <Chip tom={STATUS_TOM[detalhe.status]}>{STATUS_LABEL[detalhe.status]}</Chip>
-                  <Chip tom={chip.tom}>{chip.label}</Chip>
+                  <PrazoTooltip>
+                    <Chip tom={chip.tom}>{chip.label}</Chip>
+                  </PrazoTooltip>
                 </div>
 
                 {detalhe.motivoExcecao && (

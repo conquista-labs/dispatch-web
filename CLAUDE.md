@@ -2686,3 +2686,40 @@ Testado ponta a ponta via Playwright contra a API/Postgres local: criar sem equi
 que aparece no seletor de "escreventes sem equipe" da própria aba, criar duplicado (mensagem
 "já existe um escrevente com esse nome"). `npx tsc --noEmit`, `npm run build`, `npm run test`
 (42/42) e `npm run lint` limpos.
+
+## Tooltip no chip de prazo — "prazo restante para a conferência deste ato"
+
+Pedido do dono: explicar, no hover, o que o chip de prazo ("vence em 3h"/"estourou há 20min")
+significa — primeira vez que este app usa tooltip de verdade (até aqui só `title` nativo do
+browser, aceito como limitação em RNF-10/truncamento de nome).
+
+- **`shared/ui/tooltip.tsx`** (novo, via `npx shadcn@latest add tooltip`) — **mesmo par de
+  gotchas já catalogado nesta sessão pro `pagination.tsx`**: import quebrado (`from "cn"` em vez
+  de `@/shared/lib/utils`) corrigido manualmente, e a CLI instalou de novo o pacote npm fantasma
+  `cn` (`npm uninstall cn` removeu). O import de `radix-ui` (pacote unificado, não
+  `@radix-ui/react-tooltip`) **não é gotcha, é o padrão já usado por todos os outros
+  componentes Radix deste projeto** (`dialog`/`popover`/`select`/`sheet`/`alert-dialog`/
+  `progress`/`label`/`button` — confirmado antes de mexer, pra não "corrigir" algo que já
+  estava certo).
+- **`TooltipProvider`** montado uma vez em `app/providers/app-providers.tsx` (mesmo nível do
+  `Toaster`) — `delayDuration={300}` em vez do `0` que o shadcn usa por padrão: é explicação de
+  dado (RF-14), não menu que precisa abrir instantâneo; 300ms evita abrir à toa em qualquer
+  passada de mouse.
+- **`entities/protocolo/ui/PrazoTooltip.tsx`** (novo — primeiro componente em `ui/` desta
+  entidade, que até aqui só tinha `model/lib/api`) — wrapper fino (`children` + texto fixo),
+  não um componente de prazo próprio: cada tela decide o que renderizar dentro (`Chip` na
+  maioria dos casos, `<span>` colorido sem pill na aba "Por status" de Distribuição, que já
+  tinha uma variante visual diferente pro mesmo dado) — o wrapper só acrescenta a explicação,
+  sem duplicar lógica de chip em 5 lugares.
+- Aplicado nos 5 lugares que mostram o chip de prazo como **contagem regressiva ao vivo**:
+  `ProtocoloCard`/`EmConferenciaCard` (Minha fila), `DistribuicaoProtocoloCard` (as duas
+  variantes, "conferente" e "status"), `ListaCompletaColunaSheet`, `PainelDetalheProtocolo`.
+  **Deliberadamente fora**: `PassoLinhas.tsx` (prévia de importação) — mostra o *tipo* de prazo
+  ("D+1"/"1 hora"), não uma contagem regressiva de um protocolo que ainda nem existe; "prazo
+  restante para a conferência" não faz sentido semântico ali.
+
+Testado via Playwright contra a API local, hover de verdade (não só leitura de classe CSS): o
+texto do tooltip aparece depois do hover tanto em Minha fila (`conferente-rf27@cartorio.com`)
+quanto em Distribuição (`distribuidora@cartorio.com`, contexto de browser separado pra sessão
+não vazar). `npx tsc --noEmit`, `npm run build`, `npm run test` (42/42) e `npm run lint`
+limpos.

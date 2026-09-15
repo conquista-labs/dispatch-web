@@ -1,4 +1,4 @@
-import { prazoChip, type InfoProtocolo, type ProtocoloResumo } from '@/entities/protocolo'
+import { prazoChip, PrazoTooltip, type InfoProtocolo, type ProtocoloResumo } from '@/entities/protocolo'
 import { ObservacaoField } from '@/features/protocolo/definir-observacao'
 import { formatCronometro, formatDataHora, formatDuracaoConcluida } from '@/shared/lib/format'
 import { Chip } from '@/shared/ui/chip'
@@ -88,9 +88,13 @@ export const DistribuicaoProtocoloCard = ({
         {!emConferencia &&
           !concluido &&
           (variant === 'status' ? (
-            <span className={`font-mono text-[11.5px] font-medium ${TOM_TEXTO[chip.tom]}`}>{chip.label}</span>
+            <PrazoTooltip>
+              <span className={`font-mono text-[11.5px] font-medium ${TOM_TEXTO[chip.tom]}`}>{chip.label}</span>
+            </PrazoTooltip>
           ) : (
-            <Chip tom={chip.tom}>{chip.label}</Chip>
+            <PrazoTooltip>
+              <Chip tom={chip.tom}>{chip.label}</Chip>
+            </PrazoTooltip>
           ))}
       </div>
       {/* RF-14: tipo de ato (font-size/cor batendo com `p.tipo` do protótipo — 12.5px,

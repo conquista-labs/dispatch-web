@@ -1,4 +1,4 @@
-import { ETAPA_LABEL, prazoChip, type InfoProtocolo, type ProtocoloResumo } from '@/entities/protocolo'
+import { ETAPA_LABEL, prazoChip, PrazoTooltip, type InfoProtocolo, type ProtocoloResumo } from '@/entities/protocolo'
 import { Chip } from '@/shared/ui/chip'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/shared/ui/sheet'
 
@@ -55,7 +55,9 @@ export const ListaCompletaColunaSheet = ({
               >
                 <div className="flex items-center justify-between gap-1.5">
                   <span className="font-mono text-[12px] font-medium">{protocolo.numero}</span>
-                  <Chip tom={chip.tom}>{chip.label}</Chip>
+                  <PrazoTooltip>
+                    <Chip tom={chip.tom}>{chip.label}</Chip>
+                  </PrazoTooltip>
                 </div>
                 <div className="mt-1 overflow-hidden text-[13px] text-ellipsis whitespace-nowrap text-text-5">
                   {info.tipoAtoNome ?? '—'}

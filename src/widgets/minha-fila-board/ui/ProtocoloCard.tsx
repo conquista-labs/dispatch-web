@@ -1,4 +1,4 @@
-import { prazoChip, type InfoProtocolo, type ProtocoloResumo } from '@/entities/protocolo'
+import { prazoChip, PrazoTooltip, type InfoProtocolo, type ProtocoloResumo } from '@/entities/protocolo'
 import { ObservacaoField } from '@/features/protocolo/definir-observacao'
 import { formatDataHora } from '@/shared/lib/format'
 import { Button } from '@/shared/ui/button'
@@ -48,7 +48,9 @@ export const ProtocoloCard = ({
     <SurfaceCard tom={chip.tom}>
       <div className="flex items-center justify-between gap-1.5">
         <span className="font-mono text-[12.5px] font-medium">{protocolo.numero}</span>
-        <Chip tom={chip.tom}>{chip.label}</Chip>
+        <PrazoTooltip>
+          <Chip tom={chip.tom}>{chip.label}</Chip>
+        </PrazoTooltip>
       </div>
       <div className="mt-1.5 text-[13px] text-pretty text-text-5">{info.tipoAtoNome ?? '—'}</div>
       <div className="mt-1 flex flex-wrap items-center gap-1.5">

@@ -1,4 +1,4 @@
-import { prazoChip, type ProtocoloResumo } from '@/entities/protocolo'
+import { prazoChip, PrazoTooltip, type ProtocoloResumo } from '@/entities/protocolo'
 import { ObservacaoField } from '@/features/protocolo/definir-observacao'
 import { formatCronometro } from '@/shared/lib/format'
 import { Button } from '@/shared/ui/button'
@@ -41,7 +41,9 @@ export const EmConferenciaCard = ({
       </div>
       <div className="mt-1.5 text-[13px] text-text-5">{ETAPA_LABEL[protocolo.etapa]}</div>
       <div className="mt-1">
-        <Chip tom={chip.tom}>{chip.label}</Chip>
+        <PrazoTooltip>
+          <Chip tom={chip.tom}>{chip.label}</Chip>
+        </PrazoTooltip>
       </div>
 
       <ObservacaoField protocoloId={protocolo.id} observacao={protocolo.observacao} somenteLeitura={somenteLeitura} />
