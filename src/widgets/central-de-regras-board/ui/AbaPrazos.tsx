@@ -8,7 +8,7 @@ import { Carregando } from '@/shared/ui/carregando'
 
 import { EquipeCard } from './EquipeCard'
 import { NovaEquipeDialog } from './NovaEquipeDialog'
-import { SeletorUnico } from '@/shared/ui/seletor-unico'
+import { SeletorMultiplo } from './SeletorMultiplo'
 
 // RF-35 a RF-38 — equipes, prazo por etapa e alocação de escreventes órfãos.
 export const AbaPrazos = () => {
@@ -16,7 +16,9 @@ export const AbaPrazos = () => {
   const { data: escreventes } = useEscreventes()
   const mover = useMoverParaEquipe()
 
-  const [escreventeSelecionadoId, setEscreventeSelecionadoId] = useState<string | null>(null)
+  // Lista, não mais um id só — pedido do dono: selecionar vários escreventes de uma vez (órfãos
+  // ou já em outra equipe) e mover todos pra mesma equipe de destino num clique só.
+  const [selecionadosIds, setSelecionadosIds] = useState<string[]>([])
 
   if (!equipes || !escreventes) {
     return <Carregando />
@@ -27,17 +29,18 @@ export const AbaPrazos = () => {
   // over-fetching: os dois endpoints traziam informação sobreposta).
   const semEquipe = escreventes.filter((e) => !e.equipeId)
 
-  const toggleSelecao = (id: string) => setEscreventeSelecionadoId((atual) => (atual === id ? null : id))
+  const toggleSelecao = (id: string) =>
+    setSelecionadosIds((atual) => (atual.includes(id) ? atual.filter((x) => x !== id) : [...atual, id]))
 
-  const handleMoverParaCa = (equipeId: string) => {
-    if (!escreventeSelecionadoId) return
-    mover.mutate(
-      { escreventeId: escreventeSelecionadoId, equipeId },
-      { onSuccess: () => setEscreventeSelecionadoId(null) },
-    )
+  const handleMoverParaCa = async (equipeId: string) => {
+    if (selecionadosIds.length === 0) return
+    // Um PUT por escrevente (não existe endpoint de mover em lote) — em paralelo, mesma UX de
+    // "uma ação só" pro usuário; cada mutation invalida a lista de escreventes ao terminar.
+    await Promise.all(selecionadosIds.map((escreventeId) => mover.mutateAsync({ escreventeId, equipeId })))
+    setSelecionadosIds([])
   }
 
-  const nomeSelecionado = escreventes.find((e) => e.id === escreventeSelecionadoId)?.nome
+  const nomesSelecionados = escreventes.filter((e) => selecionadosIds.includes(e.id)).map((e) => e.nome)
 
   return (
     <div className="max-w-[960px]">
@@ -56,30 +59,37 @@ export const AbaPrazos = () => {
         <div className="mt-4.5 rounded-[10px] border border-warn-border bg-warn-bg p-3.5">
           <div className="text-[13px] font-semibold text-warn-fg-2">Escreventes sem equipe</div>
           <div className="mt-0.75 text-[12.5px] text-warn-fg">
-            Os protocolos deles entram com o prazo padrão D+1. Selecione o nome e mova para a equipe certa.
+            Os protocolos deles entram com o prazo padrão D+1. Selecione um ou mais nomes e mova para a equipe certa.
           </div>
           {/* RNF-11 — combobox com busca (protótipo reexportado: dc-import Combo, "buscar
               escrevente…"), não mais pills — a lista de órfãos cresce junto com o cartório.
-              Seleção única direta (não toggle): desmarcar já tem o botão "Cancelar" logo
-              abaixo quando alguém está selecionado. */}
+              Multi-seleção: mover vários órfãos pra mesma equipe de uma vez é o caso comum. */}
           <div className="mt-2.5">
-            <SeletorUnico
-              valor={escreventeSelecionadoId}
-              opcoes={semEquipe.map((esc) => ({ valor: esc.id as string | null, label: esc.nome }))}
-              onSelecionar={(id) => setEscreventeSelecionadoId(id)}
+            <SeletorMultiplo
+              selecionados={selecionadosIds.filter((id) => semEquipe.some((e) => e.id === id))}
+              opcoes={semEquipe.map((esc) => ({ valor: esc.id, label: esc.nome }))}
+              onAlternar={toggleSelecao}
               placeholder="buscar escrevente…"
             />
           </div>
         </div>
       )}
 
-      {escreventeSelecionadoId && (
+      {selecionadosIds.length > 0 && (
         <div className="mt-3.5 flex items-center justify-between gap-3 rounded-[10px] border border-foreground bg-card p-3">
-          <span className="text-[13px]">
-            <strong className="font-semibold">{nomeSelecionado}</strong> selecionado — clique em “Mover para cá” na
-            equipe de destino.
+          <span className="text-[13px] text-pretty">
+            <strong className="font-semibold">
+              {nomesSelecionados.length === 1 ? nomesSelecionados[0] : `${nomesSelecionados.length} escreventes`}
+            </strong>{' '}
+            selecionado{nomesSelecionados.length > 1 ? 's' : ''} — clique em “Mover para cá” na equipe de destino.
           </span>
-          <Button variant="outline" size="sm" onClick={() => setEscreventeSelecionadoId(null)}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setSelecionadosIds([])}
+            disabled={mover.isPending}
+            className="flex-none"
+          >
             Cancelar
           </Button>
         </div>
@@ -91,9 +101,10 @@ export const AbaPrazos = () => {
             key={equipe.id}
             equipe={equipe}
             escreventes={escreventes.filter((e) => e.equipeId === equipe.id)}
-            escreventeSelecionadoId={escreventeSelecionadoId}
+            selecionadosIds={selecionadosIds}
             onSelecionarEscrevente={toggleSelecao}
             onMoverParaCa={() => handleMoverParaCa(equipe.id)}
+            movendo={mover.isPending}
           />
         ))}
       </div>

@@ -14,9 +14,10 @@ const TIPOS_PRAZO = Object.keys(TIPO_PRAZO_LABEL) as TipoPrazo[]
 type EquipeCardProps = {
   equipe: Equipe
   escreventes: Escrevente[]
-  escreventeSelecionadoId: string | null
+  selecionadosIds: string[]
   onSelecionarEscrevente: (id: string) => void
   onMoverParaCa: () => void
+  movendo: boolean
 }
 
 // RF-35/RF-36 — nome edita inline (commit no blur, evita um PUT por tecla já que o back
@@ -24,9 +25,10 @@ type EquipeCardProps = {
 export const EquipeCard = ({
   equipe,
   escreventes,
-  escreventeSelecionadoId,
+  selecionadosIds,
   onSelecionarEscrevente,
   onMoverParaCa,
+  movendo,
 }: EquipeCardProps) => {
   const [nome, setNome] = useState(equipe.nome)
   // Ajusta o estado local durante o render, sem efeito (achado ligando mais categorias do
@@ -62,7 +64,9 @@ export const EquipeCard = ({
     })
   }
 
-  const mostrarMover = escreventeSelecionadoId !== null && !escreventes.some((e) => e.id === escreventeSelecionadoId)
+  // Mostra "Mover para cá" se ao menos um dos selecionados ainda não está nesta equipe —
+  // selecionar gente de equipes diferentes e mover todos pra uma só é um caso válido.
+  const mostrarMover = selecionadosIds.length > 0 && selecionadosIds.some((id) => !escreventes.some((e) => e.id === id))
 
   return (
     <SurfaceCard className="p-3.5">
@@ -114,7 +118,7 @@ export const EquipeCard = ({
             key={esc.id}
             redondo
             label={esc.nome}
-            selecionado={escreventeSelecionadoId === esc.id}
+            selecionado={selecionadosIds.includes(esc.id)}
             onClick={() => onSelecionarEscrevente(esc.id)}
           />
         ))}
@@ -122,9 +126,10 @@ export const EquipeCard = ({
       {mostrarMover && (
         <button
           onClick={onMoverParaCa}
-          className="mt-2.5 w-full rounded-md border border-dashed border-foreground bg-card py-1.5 text-[12.5px] font-medium hover:bg-secondary"
+          disabled={movendo}
+          className="mt-2.5 w-full rounded-md border border-dashed border-foreground bg-card py-1.5 text-[12.5px] font-medium hover:bg-secondary disabled:opacity-60"
         >
-          Mover para cá
+          {movendo ? 'Movendo…' : 'Mover para cá'}
         </button>
       )}
     </SurfaceCard>

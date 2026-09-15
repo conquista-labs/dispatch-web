@@ -129,13 +129,27 @@ test('Tipos de ato — CRUD completo reflete na tela', async ({ page }) => {
   const nomeOriginal = `Tipo Teste ${Date.now()}`
   await page.getByRole('button', { name: 'Novo tipo de ato' }).click()
   await page.getByLabel('Nome').fill(nomeOriginal)
-  await page.getByRole('button', { name: 'Cadastrar' }).click()
+  const [respostaCriar] = await Promise.all([
+    page.waitForResponse((r) => r.request().method() === 'POST' && /\/tipos-ato$/.test(r.url())),
+    page.getByRole('button', { name: 'Cadastrar' }).click(),
+  ])
+  expect(respostaCriar.status()).toBe(201)
+  // Espera o diálogo fechar de verdade antes de mexer na busca — ele só fecha no onSuccess da
+  // mutation (depois do POST resolver), então buscar cedo demais competia com o diálogo ainda
+  // aberto por cima da tela (achado testando de verdade: a busca preenchia mas o valor nunca
+  // chegava a gerar o GET filtrado, porque o campo de trás ainda não estava de fato interativo).
+  await expect(page.getByRole('dialog')).toHaveCount(0)
 
-  // Espera a criação invalidar e refazer o fetch da tabela ANTES de localizar a linha — o
-  // achado é posicional (`inputs.nth(i)`, congelado no momento da busca); se um refetch ainda
-  // em andamento reordenar as linhas depois de achar mas antes de usar, o índice acaba
-  // apontando pra outra linha (achado testando de verdade: renomeou "Venda" por engano).
-  await page.waitForLoadState('networkidle')
+  // Lista é paginada (20 por página) e ordenada por nome — um catálogo com dezenas de tipos já
+  // reais no banco local pode empurrar "Tipo Teste ..." pra página 2, fora do que
+  // `esperarLinhaPeloNome` enxerga (só varre os <input> renderizados na página atual). Busca no
+  // termo fixo "Tipo Teste" mantém o item de teste sempre isolado numa página só, do início ao
+  // fim (sobrevive ao rename, já que "Tipo Teste ..." continua sendo prefixo depois).
+  await Promise.all([
+    page.waitForResponse((r) => r.url().includes('/tipos-ato/com-uso') && r.url().includes('busca=Tipo')),
+    page.getByPlaceholder('buscar tipo de ato…').fill('Tipo Teste'),
+  ])
+
   const { input: inputNome, linha } = await esperarLinhaPeloNome(page, nomeOriginal)
   await expect(linha).toBeVisible()
   await expect(inputNome).toHaveValue(nomeOriginal)

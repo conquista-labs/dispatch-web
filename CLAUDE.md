@@ -2563,3 +2563,43 @@ conta) em vez de "Minha fila" — o `<h1>` da própria página continua "Minha f
 só o nome do item de menu. **Lição**: uma mudança de rótulo de nav pode quebrar silenciosamente
 specs de regressão que nunca tocam o código mudado — só rodar os 4 specs "de sempre" não
 detecta isso; vale rodar a suíte inteira depois de qualquer mudança em `AppShell.tsx`/nav.
+
+**Segunda regressão achada rodando `central-de-regras.spec.ts` (não coberta pelos 4 specs "de
+sempre")**: o teste de CRUD de Tipos de ato (`esperarLinhaPeloNome`, varre todo `<input>` da
+página) parou de achar a linha recém-criada — a lista agora é paginada (20 por página) e o item
+de teste (`Tipo Teste <timestamp>`) podia cair na página 2 dependendo de quantos "Tipo
+Correcao..." já existiam no banco local antes dele alfabeticamente. Corrigido preenchendo a
+busca (`buscar tipo de ato…`) logo depois de criar, isolando o item numa página só do início ao
+fim (sobrevive ao rename, já que o nome original continua prefixo do renomeado). **Achado no
+caminho, também real**: o primeiro conserto buscava cedo demais, ainda com o diálogo "Novo tipo
+de ato" aberto por cima da tela (só fecha no `onSuccess` da mutation, depois do POST resolver) —
+o campo de busca de trás não era interativo o bastante nesse instante, e a busca preenchida
+nunca chegava a disparar o `GET .../com-uso?busca=...`. Corrigido esperando a resposta do POST
+de criação e o diálogo fechar (`expect(page.getByRole('dialog')).toHaveCount(0)`) antes de
+mexer na busca.
+
+## Prazos por equipe — mover vários escreventes de uma vez
+
+Pedido do dono: "daria pra selecionar mais de escrevente pra colocar de uma vez em uma equipe?"
+— antes só dava pra selecionar um por vez (órfão ou de outra equipe) e mover pra outra.
+
+- **`AbaPrazos.tsx`** — `escreventeSelecionadoId: string | null` virou `selecionadosIds:
+string[]`. "Escreventes sem equipe" trocou `SeletorUnico` por `SeletorMultiplo` (já existia,
+  usado no construtor de regra — `widgets/central-de-regras-board/ui/SeletorMultiplo.tsx`), com
+  o array de selecionados filtrado pra só os que são de fato órfãos (evita o trigger mostrar uma
+  contagem que inclui gente selecionada via pill de outra equipe, fora da lista de opções desse
+  seletor). `handleMoverParaCa` dispara um `mutateAsync` por escrevente selecionado em paralelo
+  (`Promise.all` — não existe endpoint de mover em lote, e não precisa existir só pra isso) e só
+  limpa a seleção depois que todos resolverem.
+- **`EquipeCard.tsx`** — `escreventeSelecionadoId`/toggle vira `selecionadosIds: string[]`; o
+  botão "Mover para cá" aparece se **qualquer** selecionado ainda não é membro dessa equipe
+  (cobre o caso de selecionar gente de equipes diferentes e mover todo mundo pra uma equipe só
+  num clique). Ganhou `movendo` (estado de pending) pro botão mostrar "Movendo…" e não aceitar
+  duplo clique.
+
+Testado ponta a ponta via Playwright contra a API/Postgres local: 2 escreventes órfãos reais
+selecionados no `SeletorMultiplo`, banner "2 escreventes selecionados" confirmado, "Mover para
+cá" clicado numa equipe (`POST /escreventes/{id}/mover` disparado 2x, confirmado por rede),
+`GET /escreventes/sem-equipe` confirmando que os dois saíram da lista de órfãos — dado de teste
+revertido no final (mesma convenção de todo teste pontual desta sessão). `npx tsc --noEmit`,
+`npm run build`, `npm run test` (42/42) e `npm run lint` limpos.
