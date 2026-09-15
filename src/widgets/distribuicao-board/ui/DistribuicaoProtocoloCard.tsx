@@ -1,6 +1,6 @@
 import { prazoChip, type InfoProtocolo, type ProtocoloResumo } from '@/entities/protocolo'
 import { ObservacaoField } from '@/features/protocolo/definir-observacao'
-import { formatCronometro, formatDuracaoConcluida } from '@/shared/lib/format'
+import { formatCronometro, formatDataHora, formatDuracaoConcluida } from '@/shared/lib/format'
 import { Chip } from '@/shared/ui/chip'
 import { SurfaceCard } from '@/shared/ui/surface-card'
 
@@ -124,6 +124,9 @@ export const DistribuicaoProtocoloCard = ({
       {/* RNF-10: sem truncar — na variante "status" isso é o nome do dono do protocolo, dois
           donos com nome parecido não podem ficar indistinguíveis aqui. */}
       {meta && <div className="mt-1.5 text-[11.5px] text-pretty text-muted-foreground">{meta}</div>}
+      <div className="mt-0.5 font-mono text-[10.5px] text-muted-foreground">
+        entrada {formatDataHora(protocolo.andamentoEm)}
+      </div>
 
       <ObservacaoField protocoloId={protocolo.id} observacao={protocolo.observacao} somenteLeitura />
     </SurfaceCard>

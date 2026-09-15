@@ -41,6 +41,8 @@ export type ProtocoloResumo = {
   // de ConcluirConferencia, nulos em qualquer status antes disso.
   concluidoEm: string | null
   duracao: string | null
+  // "Data de entrada" (RF-18f) — quando o ato chegou de verdade, sempre preenchido.
+  andamentoEm: string
 }
 
 // GrupoPorConferenteResponse (Api) — VisaoDistribuicaoResponse (RF-13). Não carrega nome do

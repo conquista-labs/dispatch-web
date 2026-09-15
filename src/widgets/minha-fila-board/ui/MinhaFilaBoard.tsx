@@ -107,6 +107,13 @@ export const MinhaFilaBoard = () => {
                   acaoLabel="Pegar este"
                   onAcao={() => pegar.mutate(protocolo.id)}
                   acaoDesabilitada={pegar.isPending}
+                  // RF-23: só o dono edita observação — um protocolo no pool ainda não tem
+                  // dono (achado real: editar aqui abria o campo e o PUT sempre voltava 403
+                  // "NaoEhSeu", deixando o campo travado sem fechar — mesmo bug reportado,
+                  // causa raiz). Observação existente continua visível, só não editável; a
+                  // ação "Pegar este" continua ativa (diferente de `somenteLeitura`, que
+                  // desliga os dois).
+                  observacaoSomenteLeitura
                 />
               ))}
               {filaFiltrada.poolDisponivel.length > maxPoolVisivel && (

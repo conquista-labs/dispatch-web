@@ -33,8 +33,18 @@ function PopoverContent({
           // lista comprida sem rolar. Fora de um Dialog o scroll nativo já funciona normal, por
           // isso só intervimos quando o travamento está de fato ativo.
           if (document.body.hasAttribute('data-scroll-locked')) {
-            event.preventDefault()
-            event.currentTarget.scrollTop += event.deltaY
+            // A área que de fato rola pode ser o próprio PopoverContent (a maioria dos casos)
+            // ou um filho interno com overflow-y próprio (ex.: DateTimePicker, que mantém um
+            // rodapé de botões sempre visível fora da área rolável) — sobe a partir do alvo
+            // real do wheel até achar o primeiro elemento com conteúdo pra rolar de verdade.
+            let alvo: HTMLElement | null = event.target as HTMLElement
+            while (alvo && alvo !== event.currentTarget && alvo.scrollHeight <= alvo.clientHeight) {
+              alvo = alvo.parentElement
+            }
+            if (alvo) {
+              event.preventDefault()
+              alvo.scrollTop += event.deltaY
+            }
           }
           onWheel?.(event)
         }}

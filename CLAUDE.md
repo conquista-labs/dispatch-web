@@ -2194,3 +2194,59 @@ documentada neste arquivo pra popovers em ambiente headless, não indica problem
 estilizada em vez do overlay nativo do SO, funciona de forma confiável em navegador de verdade).
 Não dei como 100% verificado visualmente — vale conferir numa sessão local de verdade antes de
 considerar fechado.
+
+## Três bugs reportados: observação travada, falta "data de entrada", DateTimePicker cortado
+
+Três problemas relatados pelo dono usando o app de verdade.
+
+**1. "+Observação" abria e não fechava mais, nem salvando.** `ObservacaoField.tsx`
+(`features/protocolo/definir-observacao/ui/`) tinha um único botão que acumulava abrir e
+salvar, e o único caminho de fechar era o `onSuccess` do `mutate()` — se a chamada falhasse (ou
+nunca resolvesse), o campo ficava aberto pra sempre, sem erro visível e sem nenhum jeito de
+voltar atrás. Corrigido com dois botões independentes quando editando ("Cancelar", sempre
+funciona, e "Salvar observação", só fecha quando a mutation confirma).
+
+**Causa raiz real, achada testando de verdade (não só lendo código)**: o card do "Pool
+disponível" em Minha fila oferecia o botão de observação **antes do conferente pegar o
+protocolo** — mas `DefinirObservacao` (back, RF-23) só permite editar quando `protocolo.DonoId
+== conferenteRestritoId`, e um protocolo no pool não tem dono nenhum ainda. Todo "Salvar" ali
+sempre voltava 403 silencioso, e é exatamente esse card (visto no screenshot do dono) que
+travava pra sempre com a versão antiga do componente. Fix: `MinhaFilaBoard.tsx` passa um novo
+prop `observacaoSomenteLeitura` pro `ProtocoloCard` da coluna Pool — diferente do
+`somenteLeitura` já existente (que também desliga a ação "Pegar este"/"Iniciar conferência"),
+esse só trava a edição de observação, mantendo a ação principal do card intacta. Observação já
+salva continua visível (só não editável) nesse estado.
+
+**2. Faltava "data de entrada" no card do protocolo.** `ProtocoloResumo` (back) ganhou
+`AndamentoEm` (ver `dispatch-api/CLAUDE.md`, mesma seção) — front acompanhou: `andamentoEm:
+string` no tipo `ProtocoloResumo` (`entities/protocolo/model/types.ts`), renderizado como
+"entrada DD/MM/AAAA, HH:mm" (`formatDataHora`, já existente) logo abaixo da linha do
+escrevente, tanto em `ProtocoloCard.tsx` (Minha fila) quanto em `DistribuicaoProtocoloCard.tsx`
+(Distribuição) — os dois cards compartilham o mesmo DTO, então o gap era o mesmo nos dois.
+
+**3. `DateTimePicker` (linha de corte da importação) cortava embaixo da tela em janelas
+baixas, sem scroll.** O popover (`shared/ui/datetime-picker.tsx`) não tinha limite de altura —
+o conteúdo (Data + Calendário + Hora + rodapé de botões) podia ultrapassar a viewport inteira,
+e o rodapé ("Início do dia"/"Agora"/"Pronto" — o único jeito de fechar de propósito) ficava
+inalcançável. Fix: `PopoverContent` ganhou `max-h-[var(--radix-popover-content-available-height)]`
+(variável que o próprio Radix expõe, ninguém no projeto usava ainda) + `overflow-hidden`; Data/
+Calendário/Hora foram embrulhados num `<div overflow-y-auto flex-1 min-h-0>`, deixando o rodapé
+de botões **fora** da área rolável, sempre visível. Combinado com o flip automático do Radix
+(abre pra cima quando não cabe embaixo), o popover inteiro agora sempre cabe na viewport, com
+scroll de verdade na parte do meio quando precisa.
+
+**Ajuste consequente em `shared/ui/popover.tsx`**: o fix de scroll-dentro-de-Dialog já existente
+(seção "Dois bugs reportados no modal 'Novo protocolo'", acima) assumia que a área rolável era
+sempre o próprio `PopoverContent` — deixou de ser verdade com essa mudança no `DateTimePicker`
+(agora o scroll é num filho interno). O `onWheel` global passou a subir a partir do alvo real
+do wheel até achar o primeiro ancestral que de fato tem conteúdo pra rolar (`scrollHeight >
+clientHeight`), em vez de assumir sempre o `PopoverContent` — cobre os dois formatos ao mesmo
+tempo, sem quebrar o caso já corrigido antes.
+
+Testado ponta a ponta com Playwright contra a API/Postgres local: criado um conferente de teste
+via `POST /conferentes` (removido depois via `DELETE`) pra exercitar o fluxo de verdade — pool
+sem botão de observação, "Pegar este" → "Atribuídas a você" com observação editável, abrir/
+cancelar (fecha sem salvar)/abrir de novo/salvar (fecha e mostra o texto salvo); "entrada
+DD/MM/AAAA" visível nos cards de Minha fila e Distribuição; `DateTimePicker` em viewport de
+520px de altura com o botão "Pronto" dentro dos limites da tela e clicável. `npx tsc --noEmit`,
+`npm run build`, `npm run test` (42/42) e `npm run lint` limpos.

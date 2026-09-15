@@ -1,5 +1,6 @@
 import { prazoChip, type InfoProtocolo, type ProtocoloResumo } from '@/entities/protocolo'
 import { ObservacaoField } from '@/features/protocolo/definir-observacao'
+import { formatDataHora } from '@/shared/lib/format'
 import { Button } from '@/shared/ui/button'
 import { Chip } from '@/shared/ui/chip'
 import { SurfaceCard } from '@/shared/ui/surface-card'
@@ -22,6 +23,10 @@ type ProtocoloCardProps = {
   acaoVariante?: 'outline' | 'default'
   /** Distribuidora vendo a fila de um conferente (RF-19) — sem ação, sem editar observação. */
   somenteLeitura?: boolean
+  /** RF-23: só o dono edita observação — um protocolo do pool ainda não tem dono, então só
+   * essa parte do card fica travada (a ação, ex.: "Pegar este", continua ativa). Diferente de
+   * `somenteLeitura`, que desliga o card inteiro. */
+  observacaoSomenteLeitura?: boolean
 }
 
 // Card do pool disponível / atribuídos a você (RF-19) — mesmo layout dos dois, só muda o
@@ -35,6 +40,7 @@ export const ProtocoloCard = ({
   acaoDesabilitada,
   acaoVariante = 'outline',
   somenteLeitura,
+  observacaoSomenteLeitura,
 }: ProtocoloCardProps) => {
   const chip = prazoChip(protocolo.semaforo, protocolo.vencimentoEm, now)
 
@@ -54,8 +60,15 @@ export const ProtocoloCard = ({
         </Chip>
       </div>
       <div className="mt-1 text-[11.5px] text-pretty text-muted-foreground">{info.escreventeNome ?? '—'}</div>
+      <div className="mt-0.5 font-mono text-[10.5px] text-muted-foreground">
+        entrada {formatDataHora(protocolo.andamentoEm)}
+      </div>
 
-      <ObservacaoField protocoloId={protocolo.id} observacao={protocolo.observacao} somenteLeitura={somenteLeitura} />
+      <ObservacaoField
+        protocoloId={protocolo.id}
+        observacao={protocolo.observacao}
+        somenteLeitura={somenteLeitura || observacaoSomenteLeitura}
+      />
 
       {!somenteLeitura && onAcao && (
         <Button

@@ -101,71 +101,81 @@ export const DateTimePicker = ({ value, onChange }: DateTimePickerProps) => {
           <ChevronDownIcon className="size-4 flex-none text-muted-foreground" />
         </button>
       </PopoverTrigger>
-      <PopoverContent className="w-[266px] p-0" align="start">
+      <PopoverContent
+        className="max-h-[var(--radix-popover-content-available-height)] w-[266px] overflow-hidden p-0"
+        align="start"
+      >
         {/* Sem a largura fixa acima, o popover encolhia pro filho mais largo em max-content —
             que por acidente era a linha de botões "Início do dia"/"Agora"/"Pronto", não o
             calendário — sobrando espaço morto assimétrico do lado do calendário (mais estreito)
             e empurrando "Hora"/steppers pras pontas sem dar respiro. 266px é a mesma largura do
             painel equivalente no protótipo aprovado. `[--cell-size:35px]` deixa a grade de dias
             ocupar quase toda essa largura (só ~5px de sobra, contra os ~28px de antes); o
-            `flex justify-center` absorve essa sobra igual dos dois lados. */}
-        <div className="flex items-center gap-1.5 border-b border-border p-2.5">
-          <span className="flex-1 text-[11.5px] text-text-2">Data</span>
-          <input
-            value={textoData}
-            onChange={(event) => setTextoData(event.target.value)}
-            onBlur={commitTextoData}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter') {
-                commitTextoData()
-                event.currentTarget.blur()
-              }
-            }}
-            onFocus={(event) => event.target.select()}
-            placeholder="dd/mm/aaaa"
-            inputMode="numeric"
-            className="w-[92px] rounded-md border border-border bg-background px-1.5 py-0.5 text-right font-mono text-[12.5px] font-medium outline-none focus:border-foreground"
-          />
+            `flex justify-center` absorve essa sobra igual dos dois lados.
+            `max-h-[...--radix-popover-content-available-height]` + o wrapper rolável abaixo
+            (achado real: numa janela baixa, o popover inteiro — data + calendário + hora — não
+            cabia embaixo do gatilho e cortava fora da viewport, sem scroll nenhum pra alcançar
+            "Pronto", o único jeito de fechar de propósito) — Data/Calendário/Hora rolam juntos,
+            o rodapé de botões fica de fora do scroll, sempre visível/alcançável. */}
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          <div className="flex items-center gap-1.5 border-b border-border p-2.5">
+            <span className="flex-1 text-[11.5px] text-text-2">Data</span>
+            <input
+              value={textoData}
+              onChange={(event) => setTextoData(event.target.value)}
+              onBlur={commitTextoData}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                  commitTextoData()
+                  event.currentTarget.blur()
+                }
+              }}
+              onFocus={(event) => event.target.select()}
+              placeholder="dd/mm/aaaa"
+              inputMode="numeric"
+              className="w-[92px] rounded-md border border-border bg-background px-1.5 py-0.5 text-right font-mono text-[12.5px] font-medium outline-none focus:border-foreground"
+            />
+          </div>
+          <div className="flex justify-center pt-2.5">
+            <Calendar
+              mode="single"
+              selected={value}
+              onSelect={handleSelecionarData}
+              locale={ptBR}
+              formatters={{ formatWeekdayName: (dia) => LETRA_DIA_SEMANA[dia.getDay()] }}
+              // Protótipo usa JetBrains Mono (número/dado tabular) nos dias e na letra da semana —
+              // só o rótulo do mês ("agosto 2026") fica na fonte de texto normal. `[&_.rdp-x]` em vez
+              // de `classNames` porque esse prop substitui a classe inteira da chave (perderia o
+              // `flex`/tamanho padrão do react-day-picker), só quero acrescentar a fonte.
+              className="[--cell-size:35px] [&_.rdp-day_button]:font-mono [&_.rdp-day_button]:text-[11.5px] [&_.rdp-weekday]:font-mono [&_.rdp-weekday]:text-[10px]"
+              // Sem autoFocus: ele fazia o react-day-picker pousar o foco de teclado em "hoje" assim
+              // que o popover abria, e isso desenha um anel de foco em "hoje" ao mesmo tempo que o
+              // preenchimento do dia selecionado aparece em outro dia — duas marcações "concorrentes"
+              // lado a lado sem relação com o que o protótipo faz (ele não tem esse conceito).
+            />
+          </div>
+          <div className="flex items-center gap-2 border-t border-border p-2.5">
+            <span className="flex-1 text-[11.5px] text-text-2">Hora</span>
+            <Stepper
+              valor={doisDigitos(value.getHours())}
+              min={0}
+              max={23}
+              onAlterar={(valor) => definirHora('horas', valor)}
+              onDecrementar={() => mexerHora('horas', -1)}
+              onIncrementar={() => mexerHora('horas', 1)}
+            />
+            <span className="font-mono text-[12.5px] font-medium text-muted-foreground">:</span>
+            <Stepper
+              valor={doisDigitos(value.getMinutes())}
+              min={0}
+              max={59}
+              onAlterar={(valor) => definirHora('minutos', valor)}
+              onDecrementar={() => mexerHora('minutos', -1)}
+              onIncrementar={() => mexerHora('minutos', 1)}
+            />
+          </div>
         </div>
-        <div className="flex justify-center pt-2.5">
-          <Calendar
-            mode="single"
-            selected={value}
-            onSelect={handleSelecionarData}
-            locale={ptBR}
-            formatters={{ formatWeekdayName: (dia) => LETRA_DIA_SEMANA[dia.getDay()] }}
-            // Protótipo usa JetBrains Mono (número/dado tabular) nos dias e na letra da semana —
-            // só o rótulo do mês ("agosto 2026") fica na fonte de texto normal. `[&_.rdp-x]` em vez
-            // de `classNames` porque esse prop substitui a classe inteira da chave (perderia o
-            // `flex`/tamanho padrão do react-day-picker), só quero acrescentar a fonte.
-            className="[--cell-size:35px] [&_.rdp-day_button]:font-mono [&_.rdp-day_button]:text-[11.5px] [&_.rdp-weekday]:font-mono [&_.rdp-weekday]:text-[10px]"
-            // Sem autoFocus: ele fazia o react-day-picker pousar o foco de teclado em "hoje" assim
-            // que o popover abria, e isso desenha um anel de foco em "hoje" ao mesmo tempo que o
-            // preenchimento do dia selecionado aparece em outro dia — duas marcações "concorrentes"
-            // lado a lado sem relação com o que o protótipo faz (ele não tem esse conceito).
-          />
-        </div>
-        <div className="flex items-center gap-2 border-t border-border p-2.5">
-          <span className="flex-1 text-[11.5px] text-text-2">Hora</span>
-          <Stepper
-            valor={doisDigitos(value.getHours())}
-            min={0}
-            max={23}
-            onAlterar={(valor) => definirHora('horas', valor)}
-            onDecrementar={() => mexerHora('horas', -1)}
-            onIncrementar={() => mexerHora('horas', 1)}
-          />
-          <span className="font-mono text-[12.5px] font-medium text-muted-foreground">:</span>
-          <Stepper
-            valor={doisDigitos(value.getMinutes())}
-            min={0}
-            max={59}
-            onAlterar={(valor) => definirHora('minutos', valor)}
-            onDecrementar={() => mexerHora('minutos', -1)}
-            onIncrementar={() => mexerHora('minutos', 1)}
-          />
-        </div>
-        <div className="flex gap-1.5 border-t border-border p-2.5">
+        <div className="flex flex-none gap-1.5 border-t border-border p-2.5">
           <Button variant="outline" size="sm" className="flex-1 text-[11.5px]" onClick={irParaInicioDoDia}>
             Início do dia
           </Button>

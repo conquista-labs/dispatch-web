@@ -22,13 +22,17 @@ export const ObservacaoField = ({ protocoloId, observacao, somenteLeitura }: Obs
   const [valor, setValor] = useState(observacao ?? '')
   const { mutate, isPending } = useDefinirObservacao()
 
-  const handleClicar = () => {
-    if (!editando) {
-      setValor(observacao ?? '')
-      setEditando(true)
-      return
-    }
+  const abrir = () => {
+    setValor(observacao ?? '')
+    setEditando(true)
+  }
 
+  // Fechar não podia depender só do sucesso do PUT (achado real: se a chamada falhasse, o
+  // campo ficava aberto pra sempre, sem nenhum jeito de voltar atrás) — "Cancelar" sempre
+  // funciona, independente de rede; "Salvar" só fecha quando a mutation realmente confirma.
+  const cancelar = () => setEditando(false)
+
+  const salvar = () => {
     mutate({ protocoloId, observacao: valor.trim() || null }, { onSuccess: () => setEditando(false) })
   }
 
@@ -48,19 +52,39 @@ export const ObservacaoField = ({ protocoloId, observacao, somenteLeitura }: Obs
           value={valor}
           onChange={(event) => setValor(event.target.value)}
           placeholder="Ex.: falta certidão negativa do vendedor"
+          autoFocus
           className="mt-2 min-h-[54px] w-full resize-y rounded-[7px] border border-primary bg-card p-2 text-xs leading-snug text-foreground outline-none"
         />
       )}
 
-      {!somenteLeitura && (
+      {!somenteLeitura && !editando && (
         <Button
           variant="ghost"
-          onClick={handleClicar}
-          disabled={isPending}
+          onClick={abrir}
           className="mt-1.5 h-auto w-full justify-start px-1.5 py-1 text-[11.5px] font-medium"
         >
-          {editando ? 'Salvar observação' : observacao ? 'Editar observação' : '+ Observação'}
+          {observacao ? 'Editar observação' : '+ Observação'}
         </Button>
+      )}
+
+      {!somenteLeitura && editando && (
+        <div className="mt-1.5 flex gap-1.5">
+          <Button
+            variant="ghost"
+            onClick={cancelar}
+            disabled={isPending}
+            className="h-auto flex-1 justify-center px-1.5 py-1 text-[11.5px] font-medium"
+          >
+            Cancelar
+          </Button>
+          <Button
+            onClick={salvar}
+            disabled={isPending}
+            className="h-auto flex-1 justify-center px-1.5 py-1 text-[11.5px] font-medium"
+          >
+            {isPending ? 'Salvando…' : 'Salvar observação'}
+          </Button>
+        </div>
       )}
     </>
   )
