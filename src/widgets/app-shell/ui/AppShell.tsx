@@ -44,6 +44,27 @@ const NAV_POR_PAPEL: Record<Papel, { label: string; to: string; icon: LucideIcon
   ],
 }
 
+// Pedido do dono: uma distribuidora que também confere (mesma conta, os dois papéis) — nesse
+// caso a base é a lista completa de gestão, e a "Minha fila" dela (que na verdade é "ver a
+// fila de outro conferente", `ROUTES.filaConferentes`) precisa desambiguar da fila de verdade
+// da própria pessoa (`ROUTES.minhaFila`, que o papel Conferente já tem) — por isso a versão da
+// Distribuidora é renomeada pra "Fila de conferentes" só quando os dois papéis coexistem;
+// alguém só-Distribuidora continua vendo "Minha fila" exatamente como sempre foi.
+const itensNavPara = (papeis: Papel[]) => {
+  const ehDistribuidora = papeis.includes('Distribuidora')
+  const ehConferente = papeis.includes('Conferente')
+  const base = ehDistribuidora ? NAV_POR_PAPEL.Distribuidora : NAV_POR_PAPEL.Conferente
+
+  if (!ehDistribuidora || !ehConferente) return base
+
+  const minhaFilaDeVerdade = NAV_POR_PAPEL.Conferente.find((item) => item.to === ROUTES.minhaFila)
+  if (!minhaFilaDeVerdade) return base
+
+  return base.flatMap((item) =>
+    item.to === ROUTES.filaConferentes ? [{ ...item, label: 'Fila de conferentes' }, minhaFilaDeVerdade] : [item],
+  )
+}
+
 // Badge de pílula do menu (RF-13/RF-39) — mesma medida do protótipo (Dispatch.dc.html, `n.badge`):
 // JetBrains Mono 11px, padding 1px/6px, borda 1px, cantos totalmente arredondados. Cores próprias
 // (não reaproveita o Chip de shared/ui) porque o protótipo usa `var(--text-3)` aqui, um tom mais
@@ -69,11 +90,11 @@ export const AppShell = () => {
   const recolhida = useSidebarStore((state) => state.recolhida)
   const toggleRecolhida = useSidebarStore((state) => state.toggleRecolhida)
 
-  const ehDistribuidora = usuario?.papel === 'Distribuidora'
+  const ehDistribuidora = usuario?.papeis.includes('Distribuidora') ?? false
   const { data: visao } = useVisaoDistribuicao({ enabled: ehDistribuidora })
   const { data: sugestoesPendentes } = useSugestoesPendentes({ enabled: ehDistribuidora })
 
-  const itensNav = usuario ? NAV_POR_PAPEL[usuario.papel] : []
+  const itensNav = usuario ? itensNavPara(usuario.papeis) : []
 
   // Mesma regra do protótipo: Distribuição mostra "N exc" (aviso) se tiver alguma exceção
   // aberta, senão o tamanho do pool (neutro), senão nada. Central de regras mostra a fila de
@@ -216,7 +237,7 @@ export const AppShell = () => {
           {usuario &&
             (recolhida ? (
               <div
-                title={`${usuario.nome} · ${usuario.papel}`}
+                title={`${usuario.nome} · ${usuario.papeis.join(' · ')}`}
                 className="mx-auto flex size-8 items-center justify-center rounded-full border border-border bg-card text-[12px] font-semibold text-text-2"
               >
                 {usuario.nome.charAt(0).toUpperCase()}
@@ -225,7 +246,7 @@ export const AppShell = () => {
               // RNF-10: nome do usuário logado não trunca
               <div className="flex items-start justify-between gap-1.5 rounded-md border border-border bg-card px-2.5 py-1.5 text-[13px]">
                 <span className="text-pretty">{usuario.nome}</span>
-                <span className="mt-px flex-none text-[11px] text-muted-foreground">{usuario.papel}</span>
+                <span className="mt-px flex-none text-[11px] text-muted-foreground">{usuario.papeis.join(' · ')}</span>
               </div>
             ))}
 

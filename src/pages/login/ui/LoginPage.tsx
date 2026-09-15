@@ -17,7 +17,7 @@ export const LoginPage = () => {
   const usuario = useSessionStore((state) => state.usuario)
 
   if (usuario) {
-    return <Navigate to={roleHomeRoute[usuario.papel]} replace />
+    return <Navigate to={roleHomeRoute[usuario.papeis[0]]} replace />
   }
 
   return (

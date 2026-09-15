@@ -3,7 +3,7 @@ import { DashboardBoard } from '@/widgets/dashboard-board'
 
 // RF-42-46.
 export const DashboardPage = () => {
-  const souGestao = useSessionStore((s) => s.usuario?.papel) === 'Distribuidora'
+  const souGestao = useSessionStore((s) => s.usuario?.papeis.includes('Distribuidora') ?? false)
 
   return (
     <div className="px-7 pt-6 pb-7">

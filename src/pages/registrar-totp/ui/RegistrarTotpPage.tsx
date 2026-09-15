@@ -28,7 +28,7 @@ export const RegistrarTotpPage = () => {
 
         <div className="rounded-xl border border-border bg-card p-[22px] shadow-sm">
           {usuario ? (
-            <RegistroTotp email={usuario.email} papel={usuario.papel} />
+            <RegistroTotp email={usuario.email} papel={usuario.papeis[0]} />
           ) : (
             <>
               <div className="font-mono text-[10.5px] font-medium tracking-[0.06em] text-muted-foreground">

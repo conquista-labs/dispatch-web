@@ -19,8 +19,10 @@ export const RequireRole = ({ roles, children }: RequireRoleProps) => {
     return <Navigate to={ROUTES.login} replace />
   }
 
-  if (!roles.includes(usuario.papel)) {
-    return <Navigate to={roleHomeRoute[usuario.papel]} replace />
+  // Alguém pode ter mais de um papel (distribuidora que também confere) — libera se qualquer
+  // um dos papéis da pessoa estiver na lista aceita pela rota.
+  if (!usuario.papeis.some((papel) => roles.includes(papel))) {
+    return <Navigate to={roleHomeRoute[usuario.papeis[0]]} replace />
   }
 
   return children

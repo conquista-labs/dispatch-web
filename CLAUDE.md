@@ -2413,3 +2413,49 @@ Testado ponta a ponta via Playwright contra a API/Postgres local: preencheu o fo
 escolheu tipo de ato/escrevente, escolheu um conferente específico, confirmou a prévia mudando
 pra "atribuído direto a Aglaé Zuzarte", criou o protocolo com sucesso. `npx tsc --noEmit`,
 `npm run build`, `npm run test` (42/42) e `npm run lint` limpos.
+
+## Uma conta com os dois papéis — distribuidora que também confere
+
+Pedido do dono: a esposa dele, Maria Vittoria, é a distribuidora do cartório mas também confere
+atos pessoalmente às vezes — precisa disso na MESMA conta, sem duas contas/login separados. Ver
+`dispatch-api/CLAUDE.md`, mesma seção, pro desenho completo do back (decisão de não mexer em
+`Usuario.Papel`, zero migration — "também é conferente" é derivado de existir um `Conferente`
+vinculado ao `UsuarioId`).
+
+- **`entities/usuario`** — `Usuario.papel: Papel` (valor único) virou `Usuario.papeis: Papel[]`
+  (lista) — a mudança de contrato mais ampla desta rodada, tocando todo lugar que lia
+  `usuario.papel`. `require-role.tsx` (`RequireRole`) passou de `roles.includes(usuario.papel)`
+  pra `usuario.papeis.some((papel) => roles.includes(papel))` — libera a rota se **qualquer**
+  papel da pessoa bater com os aceitos por ela. `LoginPage.tsx`/`RegistrarTotpPage.tsx` (redirect
+  pra home de papel) usam `usuario.papeis[0]` — a primeira posição é sempre o `Usuario.Papel` de
+  verdade (`Distribuidora` ou `Conferente`), nunca o papel derivado, então continua estável pra
+  decidir "a home de quem só tem um papel".
+- **`AppShell.tsx` — nav mesclada.** `NAV_POR_PAPEL` (o `Record<Papel, Item[]>` de sempre)
+  ganhou uma função por cima, `itensNavPara(papeis: Papel[])`: parte da lista de Distribuidora se
+  ela tiver esse papel (é a mais completa), senão da lista de Conferente. **Só quando os dois
+  papéis coexistem**: o "Minha fila" da Distribuidora (que na verdade aponta pra
+  `ROUTES.filaConferentes` — "ver a fila de outro conferente") é renomeado pra **"Fila de
+  conferentes"**, e o "Minha fila" de verdade do Conferente (`ROUTES.minhaFila`) é injetado logo
+  depois — quem só é Distribuidora continua vendo "Minha fila" exatamente como sempre foi, sem
+  nenhuma mudança. `ehDistribuidora` virou `usuario?.papeis.includes('Distribuidora') ?? false`;
+  os dois pontos de exibição na sidebar (avatar recolhido `title`, card expandido) usam
+  `usuario.papeis.join(' · ')` em vez do papel cru.
+- **`DashboardPage.tsx`** — `souGestao` (decide entre a visão completa e a visão restrita) segue
+  o mesmo raciocínio do back: `usuario?.papeis.includes('Distribuidora') ?? false` — Distribuidora
+  sempre vê a visão de gestão completa, mesmo sendo também Conferente.
+- **Vincular conferente a uma conta existente — UI nova.** Botão "Adicionar alçada a uma conta
+  existente" na página Conferentes, ao lado de "Novo conferente" (`VincularExistenteDialog.tsx`,
+  `widgets/conferentes-board/ui/`) — dialog com e-mail (de uma conta já cadastrada, não cria
+  `Usuario` novo), nível e jornada, chamando `POST /conferentes/vincular` (feature nova
+  `features/conferente/vincular-existente/`, mesmo molde de `features/conferente/cadastrar/`).
+  Trata os dois erros possíveis do back de forma distinta: 404 ("Nenhuma conta com esse
+  e-mail") e 409 ("Essa conta já é conferente") — não reaproveita `ehConflito409` sozinho porque
+  aqui o 404 também precisa de mensagem própria, diferente de `NovoConferenteDialog`/
+  `EditarConferenteDialog` (que só têm um caso de erro esperado, o 409 de e-mail duplicado).
+
+Testado ponta a ponta via Playwright contra a API/Postgres local com a conta combo de teste
+(`distribuidora@cartorio.com`, que já tinha um Conferente vinculado do lado do back): sidebar
+mostrando "Distribuidora · Conferente", "Fila de conferentes" e "Minha fila" aparecendo como
+dois itens distintos de nav (o segundo indo pra `/minha-fila` de verdade, não pro seletor "ver
+como outro conferente"), Dashboard mostrando a visão de gestão completa. Nos dois temas.
+`npx tsc -b`, `npm run build`, `npm run test` (42/42) e `npm run lint` limpos.

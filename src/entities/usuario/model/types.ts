@@ -3,9 +3,12 @@
 // como um valor novo da união, e mais nada nesta entidade muda.
 export type Papel = 'Distribuidora' | 'Conferente'
 
+// Pedido do dono: uma distribuidora que também confere pessoalmente (mesma conta, os dois
+// papéis) — por isso `papeis` é uma lista, não um valor único. Back calcula isso a partir de
+// Usuario.Papel + "existe um Conferente vinculado" (PapeisEfetivos, ver dispatch-api/CLAUDE.md).
 export type Usuario = {
   id: string
   nome: string
   email: string
-  papel: Papel
+  papeis: Papel[]
 }
