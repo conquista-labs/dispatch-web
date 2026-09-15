@@ -2654,3 +2654,35 @@ identidade de login, não de cenário (`conferentes`/`fila-conferentes`/`totp-re
 passaram limpos; os specs de verificação pontual falharam exatamente como esperado (precisam de
 re-seed manual, documentado). `npx tsc --noEmit`, `npm run build`, `npm run test` (42/42) e
 `npm run lint` limpos.
+
+## Cadastro manual de escrevente + a pergunta do "Subscritor"
+
+Pedido do dono veio em duas partes. A primeira, cadastro manual de escrevente, tocada nesta
+rodada. A segunda — um futuro papel "Subscritor" que, junto com o Escrevente, um dia teria
+login próprio pra cuidar da própria etapa no fluxo de vida do protocolo — **investigada, não
+implementada**: "Subscritor" não existe em nenhum lugar do documento de requisitos formal (nem
+glossário, nem seção de papéis, nem "perguntas em aberto") — só existe como comentário-âncora
+em 3 pontos do código deste repo (`entities/usuario/model/types.ts`, `role-home-route.ts`,
+`app/routing/require-role.tsx`), antecipando que um papel novo é barato de adicionar (união
+discriminada + `Record` indexado + guarda de rota por lista), sem nunca ter sido de fato
+definido. Confirmado com o dono: fica pra depois, ele mesmo decide quando prototipar isso no
+protótipo/requisitos — mesma disciplina de sempre (a ferramenta de design do dono é quem define
+comportamento de domínio novo, não uma suposição no código). Registrado aqui pra não se perder:
+se/quando isso avançar, o caminho arquitetural mais próximo já existe neste projeto — o mesmo
+padrão que `Conferente` usa (entidade com `UsuarioId` opcional vinculado a um `Usuario`, papel
+efetivo derivado como já existe em `PapeisEfetivos`), não um mecanismo novo. `Escrevente` hoje é
+puro dado de entrada (`Id`/`Nome`/`EquipeId`, sem `UsuarioId` nenhum) — precisaria desse mesmo
+salto se um dia ganhar login.
+
+- **Cadastro manual de escrevente** — até aqui só nascia como efeito colateral de importar um
+  lote ou de criar/editar um protocolo manual com nome novo. `NovoEscreventeDialog.tsx` (novo,
+  `widgets/central-de-regras-board/ui/`), mesmo padrão visual de `NovoTipoAtoDialog` — nome +
+  `SeletorUnico` de equipe (opcional, com opção "Sem equipe" explícita). Feature nova
+  `features/escrevente/criar/` (`POST /escreventes`, ver `dispatch-api/CLAUDE.md` mesma seção).
+  Botão na aba "Prazos por equipe" (`AbaPrazos.tsx`), ao lado de "Nova equipe" — é a aba onde
+  escreventes já são geridos (mover entre equipes, ver órfãos).
+
+Testado ponta a ponta via Playwright contra a API/Postgres local: criar sem equipe, confirmar
+que aparece no seletor de "escreventes sem equipe" da própria aba, criar duplicado (mensagem
+"já existe um escrevente com esse nome"). `npx tsc --noEmit`, `npm run build`, `npm run test`
+(42/42) e `npm run lint` limpos.

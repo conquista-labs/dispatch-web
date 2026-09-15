@@ -8,6 +8,7 @@ import { Carregando } from '@/shared/ui/carregando'
 
 import { EquipeCard } from './EquipeCard'
 import { NovaEquipeDialog } from './NovaEquipeDialog'
+import { NovoEscreventeDialog } from './NovoEscreventeDialog'
 import { SeletorMultiplo } from './SeletorMultiplo'
 
 // RF-35 a RF-38 — equipes, prazo por etapa e alocação de escreventes órfãos.
@@ -52,7 +53,10 @@ export const AbaPrazos = () => {
             aplica o prazo combinado — um para pré-conferência, outro para pós.
           </p>
         </div>
-        <NovaEquipeDialog />
+        <div className="flex flex-none gap-2">
+          <NovoEscreventeDialog />
+          <NovaEquipeDialog />
+        </div>
       </header>
 
       {semEquipe.length > 0 && (
