@@ -2171,3 +2171,26 @@ sem o atributo, scroll nativo intacto).
 `npx tsc --noEmit`, `npm run build` e `npm run lint` limpos. Verificado via Playwright: campo
 "Hora de entrada" visível só na criação, com a hora atual pré-preenchida; scroll funcionando de
 verdade na lista de escreventes dentro do modal.
+
+## Scrollbar customizada, global
+
+O dono apontou o scrollbar cru do sistema operacional (barra cinza grossa, sem arredondamento)
+destoando do resto do design system — visível no scroll horizontal do board de Distribuição
+(muitas colunas de conferente lado a lado) mas vale pra qualquer lista/coluna comprida do app.
+
+Regra global em `app/styles/index.css` (`@layer base`, `*` — não um componente por vez):
+`scrollbar-width: thin` + `scrollbar-color` (Firefox) e `::-webkit-scrollbar*` (Chrome/Safari),
+barra fina (10px), cantos arredondados, com um respiro em volta do polegar via `border:
+2px solid transparent` + `background-clip: padding-box`. Cor usa os tokens `--border`
+(parado)/`--muted-foreground` (hover) que **já trocam sozinhos com o tema** (`:root`/`.dark`
+já os redefinem) — nenhuma regra extra de dark mode precisou entrar aqui.
+
+**Limitação de verificação, registrada com honestidade**: confirmei via `getComputedStyle`
+(Playwright) que `scrollbar-width`/`scrollbar-color` resolvem certo nos dois temas (token de
+`--border` de cada um), mas a screenshot headless do Chromium não pintou a barra em nenhuma
+tentativa (mesmo forçando scroll ativo + hover antes da captura) — mesma classe de limitação já
+documentada neste arquivo pra popovers em ambiente headless, não indica problema real no CSS
+(a técnica `::-webkit-scrollbar` é o jeito padrão/consolidado de forçar uma barra persistente e
+estilizada em vez do overlay nativo do SO, funciona de forma confiável em navegador de verdade).
+Não dei como 100% verificado visualmente — vale conferir numa sessão local de verdade antes de
+considerar fechado.
