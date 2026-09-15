@@ -39,15 +39,30 @@ export const AbaExcecoes = ({ excecoes, conferentes, resolverInfo, onAbrirDetalh
         </div>
       )}
 
-      {excecoes.map((protocolo) => (
-        <ExcecaoCard
-          key={protocolo.id}
-          protocolo={protocolo}
-          conferentes={conferentes}
-          info={resolverInfo(protocolo)}
-          onAbrirDetalhe={onAbrirDetalhe}
-        />
-      ))}
+      {excecoes.length > 0 && (
+        <>
+          <div className="mb-1.5 flex items-baseline justify-between gap-3">
+            <div className="text-[13.5px] font-semibold">Exceções</div>
+            <span className="font-mono text-[11px] text-muted-foreground">{excecoes.length}</span>
+          </div>
+          {/* Achado real (dono): diferente das outras colunas de Distribuição (que truncam com
+              "+N" — ver ProtocoloColuna), aqui cada item exige resolução (atribuir ou
+              descartar) — esconder atrás de um "ver mais" atrapalharia o trabalho, então só a
+              rolagem própria contém a altura (a busca livre já vem de `BarraDeFiltros`, no
+              board pai — `excecoes` aqui já chega filtrada, não precisa de uma segunda busca). */}
+          <div className="flex max-h-[560px] flex-col gap-2 overflow-y-auto">
+            {excecoes.map((protocolo) => (
+              <ExcecaoCard
+                key={protocolo.id}
+                protocolo={protocolo}
+                conferentes={conferentes}
+                info={resolverInfo(protocolo)}
+                onAbrirDetalhe={onAbrirDetalhe}
+              />
+            ))}
+          </div>
+        </>
+      )}
     </div>
   )
 }

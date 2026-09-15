@@ -2290,3 +2290,54 @@ Distribuição, Dashboard e uma aba de Central de Regras mostrando o spinner cen
 respiro, no lugar da linha de texto perdida; conferido nos dois temas (claro/escuro) — cor do
 ícone/texto troca sozinha via `text-muted-foreground`, sem regra extra. `npx tsc --noEmit`,
 `npm run build`, `npm run test` (42/42) e `npm run lint` limpos.
+
+## Auditoria de listagens sem filtro/paginação — 4 correções
+
+Pedido do dono: revisar todas as listagens do sistema (ênfase na Central de Regras) em busca de
+listas compridas sem filtro nem corte que atrapalhassem o uso. Levantamento (agente em
+background, cruzando front + back) confirmou que **nenhum endpoint do sistema pagina** (sem
+`Take`/`Skip`/cursor em lugar nenhum — só o corte de 30 dias em "concluídos" da Distribuição já
+existia) e ranqueou as listagens do pior pro melhor caso. A maioria já estava bem tratada (Alçada
+→ Camadas/Matriz/Testar, Distribuição → Por conferente/Por status, Minha fila, Prazos por
+equipe, Dashboard — confirmado que os tratamentos de rodadas anteriores continuam no lugar).
+Corrigidos os 4 piores, na ordem escolhida pelo dono:
+
+1. **Central de Regras → Regras em vigor, grupo "Alçada"** (`AbaRegrasEmVigor.tsx`) — pior
+   caso: ~95+ regras em produção, sem filtro nem corte, **e é a aba padrão** (primeira que
+   abre). `GrupoVigor` ganhou `totalSemFiltro?: number` — só o grupo Alçada usa (os outros 3:
+   Prazo/Catálogo/Operação são bounded pelo domínio, não precisam de busca). Mesmo padrão já
+   usado em Alçada → Camadas: `Input` de busca (filtra por `fraseDaRegra`) + `max-h-[420px]
+   overflow-y-auto` só nesse grupo, contador "N de M" quando a busca reduz a lista.
+2. **Central de Regras → Aprendizado, "Histórico de aprendizado"** (`AbaAprendizado.tsx`) —
+   cresce pra sempre, nunca é limpo (toda decisão aplicar/descartar fica registrada). Mesmo
+   padrão: busca por título da sugestão + `max-h-[420px] overflow-y-auto`, contador "N de M",
+   mensagem distinta pra "nenhuma decisão ainda" vs. "nenhuma bate com a busca".
+3. **Distribuição → Exceções** (`AbaExcecoes.tsx`) — a única lista de protocolo do app sem
+   nenhum truncamento próprio (as outras colunas truncam com "+N protocolos" via
+   `ProtocoloColuna`). **Achado corrigindo**: cheguei a adicionar uma segunda busca livre nessa
+   aba, só que `DistribuicaoBoard.tsx` já passa `excecoes={visaoFiltrada.excecoes}` — a lista
+   que chega aqui **já é filtrada** pelo `BarraDeFiltros` do board pai (busca livre, data,
+   equipe, tipo, prioridade, prazo). Duas caixas de busca fazendo a mesma coisa seria pior UX,
+   não melhor — removido antes de ir pro commit; ficou só `max-h-[560px] overflow-y-auto`
+   (sem truncar com "+N": cada exceção exige resolução ativa, esconder atrás de um "ver mais"
+   atrapalharia o trabalho, diferente das colunas que só são consulta).
+4. **Importar → prévia de linhas** (`PassoLinhas.tsx`) — o "+N linhas" era só texto estático,
+   sem nenhum jeito de revisar o resto antes de confirmar a importação (achado real: back já
+   documenta que "um lote pode ter centenas de linhas"). Removido o corte fixo em 9
+   (`MAX_LINHAS_VISIVEIS`) — agora mostra todas as linhas (filtradas ou não) dentro de
+   `max-h-[480px] overflow-y-auto`, com busca (protocolo/tipo/escrevente/equipe) que só aparece
+   quando o lote passa de 9 linhas.
+
+Testado localmente via Playwright: busca sem resultado mostrando a mensagem certa em Regras em
+vigor; Aprendizado renderizando sem quebrar (histórico vazio no ambiente local, mas o código
+segue o mesmo padrão já provado em Camadas); Exceções confirmado com uma **única** caixa de
+busca visível na tela (não duas). `npx tsc --noEmit`, `npm run build`, `npm run test` (42/42) e
+`npm run lint` limpos.
+
+**Fora de escopo desta rodada, registrado no levantamento mas não corrigido**: Central de Regras
+→ Tipos de ato e Conferentes ficaram como "risco moderado/baixo hoje" (dezenas de itens, sem
+filtro, mas ainda longe de doer) — não entraram nos "4 piores" que o dono pediu pra priorizar
+agora. Nenhum endpoint ganhou paginação de verdade nesta rodada — todas as correções são
+mitigação client-side (busca + rolagem contida), igual ao padrão já estabelecido em Camadas;
+paginação de back fica pra quando/se o volume justificar (mesmo raciocínio já registrado na
+seção de corte de "concluídos" acima).

@@ -1,3 +1,5 @@
+import { useState } from 'react'
+
 import { useEquipes } from '@/entities/equipe'
 import { useEscreventes } from '@/entities/escrevente'
 import { useRegrasAlcada } from '@/entities/regraAlcada'
@@ -15,6 +17,7 @@ import { useGerarSugestoes } from '@/features/sugestao/gerar'
 import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/ui/button'
 import { Carregando } from '@/shared/ui/carregando'
+import { Input } from '@/shared/ui/input'
 import { Progress } from '@/shared/ui/progress'
 import { SurfaceCard } from '@/shared/ui/surface-card'
 
@@ -39,6 +42,7 @@ export const AbaAprendizado = () => {
   const gerar = useGerarSugestoes()
   const aplicar = useAplicarSugestao()
   const descartar = useDescartarSugestao()
+  const [buscaHistorico, setBuscaHistorico] = useState('')
 
   if (!pendentes || !historico || !regras || !equipes || !escreventes || !tiposAto) {
     return <Carregando />
@@ -49,6 +53,14 @@ export const AbaAprendizado = () => {
     nomeEscrevente: (id: string) => escreventes.find((e) => e.id === id)?.nome ?? '—',
     nomeTipoAto: (id: string) => tiposAto.find((t) => t.id === id)?.nome ?? '—',
   }
+
+  // Achado real (dono): esta lista só cresce, nunca é limpa — sem busca/rolagem própria a
+  // página inteira virava scroll único (mesmo tratamento já dado a Alçada → Camadas/Regras em
+  // vigor). Filtra pelo mesmo título mostrado no card.
+  const qHistorico = buscaHistorico.trim().toLowerCase()
+  const historicoFiltrado = qHistorico
+    ? historico.filter((s) => tituloDaSugestao(s, lookups).toLowerCase().includes(qHistorico))
+    : historico
 
   const kpis = [
     { label: 'Tipos de ato no catálogo', valor: String(tiposAto.length), sub: `${regras.length} regras de alçada` },
@@ -132,9 +144,22 @@ export const AbaAprendizado = () => {
         </div>
       )}
 
-      <h2 className="mt-6.5 mb-2.5 text-[15px] font-semibold tracking-[-0.01em]">Histórico de aprendizado</h2>
-      <div className="flex flex-col gap-1.5">
-        {historico.map((sugestao) => (
+      <div className="mt-6.5 mb-2.5 flex items-baseline justify-between gap-3">
+        <h2 className="m-0 text-[15px] font-semibold tracking-[-0.01em]">Histórico de aprendizado</h2>
+        <span className="flex-none font-mono text-[11px] text-muted-foreground">
+          {qHistorico ? `${historicoFiltrado.length} de ${historico.length}` : historico.length}
+        </span>
+      </div>
+      {historico.length > 0 && (
+        <Input
+          value={buscaHistorico}
+          onChange={(e) => setBuscaHistorico(e.target.value)}
+          placeholder="buscar por tipo de ato, escrevente, equipe…"
+          className="mb-2"
+        />
+      )}
+      <div className="flex max-h-[420px] flex-col gap-1.5 overflow-y-auto">
+        {historicoFiltrado.map((sugestao) => (
           <div
             key={sugestao.id}
             className="flex flex-wrap items-center justify-between gap-3.5 rounded-[10px] border border-border bg-card p-2.75"
@@ -159,6 +184,9 @@ export const AbaAprendizado = () => {
         ))}
         {historico.length === 0 && (
           <p className="text-[13px] text-muted-foreground">Nenhuma decisão registrada ainda.</p>
+        )}
+        {historico.length > 0 && historicoFiltrado.length === 0 && (
+          <p className="text-[13px] text-muted-foreground">Nenhuma decisão bate com a busca.</p>
         )}
       </div>
     </div>
