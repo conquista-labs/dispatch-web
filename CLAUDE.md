@@ -2603,3 +2603,54 @@ cá" clicado numa equipe (`POST /escreventes/{id}/mover` disparado 2x, confirmad
 `GET /escreventes/sem-equipe` confirmando que os dois saíram da lista de órfãos — dado de teste
 revertido no final (mesma convenção de todo teste pontual desta sessão). `npx tsc --noEmit`,
 `npm run build`, `npm run test` (42/42) e `npm run lint` limpos.
+
+## `globalSetup` do Playwright — a suíte para de depender de "o que já tinha no banco"
+
+Motivado por um clone de produção pro Postgres local (pedido do dono, pra analisar a Central de
+Regras — ver `dispatch-api/CLAUDE.md`, mesma seção, pro `pg_dump`/anonimização): a suíte e2e
+inteira parou de rodar, porque quase todo spec loga com contas seed fixas
+(`distribuidora@cartorio.com`, `conferente-rf27@cartorio.com`, `conferente-visual@cartorio.com`)
+que só existiam porque alguém as criou à mão numa sessão anterior — nenhum código garantia isso.
+Comentário do dono, que virou o critério: **"um bom teste não depende de dado local, a não ser
+que o dado seja criado pelo teste e depois apagado"**.
+
+Duas categorias de dependência de dado nesta suíte, tratadas diferente:
+
+1. **Identidade de login** (as 3 contas fixas) — quase todo spec precisa disso só pra entrar,
+   não é "dado do teste" em si. Resolvido de vez: `playwright.config.ts` ganhou `globalSetup:
+   './e2e/global-setup.ts'`, que roda **uma vez**, antes da suíte inteira, chamando `POST
+   /dev/seed-e2e` (endpoint dev-only novo, ver `dispatch-api/CLAUDE.md`) — garante as 3 contas
+   com senha/estado conhecidos, criando quem não existe e resetando quem já existe. Não importa
+   mais o que tinha no banco antes (seed antigo, clone de produção anonimizado, banco vazio
+   zerado) — a suíte sempre começa com o mesmo chão de login. Se a API não estiver de pé (ou
+   não estiver em Development), `globalSetup` falha com uma mensagem clara em vez de deixar
+   cada spec quebrar de um jeito diferente e confuso lá na frente.
+2. **Dado específico de cada teste** (protocolo, conferente extra, equipe, regra) — não mudou:
+   a maioria dos specs já cria e apaga isso via API dentro do próprio teste (`conferentes.spec.ts`/
+   `correcao-reabertura.spec.ts`/`totp-recuperacao-senha.spec.ts` já seguiam essa convenção,
+   documentada há tempo na seção "Duas categorias de teste em `e2e/`" abaixo). Isso continua
+   sendo responsabilidade de cada spec — `globalSetup` não tenta resolver isso, só a identidade.
+
+**Achado corrigindo, não bug pré-existente do produto**: `session-isolation.spec.ts` tinha um
+`getByText('Distribuidora Teste')` sem escopo — contra o clone de produção, a conta seed tem um
+ato concluído de verdade (ela é combo, ver "Uma conta com os dois papéis" acima) e aparece
+*também* na tabela de desempenho do Dashboard, tornando o locator ambíguo. Escopado pra
+`page.getByRole('complementary').getByText(...)` (a sidebar, `<aside>`) — mais robusto a
+variação de dado real, não só ao seed antigo que nunca tinha ninguém com ato concluído.
+
+**Fora de escopo desta rodada, por decisão explícita (é o que já estava documentado)**: os
+specs de "verificação visual pontual" (`minha-fila`, `distribuicao`, `importar`,
+`central-de-regras`, `distribuicao-v2`, `dashboard` visão-conferente, `painel-detalhe-protocolo`,
+`alcada-v3`) continuam falhando contra um banco recém-clonado/zerado — isso é esperado, não é o
+que este ajuste resolve. Eles dependem de um **cenário** específico (protocolo em tal status,
+exceção aberta, tipo desconhecido no catálogo), não só de uma conta pra logar; automatizar isso
+também até fica mais barato agora que a suíte não depende de estado ambíguo pra login, mas seria
+escopo maior — ver a seção "Duas categorias de teste em `e2e/`", que já registra esse trade-off
+("custo > benefício num projeto sem CI ainda").
+
+Testado rodando a suíte inteira (21 specs) contra o clone de produção anonimizado — os 4 specs
+de regressão permanente (`auth`/`session-isolation`/`login`/`cursor`) mais 3 que só dependem de
+identidade de login, não de cenário (`conferentes`/`fila-conferentes`/`totp-recuperacao-senha`),
+passaram limpos; os specs de verificação pontual falharam exatamente como esperado (precisam de
+re-seed manual, documentado). `npx tsc --noEmit`, `npm run build`, `npm run test` (42/42) e
+`npm run lint` limpos.

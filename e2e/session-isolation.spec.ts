@@ -14,7 +14,10 @@ test('deslogar de um papel e logar com outro não vaza sessão/cache entre os do
   await page.getByRole('button', { name: 'Entrar' }).click()
   // RF-03, ajustado a pedido do dono: os dois papéis caem no Dashboard depois de logar.
   await expect(page).toHaveURL(/\/dashboard/)
-  await expect(page.getByText('Distribuidora Teste')).toBeVisible()
+  // Escopado na sidebar (role complementary) — a conta seed pode aparecer também na tabela de
+  // desempenho do Dashboard (se ela tiver algum ato concluído de verdade, ex.: clone de
+  // produção), o que tornaria um `getByText` solto ambíguo (achado rodando contra um clone).
+  await expect(page.getByRole('complementary').getByText('Distribuidora Teste')).toBeVisible()
 
   await page.getByRole('button', { name: 'Sair' }).click()
   await expect(page).toHaveURL(/\/login/)

@@ -3,8 +3,11 @@ import { defineConfig, devices } from '@playwright/test'
 // Testes de verificação visual/comportamental contra o app de verdade (não substituem
 // vitest/tsc — ver .claude/skills/verify-visual). Não sobem a API sozinhos: os testes que
 // dependem de login real esperam a API já rodando em VITE_API_URL (ver CLAUDE.md).
+// `globalSetup` roda uma vez antes de tudo e garante as contas fixas de login (ver
+// e2e/global-setup.ts) — não importa o que já tinha no banco local antes.
 export default defineConfig({
   testDir: './e2e',
+  globalSetup: './e2e/global-setup.ts',
   fullyParallel: false,
   retries: 0,
   reporter: [['list']],
