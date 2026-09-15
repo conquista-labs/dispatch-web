@@ -2459,3 +2459,23 @@ mostrando "Distribuidora · Conferente", "Fila de conferentes" e "Minha fila" ap
 dois itens distintos de nav (o segundo indo pra `/minha-fila` de verdade, não pro seletor "ver
 como outro conferente"), Dashboard mostrando a visão de gestão completa. Nos dois temas.
 `npx tsc -b`, `npm run build`, `npm run test` (42/42) e `npm run lint` limpos.
+
+**Bug real em produção, achado pelo dono na hora do deploy — `Uncaught TypeError: Cannot read
+properties of undefined (reading 'includes')`.** Sessão persistida no navegador de quem já
+estava logado *antes* deste deploy guardava `usuario.papel` (formato antigo, singular) — sem
+`usuario.papeis`. `AppShell`/`DashboardPage`/`RequireRole` leem `usuario.papeis.includes(...)`/
+`.some(...)` direto; numa sessão assim, isso é ler de `undefined` e quebra a tela inteira antes
+até do `GET /auth/me` (que devolveria o formato certo) ter a chance de corrigir a sessão — o
+`SessionBoot` só bloqueia a renderização enquanto a query está `isLoading`; no exato instante em
+que a resposta chega, o componente já renderiza os filhos (com o `usuario` **ainda não
+atualizado**, porque `setSession` só roda no `useEffect` seguinte, depois do commit) antes de
+corrigir a store. Deslogar/logar "resolvia" na hora porque o login novo já grava direto no
+formato certo — mas ninguém deveria precisar fazer isso manualmente.
+
+**Fix**: `session-store.ts` ganhou `version: 1` + `migrate` no `persist` do Zustand — se a
+sessão persistida está na versão anterior (`0`, implícito em qualquer sessão salva antes desta
+mudança) e o `usuario` guardado tem `papel` mas não `papeis`, migra pra `{ ..., papeis: [papel]
+}` **na hidratação**, antes de qualquer componente renderizar. Resolve o caso raiz (sessão
+antiga não quebra mais, sem precisar de logout) — testado via Playwright simulando esse exato
+cenário (localStorage com `{ usuario: { papel: 'Distribuidora' }, version: 0 }` + um token real):
+o Dashboard carrega normalmente, sidebar já mostra `papeis` corretos, zero erro de página.
