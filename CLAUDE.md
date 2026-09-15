@@ -2341,3 +2341,33 @@ agora. Nenhum endpoint ganhou paginação de verdade nesta rodada — todas as c
 mitigação client-side (busca + rolagem contida), igual ao padrão já estabelecido em Camadas;
 paginação de back fica pra quando/se o volume justificar (mesmo raciocínio já registrado na
 seção de corte de "concluídos" acima).
+
+## Painel de detalhe ganha "Atribuir a…"/"Reatribuir a…" — mandar um ato pra alguém na mão
+
+Pedido do dono: uma opção pra distribuidora mandar um ato manualmente pra um conferente
+escolhido. `AtribuirManualmente` (back) deixou de ser exclusivo de exceção — ver
+`dispatch-api/CLAUDE.md`, mesma seção — agora também vale pra Pool (ainda sem dono) e Atribuido
+(redireciona direto pra outra pessoa, sem devolver ao pool antes).
+
+`AcoesDeStatus` (dentro de `PainelDetalheProtocolo.tsx`) ganhou um botão novo, condicionado a
+`status in (Pool, Excecao, Atribuido)` — rótulo muda pra "Reatribuir a…" quando já há dono, só
+pra deixar claro que é uma troca, não uma primeira atribuição. Clicar troca o botão por um
+seletor inline (`Select` + Cancelar/Confirmar) — **mesmo padrão já usado em `ExcecaoCard.tsx`**
+pra resolver exceção (inclusive o mesmo override de `SelectTrigger` do RNF-10, nome não trunca),
+reaproveitado em vez de inventar um segundo jeito de escolher conferente. Sem restrição de
+alçada no seletor — mostra todo mundo, igual já era em `ExcecaoCard.tsx` (decisão consciente,
+ver back).
+
+**Achado corrigindo, antes de considerar pronto**: `useAtribuirManualmente` só invalidava a
+query da visão de Distribuição (`VISAO_DISTRIBUICAO_QUERY_KEY`) — suficiente enquanto o único
+uso era `ExcecaoCard.tsx` (a exceção some da lista, o card nem precisa se atualizar sozinho).
+Usado agora **de dentro do próprio painel de detalhe**, isso não bastava: depois de confirmar,
+o painel continuaria mostrando o dono antigo até fechar e reabrir. Adicionada a invalidação de
+`DETALHE_PROTOCOLO_QUERY_KEY(protocoloId)` também, mesmo padrão que `useDevolverAoPool` já
+usava — achado por comparar os dois hooks lado a lado, não por bug relatado.
+
+Testado ponta a ponta via Playwright contra a API/Postgres local: protocolo no pool → "Atribuir
+a…" → escolhe conferente → confirma → painel atualiza sozinho (status vira "Atribuído", "Dono"
+mostra o nome escolhido, linha do tempo ganha o carimbo de "Atribuído", botão agora oferece
+"Reatribuir a…") sem precisar fechar/reabrir o painel. `npx tsc --noEmit`, `npm run build`,
+`npm run test` (42/42) e `npm run lint` limpos.

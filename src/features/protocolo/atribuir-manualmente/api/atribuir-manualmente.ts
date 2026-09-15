@@ -5,7 +5,8 @@ export type AtribuirManualmenteRequest = {
   conferenteId: string
 }
 
-// POST /protocolos/{id}/atribuir (RF-17) — só funciona se o protocolo estiver em exceção.
+// POST /protocolos/{id}/atribuir — funciona com o protocolo no pool, em exceção (RF-17) ou já
+// atribuído a outra pessoa (redireciona direto, sem passar pelo pool).
 export const atribuirManualmente = async ({ protocoloId, conferenteId }: AtribuirManualmenteRequest): Promise<void> => {
   await httpClient.post(`/protocolos/${protocoloId}/atribuir`, { conferenteId })
 }

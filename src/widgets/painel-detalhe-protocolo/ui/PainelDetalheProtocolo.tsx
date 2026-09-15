@@ -19,6 +19,7 @@ import {
 import { fraseDaRegra, MOTIVO_ALCADA_LABEL, useRegrasAlcada } from '@/entities/regraAlcada'
 import { useTiposAto } from '@/entities/tipoAto'
 import { useAtribuirAoMenosCarregado } from '@/features/protocolo/atribuir-ao-menos-carregado'
+import { useAtribuirManualmente } from '@/features/protocolo/atribuir-manualmente'
 import { useDevolverAoPool } from '@/features/protocolo/devolver-ao-pool'
 import { ObservacaoField } from '@/features/protocolo/definir-observacao'
 import { useDefinirPrioridade } from '@/features/protocolo/definir-prioridade'
@@ -41,6 +42,7 @@ import {
 import { Button } from '@/shared/ui/button'
 import { Carregando } from '@/shared/ui/carregando'
 import { Chip } from '@/shared/ui/chip'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/shared/ui/sheet'
 import { ProtocoloManualDialog } from '@/widgets/protocolo-manual'
 
@@ -262,7 +264,7 @@ export const PainelDetalheProtocolo = ({ protocoloId, onFechar }: PainelDetalheP
                 </div>
                 <ObservacaoField protocoloId={detalhe.id} observacao={detalhe.observacao} />
 
-                <AcoesDeStatus detalhe={detalhe} />
+                <AcoesDeStatus detalhe={detalhe} conferentes={conferentes ?? []} />
 
                 {/* RF-18g/i: separado das ações de status acima — editar/excluir valem pra
                   qualquer protocolo, não dependem do estado atual. */}
@@ -395,18 +397,27 @@ const HistoricoConferencias = ({
   </div>
 )
 
-// Idem — os 4 botões de ação dependentes de status (cada um só faz sentido pra alguns status),
+// Idem — os botões de ação dependentes de status (cada um só faz sentido pra alguns status),
 // mais o erro de "Atribuir ao menos carregado" (único que pode falhar de um jeito que vale a
 // pena explicar: sem ninguém com alçada na escala). Cada mutation mora aqui dentro, não no
-// componente pai — reduz o que PainelDetalheProtocolo precisa saber sobre essas 4 ações.
-const AcoesDeStatus = ({ detalhe }: { detalhe: DetalheProtocolo }) => {
+// componente pai — reduz o que PainelDetalheProtocolo precisa saber sobre essas ações.
+const AcoesDeStatus = ({ detalhe, conferentes }: { detalhe: DetalheProtocolo; conferentes: Conferente[] }) => {
   const devolver = useDevolverAoPool()
   const atribuirMenosCarregado = useAtribuirAoMenosCarregado()
+  const atribuirManualmente = useAtribuirManualmente()
   const reabrirConferencia = useReabrirConferencia()
   const definirPrioridade = useDefinirPrioridade()
+  const [atribuindo, setAtribuindo] = useState(false)
+  const [conferenteEscolhidoId, setConferenteEscolhidoId] = useState('')
 
   const podeDevolverAoPool = detalhe.status === 'Atribuido'
   const podeAtribuirAoMenosCarregado = detalhe.status === 'Pool' || detalhe.status === 'Excecao'
+  // Pedido do dono: mandar um ato pra um conferente escolhido na mão — sem checagem de alçada
+  // (decisão humana deliberada, mesmo padrão já usado pra resolver exceção, RF-17). Além de
+  // Pool/Exceção, também vale pra um protocolo já Atribuido — redireciona direto pra outra
+  // pessoa sem precisar devolver ao pool antes. Não vale em Conferindo (interromperia trabalho
+  // já em andamento) nem em status concluído/descartado/excluído.
+  const podeAtribuirManualmente = ['Pool', 'Excecao', 'Atribuido'].includes(detalhe.status)
   // RF-18a/RF-24c — ação direta, sem exigir um pedido explícito do conferente (esse fluxo
   // vive na seção "Pedidos de reabertura" da aba Exceções).
   const podeReabrirConferencia = detalhe.status === 'Aprovado' || detalhe.status === 'Reprovado'
@@ -414,7 +425,21 @@ const AcoesDeStatus = ({ detalhe }: { detalhe: DetalheProtocolo }) => {
   // jeito real de um protocolo virar urgente. Não faz sentido depois de concluído/descartado.
   const podeDefinirPrioridade = !['Aprovado', 'Reprovado', 'Descartado'].includes(detalhe.status)
 
-  if (!podeDevolverAoPool && !podeAtribuirAoMenosCarregado && !podeReabrirConferencia && !podeDefinirPrioridade) {
+  const handleConfirmarAtribuicao = () => {
+    if (!conferenteEscolhidoId) return
+    atribuirManualmente.mutate(
+      { protocoloId: detalhe.id, conferenteId: conferenteEscolhidoId },
+      { onSuccess: () => setAtribuindo(false) },
+    )
+  }
+
+  if (
+    !podeDevolverAoPool &&
+    !podeAtribuirAoMenosCarregado &&
+    !podeAtribuirManualmente &&
+    !podeReabrirConferencia &&
+    !podeDefinirPrioridade
+  ) {
     return null
   }
 
@@ -434,6 +459,11 @@ const AcoesDeStatus = ({ detalhe }: { detalhe: DetalheProtocolo }) => {
             disabled={atribuirMenosCarregado.isPending}
           >
             Atribuir ao menos carregado
+          </Button>
+        )}
+        {podeAtribuirManualmente && !atribuindo && (
+          <Button variant="outline" size="sm" onClick={() => setAtribuindo(true)}>
+            {detalhe.status === 'Atribuido' ? 'Reatribuir a…' : 'Atribuir a…'}
           </Button>
         )}
         {podeReabrirConferencia && (
@@ -462,8 +492,38 @@ const AcoesDeStatus = ({ detalhe }: { detalhe: DetalheProtocolo }) => {
           </Button>
         )}
       </div>
+      {podeAtribuirManualmente && atribuindo && (
+        <div className="mt-2 flex items-center gap-1.5">
+          <Select value={conferenteEscolhidoId} onValueChange={setConferenteEscolhidoId}>
+            {/* RNF-10: nome do conferente não trunca — mesmo override já usado em ExcecaoCard.tsx. */}
+            <SelectTrigger className="h-auto min-h-8 flex-1 items-start whitespace-normal data-[size=default]:h-auto *:data-[slot=select-value]:line-clamp-none *:data-[slot=select-value]:items-start">
+              <SelectValue placeholder="Escolher conferente…" className="text-pretty" />
+            </SelectTrigger>
+            <SelectContent>
+              {conferentes.map((conferente) => (
+                <SelectItem key={conferente.id} value={conferente.id}>
+                  {conferente.nome}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button variant="outline" size="sm" onClick={() => setAtribuindo(false)}>
+            Cancelar
+          </Button>
+          <Button
+            size="sm"
+            onClick={handleConfirmarAtribuicao}
+            disabled={!conferenteEscolhidoId || atribuirManualmente.isPending}
+          >
+            Confirmar
+          </Button>
+        </div>
+      )}
       {atribuirMenosCarregado.isError && (
         <p className="mt-2 text-[12.5px] text-bad-fg">Ninguém com alçada na escala agora.</p>
+      )}
+      {atribuirManualmente.isError && (
+        <p className="mt-2 text-[12.5px] text-bad-fg">Não foi possível atribuir. Tente de novo.</p>
       )}
     </>
   )
