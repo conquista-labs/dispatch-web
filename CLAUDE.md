@@ -2352,11 +2352,21 @@ escolhido. `AtribuirManualmente` (back) deixou de ser exclusivo de exceção —
 `AcoesDeStatus` (dentro de `PainelDetalheProtocolo.tsx`) ganhou um botão novo, condicionado a
 `status in (Pool, Excecao, Atribuido)` — rótulo muda pra "Reatribuir a…" quando já há dono, só
 pra deixar claro que é uma troca, não uma primeira atribuição. Clicar troca o botão por um
-seletor inline (`Select` + Cancelar/Confirmar) — **mesmo padrão já usado em `ExcecaoCard.tsx`**
-pra resolver exceção (inclusive o mesmo override de `SelectTrigger` do RNF-10, nome não trunca),
-reaproveitado em vez de inventar um segundo jeito de escolher conferente. Sem restrição de
-alçada no seletor — mostra todo mundo, igual já era em `ExcecaoCard.tsx` (decisão consciente,
-ver back).
+seletor inline (`Select` do shadcn + Cancelar/Confirmar) — mesmo padrão já usado em
+`ExcecaoCard.tsx` pra resolver exceção, reaproveitado em vez de inventar um segundo jeito de
+escolher conferente. Sem restrição de alçada no seletor — mostra todo mundo, igual já era em
+`ExcecaoCard.tsx` (decisão consciente, ver back).
+
+**Segunda passada, um dia depois (achado pelo dono comparando com o resto do app)**: o `Select`
+puro do shadcn (lista simples, sem busca) destoava do `SeletorUnico` já estabelecido em todo
+lugar que escolhe conferente/tipo/equipe (RNF-11 — ex.: os campos de "Novo protocolo"). Trocado
+nos dois lugares que usavam esse `Select` pra escolher conferente — aqui e em `ExcecaoCard.tsx`
+— por `SeletorUnico`, com `sub: NIVEL_LABEL[c.nivel]` mostrando o nível de cada um (mesmo nível
+já exibido em "quem pode conferir este ato", reaproveitado como contexto extra no seletor). O
+override de `SelectTrigger` que existia pro RNF-10 (nome não trunca) não foi preservado — o
+`SeletorUnico` já trunca por padrão em todo outro uso no app (nenhum dos outros ganhou esse
+tratamento especial), então manter um override só aqui deixaria esse seletor inconsistente com
+todos os demais — o próprio pedido era exatamente parar de destoar.
 
 **Achado corrigindo, antes de considerar pronto**: `useAtribuirManualmente` só invalidava a
 query da visão de Distribuição (`VISAO_DISTRIBUICAO_QUERY_KEY`) — suficiente enquanto o único
@@ -2369,5 +2379,7 @@ usava — achado por comparar os dois hooks lado a lado, não por bug relatado.
 Testado ponta a ponta via Playwright contra a API/Postgres local: protocolo no pool → "Atribuir
 a…" → escolhe conferente → confirma → painel atualiza sozinho (status vira "Atribuído", "Dono"
 mostra o nome escolhido, linha do tempo ganha o carimbo de "Atribuído", botão agora oferece
-"Reatribuir a…") sem precisar fechar/reabrir o painel. `npx tsc --noEmit`, `npm run build`,
-`npm run test` (42/42) e `npm run lint` limpos.
+"Reatribuir a…") sem precisar fechar/reabrir o painel; confirmado depois que `SeletorUnico`
+filtra corretamente (buscar "mar" reduz pra "Marcio Santos"/"Marina Witter", nível como
+sub-rótulo) nos dois lugares (painel de detalhe e `ExcecaoCard.tsx`). `npx tsc --noEmit`,
+`npm run build`, `npm run test` (42/42) e `npm run lint` limpos.

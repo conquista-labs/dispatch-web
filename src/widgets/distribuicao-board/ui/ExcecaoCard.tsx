@@ -1,12 +1,12 @@
 import { useState } from 'react'
 
-import type { Conferente } from '@/entities/conferente'
+import { NIVEL_LABEL, type Conferente } from '@/entities/conferente'
 import { ETAPA_LABEL, type InfoProtocolo, type ProtocoloResumo } from '@/entities/protocolo'
 import { useAtribuirManualmente } from '@/features/protocolo/atribuir-manualmente'
 import { useDescartarExcecao } from '@/features/protocolo/descartar-excecao'
 import { Button } from '@/shared/ui/button'
 import { Chip } from '@/shared/ui/chip'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { SeletorUnico } from '@/shared/ui/seletor-unico'
 import { SurfaceCard } from '@/shared/ui/surface-card'
 
 // RF-17: motivo vem como texto livre (MotorDistribuicao.Motivo — "tipo desconhecido" ou "ninguém
@@ -40,6 +40,11 @@ export const ExcecaoCard = ({ protocolo, conferentes, info, onAbrirDetalhe }: Ex
     if (!conferenteId) return
     atribuir.mutate({ protocoloId: protocolo.id, conferenteId }, { onSuccess: () => setResolvendo(false) })
   }
+
+  // RNF-11: mesmo seletor com busca já usado em todo canto que escolhe um conferente/tipo/
+  // equipe (ex.: ProtocoloManualDialog) — o Select puro do shadcn (sem busca) destoava do
+  // resto do app (achado pelo dono comparando os dois lado a lado).
+  const conferenteOpcoes = conferentes.map((c) => ({ valor: c.id, label: c.nome, sub: NIVEL_LABEL[c.nivel] }))
 
   return (
     <SurfaceCard className="mb-2 cursor-pointer" onClick={() => onAbrirDetalhe(protocolo.id)}>
@@ -77,21 +82,12 @@ export const ExcecaoCard = ({ protocolo, conferentes, info, onAbrirDetalhe }: Ex
 
       {resolvendo && (
         <div className="mt-3 flex items-center gap-1.5" onClick={(evento) => evento.stopPropagation()}>
-          <Select value={conferenteId} onValueChange={setConferenteId}>
-            {/* RNF-10: nome do conferente não trunca — override local (não em shared/ui/select.tsx,
-                que outros selects do app usam pra coisa que não é "nome de registro") do
-                line-clamp-1/whitespace-nowrap/h-8 fixos do trigger, pra caber um nome de 2 linhas. */}
-            <SelectTrigger className="h-auto min-h-8 flex-1 items-start whitespace-normal data-[size=default]:h-auto *:data-[slot=select-value]:line-clamp-none *:data-[slot=select-value]:items-start">
-              <SelectValue placeholder="Escolher conferente…" className="text-pretty" />
-            </SelectTrigger>
-            <SelectContent>
-              {conferentes.map((conferente) => (
-                <SelectItem key={conferente.id} value={conferente.id}>
-                  {conferente.nome}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <SeletorUnico
+            valor={conferenteId}
+            opcoes={conferenteOpcoes}
+            onSelecionar={setConferenteId}
+            placeholder="buscar conferente…"
+          />
           <Button variant="outline" onClick={() => setResolvendo(false)}>
             Cancelar
           </Button>

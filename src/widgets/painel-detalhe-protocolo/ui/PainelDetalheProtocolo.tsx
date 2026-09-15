@@ -42,7 +42,7 @@ import {
 import { Button } from '@/shared/ui/button'
 import { Carregando } from '@/shared/ui/carregando'
 import { Chip } from '@/shared/ui/chip'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { SeletorUnico } from '@/shared/ui/seletor-unico'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/shared/ui/sheet'
 import { ProtocoloManualDialog } from '@/widgets/protocolo-manual'
 
@@ -433,6 +433,11 @@ const AcoesDeStatus = ({ detalhe, conferentes }: { detalhe: DetalheProtocolo; co
     )
   }
 
+  // RNF-11: mesmo seletor com busca já usado em todo canto que escolhe um conferente/tipo/
+  // equipe (ex.: ProtocoloManualDialog) — o Select puro do shadcn (sem busca) destoava do
+  // resto do app (achado pelo dono comparando os dois lado a lado).
+  const conferenteOpcoes = conferentes.map((c) => ({ valor: c.id, label: c.nome, sub: NIVEL_LABEL[c.nivel] }))
+
   if (
     !podeDevolverAoPool &&
     !podeAtribuirAoMenosCarregado &&
@@ -494,19 +499,12 @@ const AcoesDeStatus = ({ detalhe, conferentes }: { detalhe: DetalheProtocolo; co
       </div>
       {podeAtribuirManualmente && atribuindo && (
         <div className="mt-2 flex items-center gap-1.5">
-          <Select value={conferenteEscolhidoId} onValueChange={setConferenteEscolhidoId}>
-            {/* RNF-10: nome do conferente não trunca — mesmo override já usado em ExcecaoCard.tsx. */}
-            <SelectTrigger className="h-auto min-h-8 flex-1 items-start whitespace-normal data-[size=default]:h-auto *:data-[slot=select-value]:line-clamp-none *:data-[slot=select-value]:items-start">
-              <SelectValue placeholder="Escolher conferente…" className="text-pretty" />
-            </SelectTrigger>
-            <SelectContent>
-              {conferentes.map((conferente) => (
-                <SelectItem key={conferente.id} value={conferente.id}>
-                  {conferente.nome}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <SeletorUnico
+            valor={conferenteEscolhidoId}
+            opcoes={conferenteOpcoes}
+            onSelecionar={setConferenteEscolhidoId}
+            placeholder="buscar conferente…"
+          />
           <Button variant="outline" size="sm" onClick={() => setAtribuindo(false)}>
             Cancelar
           </Button>
