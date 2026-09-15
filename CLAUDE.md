@@ -2383,3 +2383,33 @@ mostra o nome escolhido, linha do tempo ganha o carimbo de "Atribuído", botão 
 filtra corretamente (buscar "mar" reduz pra "Marcio Santos"/"Marina Witter", nível como
 sub-rótulo) nos dois lugares (painel de detalhe e `ExcecaoCard.tsx`). `npx tsc --noEmit`,
 `npm run build`, `npm run test` (42/42) e `npm run lint` limpos.
+
+## "Conferente específico" na criação manual — pula o motor direto na hora de criar
+
+Pedido do dono: em vez de criar o protocolo e ter que reatribuir na mão depois (ver seção
+acima), poder já escolher a pessoa na hora de preencher o modal "Novo protocolo". Campo novo,
+opcional, só no modo criação (edição já tem seu próprio fluxo de reatribuir no painel de
+detalhe) — `SeletorUnico` de conferente (com `sub: NIVEL_LABEL`, mesmo padrão de hoje mais
+cedo) + um "Limpar" que só aparece quando algo está escolhido (campo opcional, precisa de
+volta fácil pro "deixa o motor decidir").
+
+**Sem endpoint novo nem mudança no back**: reaproveita as duas capacidades que já existem —
+`CriarProtocoloManual` sempre roda (nasce em Pool/Atribuído-automático/Exceção, tanto faz) e,
+se um conferente foi escolhido, `AtribuirManualmente` roda **depois**, sobrescrevendo o destino
+com o `protocoloId` que acabou de voltar da criação. Funciona porque `AtribuirManualmente` já
+aceita os 3 status possíveis de saída de `CriarProtocoloManual` (ver seção de hoje mais cedo,
+"deixa de ser exclusivo de exceção") — se essa mudança não tivesse sido feita antes, um
+protocolo que caísse em Exceção na criação não poderia ser redirecionado assim.
+
+A prévia ("O QUE O SISTEMA VAI FAZER") precisou de um ajuste: a linha "Destino" mostra
+"atribuído direto a `<nome>`" em vez do resultado simulado pelo motor quando há um conferente
+escolhido — sem isso a prévia mentiria (mostraria o que o motor faria, não o que vai acontecer
+de verdade). Equipe/Prazo/Grupo continuam vindo da simulação normal (não mudam com quem vai
+ficar dono). `salvando`/`erroAoSalvar` (antes só `mutation.isPending`/`.isError`) agora
+combinam as duas mutations em sequência (criar + atribuir), pra o botão/mensagem de erro
+refletirem as duas chamadas, não só a primeira.
+
+Testado ponta a ponta via Playwright contra a API/Postgres local: preencheu o formulário,
+escolheu tipo de ato/escrevente, escolheu um conferente específico, confirmou a prévia mudando
+pra "atribuído direto a Aglaé Zuzarte", criou o protocolo com sucesso. `npx tsc --noEmit`,
+`npm run build`, `npm run test` (42/42) e `npm run lint` limpos.

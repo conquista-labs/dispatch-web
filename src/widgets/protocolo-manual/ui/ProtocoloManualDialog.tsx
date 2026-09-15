@@ -1,6 +1,7 @@
 import { isAxiosError } from 'axios'
 import { useEffect, useState } from 'react'
 
+import { NIVEL_LABEL, useConferentes } from '@/entities/conferente'
 import { useEquipes } from '@/entities/equipe'
 import { useEscreventes } from '@/entities/escrevente'
 import {
@@ -13,6 +14,7 @@ import {
   type Prioridade,
 } from '@/entities/protocolo'
 import { GRUPO_LABEL, useTiposAto } from '@/entities/tipoAto'
+import { useAtribuirManualmente } from '@/features/protocolo/atribuir-manualmente'
 import { useCriarProtocoloManual } from '@/features/protocolo/criar-manual'
 import { useEditarProtocoloManual } from '@/features/protocolo/editar-manual'
 import { formatDataHora } from '@/shared/lib/format'
@@ -73,13 +75,20 @@ export const ProtocoloManualDialog = ({
   const { data: escreventes } = useEscreventes()
   const { data: equipes } = useEquipes()
   const { data: tiposAto } = useTiposAto()
+  const { data: conferentes } = useConferentes()
   const criar = useCriarProtocoloManual()
   const editar = useEditarProtocoloManual()
+  const atribuirManualmente = useAtribuirManualmente()
   const [form, setForm] = useState(formVazio)
   // "Hora de entrada" (RF-18f) — só existe no modo criação; a importação já lê isso do
   // relatório, mas o cadastro manual sempre assumia "agora" sem deixar a distribuidora corrigir
   // um ato que chegou antes. Reseta pra "agora" toda vez que o modal abre pra criar (abaixo).
   const [andamentoEm, setAndamentoEm] = useState(new Date())
+  // Pedido do dono: mandar o ato direto pra alguém já na criação, sem esperar o motor decidir
+  // e depois reatribuir na mão. Só existe no modo criação — em edição a atribuição já existe e
+  // tem seu próprio fluxo (painel de detalhe, "Atribuir a…"/"Reatribuir a…"). Opcional: vazio
+  // significa "deixa o motor decidir" (comportamento de sempre).
+  const [conferenteEscolhidoId, setConferenteEscolhidoId] = useState('')
 
   useEffect(() => {
     if (!aberto) return
@@ -98,6 +107,7 @@ export const ProtocoloManualDialog = ({
     } else {
       setForm(formVazio)
       setAndamentoEm(new Date())
+      setConferenteEscolhidoId('')
     }
     // `!!escreventes` (não o array inteiro) — dispara de novo quando a lista carrega pela
     // primeira vez (corrige o nome do escrevente pré-preenchido), sem resetar o formulário a
@@ -131,6 +141,10 @@ export const ProtocoloManualDialog = ({
 
   const mutation = editando ? editar : criar
   const numeroJaExiste = isAxiosError(mutation.error) && mutation.error.response?.status === 409
+  // Criação com conferente escolhido é duas chamadas em sequência (criar → atribuir) — o botão/
+  // erro precisam refletir as duas, não só a primeira.
+  const salvando = mutation.isPending || atribuirManualmente.isPending
+  const erroAoSalvar = mutation.isError || (!editando && atribuirManualmente.isError)
 
   const handleSalvar = () => {
     if (editando) {
@@ -156,7 +170,21 @@ export const ProtocoloManualDialog = ({
           observacao: form.observacao.trim() || null,
           andamentoEm: andamentoEm.toISOString(),
         },
-        { onSuccess: onFechar },
+        {
+          onSuccess: (resultado) => {
+            // Conferente escolhido na hora de criar (opcional) — o protocolo já nasceu (Pool,
+            // Atribuído automaticamente ou Exceção, tanto faz: AtribuirManualmente aceita os
+            // 3), aqui só sobrescreve pra quem foi escolhido, sem esperar o motor decidir.
+            if (conferenteEscolhidoId) {
+              atribuirManualmente.mutate(
+                { protocoloId: resultado.protocoloId, conferenteId: conferenteEscolhidoId },
+                { onSuccess: onFechar },
+              )
+            } else {
+              onFechar()
+            }
+          },
+        },
       )
     }
   }
@@ -170,6 +198,8 @@ export const ProtocoloManualDialog = ({
     label: e.nome,
     sub: e.equipeId ? (nomePorEquipeId.get(e.equipeId) ?? 'sem equipe') : 'sem equipe',
   }))
+  const conferenteOpcoes = (conferentes ?? []).map((c) => ({ valor: c.id, label: c.nome, sub: NIVEL_LABEL[c.nivel] }))
+  const nomeConferenteEscolhido = conferenteOpcoes.find((c) => c.valor === conferenteEscolhidoId)?.label
 
   return (
     <Dialog open={aberto} onOpenChange={(open) => !open && onFechar()}>
@@ -263,6 +293,32 @@ export const ProtocoloManualDialog = ({
             </div>
           </div>
 
+          {!editando && (
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-baseline justify-between gap-2">
+                <Label>Conferente específico (opcional)</Label>
+                {conferenteEscolhidoId && (
+                  <button
+                    type="button"
+                    onClick={() => setConferenteEscolhidoId('')}
+                    className="text-[11px] font-medium text-muted-foreground hover:text-foreground"
+                  >
+                    Limpar
+                  </button>
+                )}
+              </div>
+              <SeletorUnico
+                valor={conferenteEscolhidoId}
+                opcoes={conferenteOpcoes}
+                onSelecionar={setConferenteEscolhidoId}
+                placeholder="buscar conferente…"
+              />
+              <span className="text-[11px] text-muted-foreground">
+                pula a distribuição automática e o motor — vai direto pra essa pessoa, sem checar alçada
+              </span>
+            </div>
+          )}
+
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="observacao">Observação</Label>
             <Input
@@ -293,8 +349,13 @@ export const ProtocoloManualDialog = ({
                   <dt className="text-muted-foreground">Grupo do ato</dt>
                   <dd>{simulacao.grupo ? GRUPO_LABEL[simulacao.grupo] : 'sem grupo'}</dd>
                   <dt className="text-muted-foreground">Destino</dt>
-                  <dd className={simulacao.destino === 'Excecao' ? 'text-bad-fg' : ''}>
-                    {DESTINO_LABEL[simulacao.destino]}
+                  <dd className={!conferenteEscolhidoId && simulacao.destino === 'Excecao' ? 'text-bad-fg' : ''}>
+                    {/* Conferente específico escolhido sobrescreve o que o motor decidiria —
+                        a prévia tem que refletir o que vai acontecer de verdade, não o cálculo
+                        automático que nem vai ser usado (ver handleSalvar). */}
+                    {nomeConferenteEscolhido
+                      ? `atribuído direto a ${nomeConferenteEscolhido}`
+                      : DESTINO_LABEL[simulacao.destino]}
                   </dd>
                 </dl>
               ) : null}
@@ -302,14 +363,14 @@ export const ProtocoloManualDialog = ({
           )}
 
           {numeroJaExiste && <p className="text-[13px] text-bad-fg">Este protocolo já existe no sistema.</p>}
-          {mutation.isError && !numeroJaExiste && (
+          {erroAoSalvar && !numeroJaExiste && (
             <p className="text-[13px] text-bad-fg">Não foi possível salvar. Tente de novo.</p>
           )}
         </div>
 
         <DialogFooter className="sm:justify-between">
           <div className="flex gap-2">
-            <Button variant="outline" onClick={onFechar} disabled={mutation.isPending}>
+            <Button variant="outline" onClick={onFechar} disabled={salvando}>
               Cancelar
             </Button>
             {editando && onPedirExclusao && (
@@ -317,14 +378,14 @@ export const ProtocoloManualDialog = ({
                 variant="outline"
                 className="text-bad-fg hover:bg-bad-bg"
                 onClick={onPedirExclusao}
-                disabled={mutation.isPending}
+                disabled={salvando}
               >
                 Excluir
               </Button>
             )}
           </div>
-          <Button onClick={handleSalvar} disabled={!podeSalvar || mutation.isPending}>
-            {mutation.isPending ? 'Salvando…' : editando ? 'Salvar alterações' : 'Criar protocolo'}
+          <Button onClick={handleSalvar} disabled={!podeSalvar || salvando}>
+            {salvando ? 'Salvando…' : editando ? 'Salvar alterações' : 'Criar protocolo'}
           </Button>
         </DialogFooter>
       </DialogContent>
