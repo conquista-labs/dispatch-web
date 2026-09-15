@@ -2479,3 +2479,19 @@ mudança) e o `usuario` guardado tem `papel` mas não `papeis`, migra pra `{ ...
 antiga não quebra mais, sem precisar de logout) — testado via Playwright simulando esse exato
 cenário (localStorage com `{ usuario: { papel: 'Distribuidora' }, version: 0 }` + um token real):
 o Dashboard carrega normalmente, sidebar já mostra `papeis` corretos, zero erro de página.
+
+**Achado usando a feature de verdade (Vivi testando em produção): dar o papel de Conferente a
+uma conta não tem efeito imediato pra quem já está logada.** `GET /minha-fila` respondia 403
+mesmo com a sidebar já mostrando "Distribuidora · Conferente" — porque o papel novo só entra
+nas *claims do JWT* na próxima emissão de token; `GET /auth/me` atualiza o que a tela sabe sobre
+a pessoa (por isso o menu já reagia), mas nunca troca o token guardado. Não é bug, é a natureza
+de um JWT (claims fixas desde a emissão até expirar) — mesma classe de coisa que RF-01k já lida
+(troca de senha invalida sessões antigas). **Resolução: pedir pra pessoa deslogar e logar de
+novo** depois de vincular um Conferente a ela — o login novo emite o token com as duas claims.
+
+**Ajuste de UI, mesma conversa: card de sessão na sidebar virou feio pra quem tem dois
+papéis** ("Maria Vittoria" quebrando em 2 linhas ao lado de "Distribuidora · Conferente"
+espremido do lado). Pedido do dono: mostrar só o nome. `AppShell.tsx` — o card expandido (rodapé
+da sidebar) e o `title` do avatar recolhido deixaram de mostrar `usuario.papeis` — só
+`usuario.nome`. Simplificação vale pra todo mundo (não só combo), papel nunca foi essencial ali,
+já aparece no resto da tela.

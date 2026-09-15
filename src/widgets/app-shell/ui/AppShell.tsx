@@ -237,16 +237,17 @@ export const AppShell = () => {
           {usuario &&
             (recolhida ? (
               <div
-                title={`${usuario.nome} · ${usuario.papeis.join(' · ')}`}
+                title={usuario.nome}
                 className="mx-auto flex size-8 items-center justify-center rounded-full border border-border bg-card text-[12px] font-semibold text-text-2"
               >
                 {usuario.nome.charAt(0).toUpperCase()}
               </div>
             ) : (
-              // RNF-10: nome do usuário logado não trunca
-              <div className="flex items-start justify-between gap-1.5 rounded-md border border-border bg-card px-2.5 py-1.5 text-[13px]">
-                <span className="text-pretty">{usuario.nome}</span>
-                <span className="mt-px flex-none text-[11px] text-muted-foreground">{usuario.papeis.join(' · ')}</span>
+              // RNF-10: nome do usuário logado não trunca. Só o nome — o papel (ou os dois,
+              // pra quem é Distribuidora e também Conferente) deixou de caber bem aqui do lado
+              // sem quebrar feio quando o nome já ocupa 2 linhas (pedido do dono).
+              <div className="rounded-md border border-border bg-card px-2.5 py-1.5 text-[13px] text-pretty">
+                {usuario.nome}
               </div>
             ))}
 
