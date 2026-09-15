@@ -3,16 +3,21 @@ import { expect, test } from '@playwright/test'
 // Regressão permanente (RF-19) — Distribuidora vendo a fila de um conferente, contas seed
 // fixas, sempre passa. Confirma que a tela existe, o seletor troca de conferente disparando
 // uma leitura nova (GET /conferentes/{id}/fila), e que nenhum controle de escrita aparece.
+//
+// A conta seed é combo (Distribuidora + Conferente, ver "Uma conta com os dois papéis" no
+// CLAUDE.md) — o item de nav pra esta tela virou "Fila de conferentes" (o "Minha fila" puro
+// agora é a fila de verdade da própria pessoa, /minha-fila, outra tela). O `<h1>` da própria
+// página continua "Minha fila" (não mudou, só o rótulo do menu).
 const EMAIL = process.env.E2E_DISTRIBUIDORA_EMAIL ?? 'distribuidora@cartorio.com'
 const SENHA = process.env.E2E_DISTRIBUIDORA_SENHA ?? 'Senha123!'
 
-test('Distribuidora — "Minha fila" mostra a fila de um conferente, somente leitura', async ({ page }) => {
+test('Distribuidora — "Fila de conferentes" mostra a fila de um conferente, somente leitura', async ({ page }) => {
   await page.goto('/login')
   await page.getByLabel('E-mail').fill(EMAIL)
   await page.getByLabel('Senha').fill(SENHA)
   await page.getByRole('button', { name: 'Entrar' }).click()
 
-  await page.getByRole('link', { name: 'Minha fila' }).click()
+  await page.getByRole('link', { name: 'Fila de conferentes' }).click()
   await expect(page.getByRole('heading', { name: 'Minha fila' })).toBeVisible()
   await expect(page.getByText('Pool disponível', { exact: true })).toBeVisible()
   await expect(page.getByText('Atribuídas', { exact: true })).toBeVisible()

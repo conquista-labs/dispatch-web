@@ -13,7 +13,9 @@ test('Conferentes — carrega, cadastra, edita perfil e remove um conferente de 
   await page.getByLabel('Senha').fill(SENHA)
   await page.getByRole('button', { name: 'Entrar' }).click()
 
-  await page.getByRole('link', { name: 'Conferentes' }).click()
+  // exact: true — a conta seed é combo (Distribuidora + Conferente) desde a feature de "dois
+  // papéis"; sem isso, "Conferentes" também bate em "Fila de conferentes" (substring).
+  await page.getByRole('link', { name: 'Conferentes', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Conferentes' })).toBeVisible()
   await expect(page.getByText('Na escala hoje', { exact: true })).toBeVisible()
   await page.screenshot({ path: 'e2e/.screenshots/conferentes-claro.png', fullPage: true })

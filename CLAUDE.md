@@ -2495,3 +2495,71 @@ espremido do lado). Pedido do dono: mostrar só o nome. `AppShell.tsx` — o car
 da sidebar) e o `title` do avatar recolhido deixaram de mostrar `usuario.papeis` — só
 `usuario.nome`. Simplificação vale pra todo mundo (não só combo), papel nunca foi essencial ali,
 já aparece no resto da tela.
+
+## Tipos de ato — tira o seletor de grupo da lista, ganha busca + rolagem contida
+
+Pedido do dono olhando a lista em produção: "tirar esse negócio de grupo" (o dropdown "sem
+grupo"/grupo por linha estava poluindo a tela) e "essa lista merece filtro e paginação".
+Confirmado o escopo antes de mexer (`AskUserQuestion`): **só tirar o seletor dessa lista** — o
+conceito `GrupoTipoAto` continua existindo pra Matriz de alçada e pro construtor de regra
+(alvo "grupo"), sem nenhuma mudança nesses dois.
+
+- **`TipoAtoRow.tsx`** — removido o `Select` de grupo por linha (`useDefinirGrupoTipoAto`,
+  `GRUPO_LABEL`/`GRUPOS`, o sentinela `SEM_GRUPO`) inteiro. **Efeito colateral honesto, não
+  escondido**: com isso, não sobra **nenhum** lugar na UI pra atribuir grupo a um tipo de ato —
+  nem aqui, nem no diálogo de criação (`NovoTipoAtoDialog` nunca teve esse campo). A leitura
+  (Matriz, frase de regra por grupo) continua funcionando normalmente pros tipos que já tinham
+  grupo definido; só não há mais como definir um novo por enquanto. `features/tipoAto/
+  definir-grupo/` fica no repo, sem nenhum consumidor — não removido (é código do back que
+  continua existindo e testado; reaproveitável se um lugar pra atribuir grupo voltar a fazer
+  sentido, ex.: dentro do próprio diálogo de criar/editar tipo).
+- **`AbaTiposDeAto.tsx`**, primeira versão — mesmo padrão já estabelecido em Alçada → Camadas/
+  Regras em vigor: `Input` de busca (filtra por nome) + `max-h-[560px] overflow-y-auto`.
+
+**Pivotado pra paginação de verdade na mesma conversa** — o dono, olhando a implementação,
+apontou que "busca + rolagem" não é paginação de fato (sem página 1/2/3..., sem `Take`/`Skip`
+no back) e pediu a coisa real, especificamente pra esta lista (não pro resto do app, que
+continua com o padrão client-side de sempre). **Primeira paginação de verdade do sistema** — ver
+`dispatch-api/CLAUDE.md`, mesma seção, pro desenho do back (`ListarTiposAtoComUso` ganha
+`busca`/`pagina`/`tamanhoPagina`, devolve `Paginado<T>`).
+
+- **`entities/tipoAto`** — `PaginaDeTipoAtoComUso<T>` (espelha `PaginaDeTipoAtoComUsoResponse`).
+  `getTiposAtoComUso`/`useTiposAtoComUso` passam a exigir `{ busca?, pagina?, tamanhoPagina? }` —
+  `queryKey` inclui os parâmetros (cada combinação cacheia separada), `placeholderData:
+(dadoAnterior) => dadoAnterior` (TanStack Query v5) mantém a página anterior visível enquanto a
+  próxima carrega, em vez de piscar um loading a cada troca de página.
+- **`shared/lib/use-debounced-value.ts`** (novo, genérico) — busca só dispara request depois de
+  300ms sem digitar; filtro client-side do resto do app não precisa disso (já é síncrono, sobre
+  um array em memória).
+- **`shared/ui/pagination.tsx`** (novo, via `npx shadcn@latest add pagination`) — **gotcha novo
+  do `shadcn add` neste projeto**: o arquivo gerado veio com `import { cn } from "cn"` — não
+  `@/shared/lib/utils` (o alias real de `"utils"` em `components.json`) — e a CLI ainda
+  **instalou um pacote npm de verdade chamado `cn`** (`^0.3.0`) só pra esse import quebrado
+  resolver. Import corrigido manualmente pro alias certo; `npm uninstall cn` removeu a
+  dependência espúria (mesma categoria do `next-themes` removido antes — nada mais no projeto
+  usava). Registrado aqui como mais uma das "armadilhas do shadcn add" já catalogadas nesta
+  sessão (desta vez: import quebrado + dependência fantasma, não path de saída errado).
+- **`AbaTiposDeAto.tsx`**, versão final — `TAMANHO_PAGINA = 20`; busca (com debounce) reseta
+  `pagina` pra 1 sempre que muda; `Pagination`/`PaginationPrevious`/`PaginationNext` do shadcn,
+  sem números de página individuais (catálogo ainda pequeno, poucas páginas — não vale a
+  cerimônia de `PaginationLink`/`PaginationEllipsis` por enquanto, cresce se precisar).
+
+Verificado via Playwright contra a API local: 24 tipos reais, página 1 com 20 itens, "Página 1
+de 2 · 24 tipos"; clicar "próxima" dispara `GET .../com-uso?pagina=2&tamanhoPagina=20` de
+verdade (confirmado pela URL da resposta) e troca o conteúdo (primeiro item diferente); voltar
+pra página 1 usa cache (sem GET novo, `staleTime` de 30s); busca "venda" reseta pra página 1 e
+filtra no back (2 de 24). `npx tsc --noEmit`, `npm run build`, `npm run test` (42/42) e
+`npm run lint` limpos.
+
+**Regressão real achada rodando a suíte permanente inteira (não só os 4 specs de sempre)** —
+três specs (`conferentes.spec.ts`, `fila-conferentes.spec.ts`, `totp-recuperacao-senha.spec.ts`)
+usam a conta seed `distribuidora@cartorio.com` pra clicar em "Conferentes"/"Minha fila" no menu
+— como essa conta virou combo (Distribuidora + Conferente) mais cedo nesta sessão, o nav dela
+agora mostra "Fila de conferentes" (que contém a substring "Conferentes") e o "Minha fila" real
+some, virando um destino diferente do que o teste queria. `conferentes.spec.ts`/
+`totp-recuperacao-senha.spec.ts` ganharam `exact: true` no locator de "Conferentes";
+`fila-conferentes.spec.ts` passou a clicar "Fila de conferentes" (o rótulo certo agora para essa
+conta) em vez de "Minha fila" — o `<h1>` da própria página continua "Minha fila", não mudou,
+só o nome do item de menu. **Lição**: uma mudança de rótulo de nav pode quebrar silenciosamente
+specs de regressão que nunca tocam o código mudado — só rodar os 4 specs "de sempre" não
+detecta isso; vale rodar a suíte inteira depois de qualquer mudança em `AppShell.tsx`/nav.

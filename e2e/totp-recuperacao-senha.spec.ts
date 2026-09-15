@@ -43,7 +43,7 @@ test('TOTP e recuperação de senha — registrar autenticador e redefinir a sen
   await page.getByRole('button', { name: 'Entrar' }).click()
   await expect(page).toHaveURL(/\/dashboard/)
 
-  await page.getByRole('link', { name: 'Conferentes' }).click()
+  await page.getByRole('link', { name: 'Conferentes', exact: true }).click()
   await page.getByRole('button', { name: 'Novo conferente' }).click()
   const dialog = page.getByRole('dialog')
   await dialog.getByLabel('Nome', { exact: true }).fill('Conferente E2E TOTP')
@@ -147,7 +147,7 @@ test('TOTP e recuperação de senha — registrar autenticador e redefinir a sen
   await page.getByLabel('E-mail').fill(EMAIL)
   await page.getByLabel('Senha', { exact: true }).fill(SENHA)
   await page.getByRole('button', { name: 'Entrar' }).click()
-  await page.getByRole('link', { name: 'Conferentes' }).click()
+  await page.getByRole('link', { name: 'Conferentes', exact: true }).click()
   const card = page.getByTestId(`conferente-card-${conferenteId}`)
   await Promise.all([
     page.waitForResponse(

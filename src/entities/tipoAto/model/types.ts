@@ -6,8 +6,9 @@ export type TipoAto = {
   grupo: GrupoTipoAto | null
 }
 
-// Categoria vista na Matriz da aba Alçada do protótipo v2 — sem tela de gestão de grupo lá
-// (só leitura agrupada), então virou um seletor aqui mesmo, na aba Tipos de ato.
+// Categoria vista na Matriz da aba Alçada e no construtor de regra (alvo "grupo") — sem
+// nenhum lugar na UI hoje pra atribuir grupo a um tipo (existia um seletor na linha de Tipos de
+// ato, removido a pedido do dono por poluir a lista; ver CLAUDE.md).
 export type GrupoTipoAto = 'Transmissoes' | 'Sucessoes' | 'Familia' | 'Garantias' | 'Notariais'
 
 // Espelha TipoAtoComUsoResponse — leitura agregada pra tabela da aba Tipos de ato (RF-34a).
@@ -19,4 +20,11 @@ export type TipoAtoComUso = {
   grupo: GrupoTipoAto | null
   volume: number
   conferentesComAlcada: number
+}
+
+// Espelha PaginaDeTipoAtoComUsoResponse — primeira paginação de verdade do sistema (o resto do
+// app usa busca + rolagem contida no front, ver CLAUDE.md).
+export type PaginaDeTipoAtoComUso<T> = {
+  itens: T[]
+  total: number
 }
