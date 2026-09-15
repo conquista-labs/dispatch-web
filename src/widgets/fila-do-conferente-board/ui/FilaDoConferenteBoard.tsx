@@ -6,6 +6,7 @@ import { criarResolverInfoProtocolo, useConcluidosHojeDoConferente, useFilaDoCon
 import { useTiposAto } from '@/entities/tipoAto'
 import { useIsMobile } from '@/shared/lib/use-is-mobile'
 import { useNow } from '@/shared/lib/use-now'
+import { Carregando } from '@/shared/ui/carregando'
 import { BarraDeFiltros, useFiltroProtocolos } from '@/widgets/filtro-protocolos'
 import {
   ConcluidosHojeList,
@@ -62,7 +63,7 @@ export const FilaDoConferenteBoard = ({ conferenteId }: FilaDoConferenteBoardPro
   })
 
   if (isLoading || !fila) {
-    return <p className="text-[13.5px] text-muted-foreground">Carregando…</p>
+    return <Carregando />
   }
 
   const { passaNoFiltro } = filtroProtocolos

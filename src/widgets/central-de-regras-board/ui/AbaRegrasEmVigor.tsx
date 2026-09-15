@@ -48,7 +48,7 @@ export const AbaRegrasEmVigor = ({
   const { data: configuracao } = useConfiguracao()
 
   if (!regras || !conferentes || !tiposAto || !equipes || !escreventes || !configuracao) {
-    return <Carregando className="mt-5" />
+    return <Carregando />
   }
 
   const { nomePorConferenteId, nomePorTipoAtoId, nomePorEquipeId } = criarNomesDaCentralDeRegras(

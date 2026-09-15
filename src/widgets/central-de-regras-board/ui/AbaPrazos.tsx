@@ -19,7 +19,7 @@ export const AbaPrazos = () => {
   const [escreventeSelecionadoId, setEscreventeSelecionadoId] = useState<string | null>(null)
 
   if (!equipes || !escreventes) {
-    return <Carregando className="mt-5" />
+    return <Carregando />
   }
 
   // Derivado localmente em vez de um segundo GET (/escreventes/sem-equipe) — `escreventes` já

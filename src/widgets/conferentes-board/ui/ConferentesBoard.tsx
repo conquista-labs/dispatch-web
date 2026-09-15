@@ -2,6 +2,7 @@ import { useAlcance, useCobertura, useConferentes } from '@/entities/conferente'
 import { useEquipes } from '@/entities/equipe'
 import { fraseDaRegra, useRegrasAlcada } from '@/entities/regraAlcada'
 import { useTiposAto } from '@/entities/tipoAto'
+import { Carregando } from '@/shared/ui/carregando'
 import { SurfaceCard } from '@/shared/ui/surface-card'
 
 import { ConferenteCard } from './ConferenteCard'
@@ -17,7 +18,7 @@ export const ConferentesBoard = () => {
   const { data: equipes } = useEquipes()
 
   if (isLoading || !conferentes) {
-    return <p className="text-[13.5px] text-muted-foreground">Carregando…</p>
+    return <Carregando />
   }
 
   // RF-25: "Remover" é soft delete no back (Usuario.Desativar — mantém histórico, ver

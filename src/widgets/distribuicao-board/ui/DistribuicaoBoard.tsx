@@ -8,6 +8,7 @@ import { criarResolverInfoProtocolo, useVisaoDistribuicao } from '@/entities/pro
 import { useTiposAto } from '@/entities/tipoAto'
 import { cn } from '@/shared/lib/utils'
 import { useNow } from '@/shared/lib/use-now'
+import { Carregando } from '@/shared/ui/carregando'
 import { BarraDeFiltros, useFiltroProtocolos } from '@/widgets/filtro-protocolos'
 import { PainelDetalheProtocolo } from '@/widgets/painel-detalhe-protocolo'
 
@@ -65,7 +66,7 @@ export const DistribuicaoBoard = () => {
   })
 
   if (isLoading || !visao || !conferentes || !escreventes || !equipes || !tiposAto) {
-    return <p className="text-[13.5px] text-muted-foreground">Carregando…</p>
+    return <Carregando />
   }
 
   const conferentesNaEscala = conferentes.filter((c) => c.naEscala)

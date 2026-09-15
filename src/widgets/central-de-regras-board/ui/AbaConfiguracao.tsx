@@ -328,7 +328,7 @@ export const AbaConfiguracao = () => {
   }
 
   if (!configuracao || !rascunho) {
-    return <Carregando className="mt-5" />
+    return <Carregando />
   }
 
   const sujo = TODAS_AS_CHAVES.some((chave) => rascunho[chave] !== configuracao[chave])

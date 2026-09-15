@@ -1,6 +1,7 @@
 import { type PropsWithChildren, useEffect } from 'react'
 
 import { useCurrentUser, useSessionStore } from '@/entities/usuario'
+import { Carregando } from '@/shared/ui/carregando'
 
 // No boot, se existe um token persistido (F5, aba nova), revalida contra o GET /auth/me antes
 // de liberar as rotas privadas — nunca confia cegamente no que estava salvo. Enquanto isso
@@ -18,7 +19,11 @@ export const SessionBoot = ({ children }: PropsWithChildren) => {
   }, [data, token, setSession])
 
   if (token && isLoading) {
-    return <div className="flex min-h-screen items-center justify-center text-sm text-zinc-500">Carregando…</div>
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <Carregando />
+      </div>
+    )
   }
 
   return children

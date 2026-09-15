@@ -41,7 +41,7 @@ export const AbaAprendizado = () => {
   const descartar = useDescartarSugestao()
 
   if (!pendentes || !historico || !regras || !equipes || !escreventes || !tiposAto) {
-    return <Carregando className="mt-5" />
+    return <Carregando />
   }
 
   const lookups = {

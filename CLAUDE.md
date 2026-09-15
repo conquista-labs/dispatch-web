@@ -2250,3 +2250,43 @@ cancelar (fecha sem salvar)/abrir de novo/salvar (fecha e mostra o texto salvo);
 DD/MM/AAAA" visível nos cards de Minha fila e Distribuição; `DateTimePicker` em viewport de
 520px de altura com o botão "Pronto" dentro dos limites da tela e clicável. `npx tsc --noEmit`,
 `npm run build`, `npm run test` (42/42) e `npm run lint` limpos.
+
+## Loading unificado — spinner + texto, em vez de linha de texto solta
+
+Pedido do dono ("esse loading tá muito feio"). Levantamento achou **três formatos coexistindo**:
+um `<p>Carregando…</p>` copiado à mão em 5 boards de tela inteira (Dashboard, Distribuição,
+Minha fila, Conferentes, Fila do conferente — justamente as telas principais), o componente
+compartilhado `shared/ui/carregando.tsx` (extraído numa auditoria anterior, usado só nas 7 abas
+de Central de Regras + painel de detalhe — os 5 boards nunca foram migrados pra ele) e mais duas
+cópias do mesmo texto no gate de sessão (`session-boot.tsx`) e no fallback do `<Suspense>` de
+rota (`router.tsx`). Nenhum tinha ícone — só texto cinza, sem peso visual, destoando do
+cabeçalho/abas que já renderizavam prontos ao redor (achado real: o "chrome" da tela aparece na
+hora, só o corpo virava uma linha perdida).
+
+**Sem referência no protótipo aprovado** (não tem estado de loading nenhum, é uma ferramenta de
+design estática) — a forma teve que ser desenhada dentro da linguagem visual já existente, não
+copiada de lugar nenhum. Duas direções possíveis (perguntado ao dono): skeleton do layout real
+de cada tela (mais polido, mas sem precedente pra seguir, esforço bem maior) vs. spinner
+centralizado reaproveitando o `Loader2Icon` já usado no botão "Redistribuir pool"/toast do
+Sonner (mais rápido, baixo risco). Escolhido: spinner.
+
+`shared/ui/carregando.tsx` — de `<p>` pra um bloco `flex flex-col items-center justify-center
+gap-2 py-14`, ícone `Loader2Icon` (`size-5 animate-spin`) + texto, `className` continua
+opcional pra ajuste por chamador. Os 5 boards que tinham o `<p>` copiado à mão passaram a
+importar e usar o componente; os `className="mt-5"` que existiam em 4 abas de Central de Regras
+(compensação manual de espaçamento pro `<p>` sem padding próprio) foram removidos — o `py-14`
+novo já dá o respiro sozinho. `session-boot.tsx` e o `CarregandoPagina` do `router.tsx` também
+passaram a usar o componente, cada um dentro de um `flex min-h-screen items-center justify-center
+bg-background` (esses dois casos ficam fora do `AppShell`, então precisam centralizar na tela
+inteira, não só na área de conteúdo).
+
+**Fora de escopo desta rodada, decisão consciente**: os ~30 botões de ação que já mostram texto
+("Salvando…"/"Criando…"/"Processando…") sem ícone continuam como estavam — o pedido era
+especificamente sobre o "Carregando…" genérico de carregamento de tela/dado, não sobre todo
+estado de pendência de toda mutation do app; virar um padrão à parte, se algum dia fizer sentido.
+
+Verificado via Playwright (delay artificial de ~1.5s interceptando as chamadas à API): board de
+Distribuição, Dashboard e uma aba de Central de Regras mostrando o spinner centralizado com bom
+respiro, no lugar da linha de texto perdida; conferido nos dois temas (claro/escuro) — cor do
+ícone/texto troca sozinha via `text-muted-foreground`, sem regra extra. `npx tsc --noEmit`,
+`npm run build`, `npm run test` (42/42) e `npm run lint` limpos.

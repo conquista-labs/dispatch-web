@@ -9,6 +9,7 @@ import { useIniciarConferencia } from '@/features/minha-fila/iniciar-conferencia
 import { usePegarProtocolo } from '@/features/minha-fila/pegar-protocolo'
 import { useIsMobile } from '@/shared/lib/use-is-mobile'
 import { useNow } from '@/shared/lib/use-now'
+import { Carregando } from '@/shared/ui/carregando'
 import { BarraDeFiltros, useFiltroProtocolos } from '@/widgets/filtro-protocolos'
 
 import { MAX_POOL_VISIVEL, MAX_POOL_VISIVEL_MOBILE } from '../lib/constantes'
@@ -61,7 +62,7 @@ export const MinhaFilaBoard = () => {
   })
 
   if (isLoading || !fila) {
-    return <p className="text-[13.5px] text-muted-foreground">Carregando…</p>
+    return <Carregando />
   }
 
   const erro = pegar.error ?? iniciar.error ?? concluir.error

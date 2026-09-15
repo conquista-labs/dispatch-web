@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 
 import { LoginPage } from '@/pages/login'
 import { ROUTES } from '@/shared/config/routes'
+import { Carregando } from '@/shared/ui/carregando'
 import { AppShell } from '@/widgets/app-shell'
 
 import { RequireRole } from './require-role'
@@ -27,11 +28,13 @@ const RecuperarSenhaPage = lazy(() =>
   import('@/pages/recuperar-senha').then((m) => ({ default: m.RecuperarSenhaPage })),
 )
 
-// Mesmo texto/classe já usado em todo canto do app enquanto uma query carrega (ver
-// MinhaFilaBoard, DistribuicaoBoard etc.) — consistente com o resto, não é um spinner novo.
+// Fallback do Suspense — o boundary fica acima de <Routes> inteiro, então isso aparece sem
+// nenhum chrome de AppShell ao redor (mesma situação de SessionBoot). Mesmo componente
+// compartilhado usado em todo canto do app enquanto uma query carrega, centralizado na tela
+// inteira pra não ficar uma linha perdida no canto superior esquerdo.
 const CarregandoPagina = () => (
-  <div className="px-7 pt-6 pb-7">
-    <p className="text-[13.5px] text-muted-foreground">Carregando…</p>
+  <div className="flex min-h-screen items-center justify-center bg-background">
+    <Carregando />
   </div>
 )
 
