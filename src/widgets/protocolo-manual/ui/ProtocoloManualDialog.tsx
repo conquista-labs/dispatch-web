@@ -224,7 +224,10 @@ export const ProtocoloManualDialog = ({
                 <span className="text-[11px] text-bad-fg">só números, mínimo 4 dígitos</span>
               )}
               {numeroValido && numeroIndisponivel && (
-                <span className="text-[11px] text-bad-fg">este protocolo já existe no sistema</span>
+                <span className="text-[11px] text-bad-fg">
+                  este protocolo já existe no sistema — se ele precisa de uma nova conferência, abra-o e use
+                  &quot;Reabrir conferência&quot; em vez de cadastrar de novo
+                </span>
               )}
             </div>
 
@@ -362,7 +365,12 @@ export const ProtocoloManualDialog = ({
             </div>
           )}
 
-          {numeroJaExiste && <p className="text-[13px] text-bad-fg">Este protocolo já existe no sistema.</p>}
+          {numeroJaExiste && (
+            <p className="text-[13px] text-bad-fg">
+              Este protocolo já existe no sistema. Se ele precisa de uma nova conferência (ex.: foi aprovado mas algo
+              mudou), abra-o e use &quot;Reabrir conferência&quot; em vez de cadastrar de novo.
+            </p>
+          )}
           {erroAoSalvar && !numeroJaExiste && (
             <p className="text-[13px] text-bad-fg">Não foi possível salvar. Tente de novo.</p>
           )}

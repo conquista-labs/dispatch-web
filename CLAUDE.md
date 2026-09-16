@@ -2744,3 +2744,28 @@ Verificado via Playwright contra a API/Postgres local: protocolo manual criado c
 `prioridade: "Alta"` via `POST /protocolos/manual`, atribuído a um conferente de teste via
 `POST /protocolos/{id}/atribuir`, badge "Alta" visível no card "Atribuídas a você" nos dois
 temas — protocolo removido depois. `npx tsc -b`, `npm run build` e `npm run lint` limpos.
+
+## "Novo protocolo" com Número já existente — mensagem de erro passa a orientar
+
+Dono relatou: tentou cadastrar manualmente o protocolo 263605 (já Aprovado, precisando de uma
+nova conferência porque algo mudou) e travou com "este protocolo já existe no sistema" — beco
+sem saída, sem dizer o que fazer. Cheguei a alterar `ResolvedorDeContinuidade.PodeRecriar`
+(back) pra liberar recriação de um Número Aprovado, mas revertido depois de conversar com o
+dono sobre os cenários reais — concluímos que **não era bug**: os dois caminhos certos pra esse
+cenário já existem hoje, sem precisar de nenhuma mudança de código. (1) se o mesmo Número
+reaparece numa reimportação de relatório,
+a continuidade já assume de novo pro mesmo conferente, sem bloqueio nenhum (`ImportarLote` nunca
+checou "já existe"); (2) se é a distribuidora decidindo na hora, sem esperar reimportação, o
+caminho é abrir o protocolo já existente e clicar **"Reabrir conferência"** — reaproveita o
+mesmo registro, com todo o histórico (`TempoAcumuladoAnterior`/`ReabertoEm`), em vez de criar um
+segundo registro ligado só pelo Número. "Novo protocolo" (`CriarProtocoloManual`, RF-18f) é pra
+ato que chega de fora do relatório, nunca visto antes — não é a ferramenta certa pra reabrir
+algo que já existe.
+
+**Fix, só de UX**: as duas mensagens de "já existe" em `ProtocoloManualDialog.tsx` (a validação
+ao vivo enquanto digita o Número, e a que aparece depois de um 409 de verdade no submit)
+passaram a orientar pra ação certa — "abra-o e use 'Reabrir conferência' em vez de cadastrar de
+novo" — ao invés de só travar sem explicar o que fazer. Nenhuma mudança de contrato de API ou de
+lógica de negócio: o back continua exatamente como estava (nenhum fix foi necessário lá).
+
+`npx tsc -b`, `npm run build` e `npm run lint` limpos.
