@@ -39,7 +39,14 @@ export const EmConferenciaCard = ({
         <span className="font-mono text-[12.5px] font-medium">{protocolo.numero}</span>
         <span className="font-mono text-sm font-medium">{formatCronometro(decorridoMs)}</span>
       </div>
-      <div className="mt-1.5 text-[13px] text-text-5">{ETAPA_LABEL[protocolo.etapa]}</div>
+      <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+        {protocolo.prioridade === 'Alta' && (
+          <span className="flex-none rounded-full border border-bad-border bg-bad-bg px-1.5 text-[10.5px] font-semibold text-bad-fg">
+            Alta
+          </span>
+        )}
+        <span className="text-[13px] text-text-5">{ETAPA_LABEL[protocolo.etapa]}</span>
+      </div>
       <div className="mt-1">
         <PrazoTooltip>
           <Chip tom={chip.tom}>{chip.label}</Chip>

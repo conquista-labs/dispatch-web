@@ -2723,3 +2723,24 @@ texto do tooltip aparece depois do hover tanto em Minha fila (`conferente-rf27@c
 quanto em Distribuição (`distribuidora@cartorio.com`, contexto de browser separado pra sessão
 não vazar). `npx tsc --noEmit`, `npm run build`, `npm run test` (42/42) e `npm run lint`
 limpos.
+
+## Badge "Alta" também nos cards de Minha fila — gap real, não regressão
+
+Dono relatou "a tag de prioridade não está aparecendo na fila dos conferentes". Investigado
+antes de mexer: não era bug — o badge de prioridade Alta nunca tinha sido implementado nos
+cards de Minha fila, só em Distribuição (`DistribuicaoProtocoloCard.tsx`). Conferido no
+protótipo aprovado (`Dispatch.dc.html`): a tag `p.alta` só aparece na seção de Distribuição; o
+bloco `isFila` (Minha fila) nunca desenha esse indicador — RF-24f cita prioridade só como eixo
+de filtro, nunca como badge no card. Confirmado com o dono antes de implementar (diverge do
+protótipo de propósito, mesmo padrão de outras divergências documentadas já registradas aqui).
+
+`ProtocoloCard.tsx`/`EmConferenciaCard.tsx` (`widgets/minha-fila-board`) ganharam o mesmo badge
+(`10.5px`, `font-semibold`, `border-bad-border`/`bg-bad-bg`/`text-bad-fg`, `rounded-full`) já
+usado em Distribuição — `ProtocoloCard` na linha de equipe/etapa, `EmConferenciaCard` na linha
+da etapa (não tinha `info`/tipo de ato nesse card, só etapa). `ListaCompletaPoolSheet.tsx`
+ganhou de graça, por reaproveitar `ProtocoloCard` — nenhuma mudança própria precisou.
+
+Verificado via Playwright contra a API/Postgres local: protocolo manual criado com
+`prioridade: "Alta"` via `POST /protocolos/manual`, atribuído a um conferente de teste via
+`POST /protocolos/{id}/atribuir`, badge "Alta" visível no card "Atribuídas a você" nos dois
+temas — protocolo removido depois. `npx tsc -b`, `npm run build` e `npm run lint` limpos.

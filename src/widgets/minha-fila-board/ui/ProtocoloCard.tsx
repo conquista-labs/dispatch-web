@@ -54,6 +54,11 @@ export const ProtocoloCard = ({
       </div>
       <div className="mt-1.5 text-[13px] text-pretty text-text-5">{info.tipoAtoNome ?? '—'}</div>
       <div className="mt-1 flex flex-wrap items-center gap-1.5">
+        {protocolo.prioridade === 'Alta' && (
+          <span className="flex-none rounded-full border border-bad-border bg-bad-bg px-1.5 text-[10.5px] font-semibold text-bad-fg">
+            Alta
+          </span>
+        )}
         <Chip tom={info.equipeNome ? 'neutro' : 'vencido'} fonte="padrao" className="font-medium">
           {info.equipeNome ?? 'sem equipe'}
         </Chip>
