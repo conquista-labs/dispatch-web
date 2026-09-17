@@ -6,7 +6,9 @@ import { criarResolverInfoProtocolo, useConcluidosHoje, useMinhaFila } from '@/e
 import { useTiposAto } from '@/entities/tipoAto'
 import { useConcluirConferencia } from '@/features/minha-fila/concluir-conferencia'
 import { useIniciarConferencia } from '@/features/minha-fila/iniciar-conferencia'
+import { usePausarConferencia } from '@/features/minha-fila/pausar-conferencia'
 import { usePegarProtocolo } from '@/features/minha-fila/pegar-protocolo'
+import { useRetomarConferencia } from '@/features/minha-fila/retomar-conferencia'
 import { useIsMobile } from '@/shared/lib/use-is-mobile'
 import { useNow } from '@/shared/lib/use-now'
 import { Carregando } from '@/shared/ui/carregando'
@@ -41,6 +43,8 @@ export const MinhaFilaBoard = () => {
   const pegar = usePegarProtocolo()
   const iniciar = useIniciarConferencia()
   const concluir = useConcluirConferencia()
+  const pausar = usePausarConferencia()
+  const retomar = useRetomarConferencia()
   const [listaCompletaAberta, setListaCompletaAberta] = useState(false)
 
   // RF-19/RF-24: protótipo v2 passou a mostrar tipo de ato/escrevente/equipe no card daqui
@@ -65,7 +69,7 @@ export const MinhaFilaBoard = () => {
     return <Carregando />
   }
 
-  const erro = pegar.error ?? iniciar.error ?? concluir.error
+  const erro = pegar.error ?? iniciar.error ?? concluir.error ?? pausar.error ?? retomar.error
   const { passaNoFiltro } = filtroProtocolos
   const filaFiltrada = {
     poolDisponivel: fila.poolDisponivel.filter(passaNoFiltro),
@@ -187,7 +191,9 @@ export const MinhaFilaBoard = () => {
                   now={now}
                   onAprovar={() => concluir.mutate({ protocoloId: protocolo.id, aprovado: true })}
                   onReprovar={() => concluir.mutate({ protocoloId: protocolo.id, aprovado: false })}
-                  desabilitado={concluir.isPending}
+                  onPausar={() => pausar.mutate(protocolo.id)}
+                  onRetomar={() => retomar.mutate(protocolo.id)}
+                  desabilitado={concluir.isPending || pausar.isPending || retomar.isPending}
                 />
               ))}
               {filaFiltrada.emConferencia.length === 0 && (

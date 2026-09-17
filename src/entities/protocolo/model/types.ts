@@ -37,6 +37,9 @@ export type ProtocoloResumo = {
   semaforo: FaixaSemaforo | null
   // RF-21: só existe depois de IniciarConferencia — front calcula o cronômetro ao vivo com isso.
   iniciadoEm: string | null
+  // Pausa (pedido do dono, "a pessoa sai pra almoçar") — não nulo enquanto pausado; troca o
+  // cronômetro por "Pausado" + "Retomar" no card.
+  pausadoEm: string | null
   // "N feitos hoje"/tempo de conferência (aba "Por status" → Concluídos) — só existem depois
   // de ConcluirConferencia, nulos em qualquer status antes disso.
   concluidoEm: string | null

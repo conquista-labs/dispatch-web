@@ -2769,3 +2769,28 @@ novo" — ao invés de só travar sem explicar o que fazer. Nenhuma mudança de 
 lógica de negócio: o back continua exatamente como estava (nenhum fix foi necessário lá).
 
 `npx tsc -b`, `npm run build` e `npm run lint` limpos.
+
+## Pausar conferência — "a pessoa sai pra almoçar, por exemplo"
+
+Pedido do dono, não é RF/protótipo (ver `dispatch-api/CLAUDE.md`, mesma seção, pro desenho
+completo do back). `ProtocoloResumo` (`entities/protocolo`) ganha `pausadoEm: string | null`.
+Duas features novas, mesmo molde de `iniciar-conferencia`: `features/minha-fila/
+pausar-conferencia`/`retomar-conferencia` (`POST /minha-fila/{id}/pausar`\|`/retomar`).
+
+`EmConferenciaCard.tsx` (`widgets/minha-fila-board`) — quando `pausadoEm` está presente: o
+cronômetro no topo do card vira o texto "Pausado", e o botão "Retomar" (com `PlayIcon`,
+`lucide-react`) substitui a linha Aprovar/Não aprovar inteira — reforça no front a mesma regra
+que o back já impõe (`ConcluirConferencia.EstaPausado`): não dá pra concluir sem retomar
+primeiro. Quando não está pausado: um botão pequeno de ícone (`PauseIcon`) aparece ao lado do
+cronômetro, mesmo padrão visual dos ícones de stepper já usados em `ConferenteCard.tsx`
+(`MinusIcon`/`PlusIcon`) — não um `Button` de texto cheio, porque é uma ação secundária que não
+merece o mesmo peso visual de Aprovar/Não aprovar. `FilaDoConferenteBoard.tsx` (Distribuidora
+vendo a fila de outra pessoa, `somenteLeitura`) já não passa `onPausar`/`onRetomar` — o card
+mostra "Pausado" quando for o caso, mas sem nenhum botão de ação, mesmo padrão dos outros já
+existentes.
+
+Verificado via Playwright contra a API/Postgres local, login real como conferente: card antes
+da pausa (cronômetro + ícone de pausar visível), depois de pausar ("Pausado" + "Retomar",
+Aprovar/Não aprovar ausentes — `toHaveCount(0)`), nos dois temas; retomado de novo, confirmado
+que Aprovar/Não aprovar voltam. `npx tsc -b`, `npm run build`, `npm run test` (42/42) e
+`npm run lint` limpos.
