@@ -2794,3 +2794,22 @@ da pausa (cronômetro + ícone de pausar visível), depois de pausar ("Pausado" 
 Aprovar/Não aprovar ausentes — `toHaveCount(0)`), nos dois temas; retomado de novo, confirmado
 que Aprovar/Não aprovar voltam. `npx tsc -b`, `npm run build`, `npm run test` (42/42) e
 `npm run lint` limpos.
+
+**Visibilidade das pausas** (pergunta do dono, mesma conversa: "como garantir que ninguém abusa
+da pausa pra melhorar o tempo dela?" — ver `dispatch-api/CLAUDE.md`, mesma seção, pro desenho do
+back). `DetalheProtocolo` (`entities/protocolo`) ganha `pausadoEm: string | null` e
+`pausas: PausaConferencia[]` (`pausadoEm`/`retomadoEm`/`duracao`, tipo novo exportado no barrel).
+
+`PainelDetalheProtocolo.tsx` — "LINHA DO TEMPO" ganha a entrada "Pausado" (mesmo padrão de
+`Reaberto`/`Corrigido`); seção nova "PAUSAS" (só renderizada quando `pausas.length > 0`, mesmo
+padrão condicional de "HISTÓRICO DE CONFERÊNCIAS") com um componente `HistoricoDePausas` — linha
+de resumo ("N pausas · Xmin no total", via `formatDuracaoCurta` somando os intervalos em ms) mais
+um card por pausa (`pausadoEm → retomadoEm`, duração via `formatDuracaoConcluida`), mesmo padrão
+visual de `HistoricoConferencias` (lista de cards, já existente no mesmo arquivo).
+
+Verificado via Playwright contra a API/Postgres local: protocolo pausado e retomado duas vezes,
+painel de detalhe aberto como distribuidora mostrando "2 pausas · Xmin no total" mais os dois
+cards com os intervalos certos (conferido via `innerText` do conteúdo do Sheet, não só
+screenshot — o Sheet tem rolagem própria, um `fullPage` screenshot sozinho não capturava o
+conteúdo abaixo da dobra). `npx tsc -b`, `npm run build`, `npm run test` (42/42) e `npm run lint`
+limpos.

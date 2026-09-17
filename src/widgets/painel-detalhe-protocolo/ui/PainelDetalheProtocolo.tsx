@@ -15,6 +15,7 @@ import {
   type AlcadaConferente,
   type DetalheProtocolo,
   type HistoricoConferencia,
+  type PausaConferencia,
   type StatusProtocolo,
 } from '@/entities/protocolo'
 import { fraseDaRegra, MOTIVO_ALCADA_LABEL, useRegrasAlcada } from '@/entities/regraAlcada'
@@ -27,7 +28,7 @@ import { useDefinirPrioridade } from '@/features/protocolo/definir-prioridade'
 import { useExcluirProtocolo } from '@/features/protocolo/excluir'
 import { useReabrirConferencia } from '@/features/protocolo/reabrir-conferencia'
 import { useRestaurarProtocolo } from '@/features/protocolo/restaurar'
-import { formatDataHora } from '@/shared/lib/format'
+import { formatDataHora, formatDuracaoConcluida, formatDuracaoCurta } from '@/shared/lib/format'
 import { useNow } from '@/shared/lib/use-now'
 import { cn } from '@/shared/lib/utils'
 import {
@@ -243,6 +244,7 @@ export const PainelDetalheProtocolo = ({ protocoloId, onFechar }: PainelDetalheP
                   <LinhaDoTempo rotulo="Concluído" quando={detalhe.concluidoEm} />
                   <LinhaDoTempo rotulo="Corrigido" quando={detalhe.corrigidoEm} />
                   <LinhaDoTempo rotulo="Reaberto" quando={detalhe.reabertoEm} />
+                  <LinhaDoTempo rotulo="Pausado" quando={detalhe.pausadoEm} />
                 </div>
 
                 {detalhe.historicoConferencias.length > 0 && (
@@ -254,6 +256,15 @@ export const PainelDetalheProtocolo = ({ protocoloId, onFechar }: PainelDetalheP
                       historico={detalhe.historicoConferencias}
                       nomePorConferenteId={nomePorConferenteId}
                     />
+                  </>
+                )}
+
+                {detalhe.pausas.length > 0 && (
+                  <>
+                    <div className="mt-4.5 mb-2 font-mono text-[10.5px] tracking-[0.04em] text-muted-foreground">
+                      PAUSAS
+                    </div>
+                    <HistoricoDePausas pausas={detalhe.pausas} />
                   </>
                 )}
 
@@ -399,6 +410,35 @@ const HistoricoConferencias = ({
     ))}
   </div>
 )
+
+// Visibilidade da pausa (pedido do dono, "como garantir que ninguém abusa da pausa pra melhorar
+// o próprio tempo?" — ver dispatch-api/CLAUDE.md, "Pausar conferência"): não bloqueia nada, só
+// deixa auditável quantas vezes e por quanto tempo o ato ficou pausado. Mesmo padrão visual de
+// `HistoricoConferencias` (lista de cards), com um resumo na primeira linha.
+const HistoricoDePausas = ({ pausas }: { pausas: PausaConferencia[] }) => {
+  const totalMs = pausas.reduce(
+    (soma, p) => soma + (new Date(p.retomadoEm).getTime() - new Date(p.pausadoEm).getTime()),
+    0,
+  )
+  return (
+    <div className="flex flex-col gap-1.5">
+      <span className="text-[11.5px] text-muted-foreground">
+        {pausas.length} {pausas.length === 1 ? 'pausa' : 'pausas'} · {formatDuracaoCurta(totalMs)} no total
+      </span>
+      {pausas.map((p) => (
+        <div
+          key={p.pausadoEm}
+          className="flex items-center justify-between gap-2.5 rounded-lg border border-border bg-card px-2.5 py-1.5"
+        >
+          <span className="text-[11px] text-muted-foreground">
+            {formatDataHora(p.pausadoEm)} → {formatDataHora(p.retomadoEm)}
+          </span>
+          <span className="text-[11px] font-medium text-text-5">{formatDuracaoConcluida(p.duracao)}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
 
 // Idem — os botões de ação dependentes de status (cada um só faz sentido pra alguns status),
 // mais o erro de "Atribuir ao menos carregado" (único que pode falhar de um jeito que vale a

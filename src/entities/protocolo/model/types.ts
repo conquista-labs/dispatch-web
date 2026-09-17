@@ -105,9 +105,20 @@ export type DetalheProtocolo = {
   regraAplicadaId: string | null
   corrigidoEm: string | null
   reabertoEm: string | null
+  pausadoEm: string | null
   semaforo: FaixaSemaforo | null
   alcada: AlcadaConferente[]
   historicoConferencias: HistoricoConferencia[]
+  // Pedido do dono ("como garantir que ninguém abusa da pausa pra melhorar o tempo dela?") —
+  // visibilidade, não bloqueio: quantas vezes e por quanto tempo este ato ficou pausado.
+  pausas: PausaConferencia[]
+}
+
+// PausaConferenciaResponse (Api) — uma pausa já encerrada (pausar/retomar, RF não numerado).
+export type PausaConferencia = {
+  pausadoEm: string
+  retomadoEm: string
+  duracao: string
 }
 
 // HistoricoConferenciaResponse (Api) — continuidade de conferência: outras linhas com o mesmo

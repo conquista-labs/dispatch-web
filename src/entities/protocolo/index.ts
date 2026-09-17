@@ -7,6 +7,7 @@ export type {
   GrupoPorConferente,
   HistoricoConferencia,
   InfoProtocolo,
+  PausaConferencia,
   Prioridade,
   ProtocoloConcluidoResumo,
   ProtocoloResumo,
