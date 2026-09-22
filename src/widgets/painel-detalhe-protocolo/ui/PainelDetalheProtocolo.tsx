@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { ChevronDownIcon } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { NIVEL_LABEL, useConferentes, type Conferente } from '@/entities/conferente'
@@ -51,6 +52,7 @@ import {
 import { Button } from '@/shared/ui/button'
 import { Carregando } from '@/shared/ui/carregando'
 import { Chip } from '@/shared/ui/chip'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/shared/ui/collapsible'
 import { Input } from '@/shared/ui/input'
 import { SeletorUnico } from '@/shared/ui/seletor-unico'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/shared/ui/sheet'
@@ -258,35 +260,7 @@ export const PainelDetalheProtocolo = ({ protocoloId, onFechar }: PainelDetalheP
                   <LinhaDoTempo rotulo="Pausado" quando={detalhe.pausadoEm} />
                 </div>
 
-                {detalhe.historicoConferencias.length > 0 && (
-                  <>
-                    <div className="mt-4.5 mb-2 font-mono text-[10.5px] tracking-[0.04em] text-muted-foreground">
-                      HISTÓRICO DE CONFERÊNCIAS
-                    </div>
-                    <HistoricoConferencias
-                      historico={detalhe.historicoConferencias}
-                      nomePorConferenteId={nomePorConferenteId}
-                    />
-                  </>
-                )}
-
-                {detalhe.pausas.length > 0 && (
-                  <>
-                    <div className="mt-4.5 mb-2 font-mono text-[10.5px] tracking-[0.04em] text-muted-foreground">
-                      PAUSAS
-                    </div>
-                    <HistoricoDePausas pausas={detalhe.pausas} />
-                  </>
-                )}
-
-                {detalhe.ajustesDeDuracao.length > 0 && (
-                  <>
-                    <div className="mt-4.5 mb-2 font-mono text-[10.5px] tracking-[0.04em] text-muted-foreground">
-                      AJUSTES DE DURAÇÃO
-                    </div>
-                    <HistoricoDeAjustesDeDuracao ajustes={detalhe.ajustesDeDuracao} />
-                  </>
-                )}
+                <BlocoHistorico detalhe={detalhe} nomePorConferenteId={nomePorConferenteId} />
 
                 <div className="mt-4.5 mb-2 font-mono text-[10.5px] tracking-[0.04em] text-muted-foreground">
                   QUEM PODE CONFERIR ESTE ATO
@@ -399,6 +373,61 @@ const ListaAlcada = ({ alcada, conferentes }: { alcada: AlcadaConferente[]; conf
     {alcada.length === 0 && <p className="text-[12.5px] text-muted-foreground">Ninguém na escala hoje.</p>}
   </div>
 )
+
+// Pedido do dono ("esse painel já tá ficando grande demais não?") — agrupa as 3 seções de
+// auditoria (histórico de conferências, pausas, ajustes de duração) num único bloco recolhível,
+// fechado por padrão: quem só quer ver status/prazo/dono não precisa rolar por elas; quem quer
+// auditar expande. Some inteiro quando não há nada pra mostrar nas 3 (mesmo critério que cada
+// seção já usava sozinha).
+const BlocoHistorico = ({
+  detalhe,
+  nomePorConferenteId,
+}: {
+  detalhe: DetalheProtocolo
+  nomePorConferenteId: Map<string, string>
+}) => {
+  const [aberto, setAberto] = useState(false)
+  const total = detalhe.historicoConferencias.length + detalhe.pausas.length + detalhe.ajustesDeDuracao.length
+  if (total === 0) return null
+
+  return (
+    <Collapsible open={aberto} onOpenChange={setAberto} className="mt-4.5">
+      <CollapsibleTrigger className="flex w-full items-center justify-between gap-2 py-1">
+        <span className="font-mono text-[10.5px] tracking-[0.04em] text-muted-foreground">HISTÓRICO · {total}</span>
+        <ChevronDownIcon
+          className={cn('size-3.5 text-muted-foreground transition-transform', aberto && 'rotate-180')}
+        />
+      </CollapsibleTrigger>
+      <CollapsibleContent className="flex flex-col gap-4">
+        {detalhe.historicoConferencias.length > 0 && (
+          <div>
+            <div className="mt-2 mb-2 font-mono text-[10.5px] tracking-[0.04em] text-muted-foreground">
+              CONFERÊNCIAS ANTERIORES
+            </div>
+            <HistoricoConferencias
+              historico={detalhe.historicoConferencias}
+              nomePorConferenteId={nomePorConferenteId}
+            />
+          </div>
+        )}
+        {detalhe.pausas.length > 0 && (
+          <div>
+            <div className="mt-2 mb-2 font-mono text-[10.5px] tracking-[0.04em] text-muted-foreground">PAUSAS</div>
+            <HistoricoDePausas pausas={detalhe.pausas} />
+          </div>
+        )}
+        {detalhe.ajustesDeDuracao.length > 0 && (
+          <div>
+            <div className="mt-2 mb-2 font-mono text-[10.5px] tracking-[0.04em] text-muted-foreground">
+              AJUSTES DE DURAÇÃO
+            </div>
+            <HistoricoDeAjustesDeDuracao ajustes={detalhe.ajustesDeDuracao} />
+          </div>
+        )}
+      </CollapsibleContent>
+    </Collapsible>
+  )
+}
 
 // Continuidade de conferência (pedido do dono, não é RF numerado nem está no protótipo
 // aprovado — ver dispatch-api/CLAUDE.md): outras linhas com o mesmo Número, mais recente

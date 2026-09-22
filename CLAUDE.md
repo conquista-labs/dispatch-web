@@ -2848,3 +2848,25 @@ Teste · {data}", "0 min → 45 min" e o motivo, nos dois temas; `GET /dashboard
 API, não só UI) com `tempoMedio: "00:45:00"` pro conferente — reflete no Dashboard como pedido.
 `npx tsc -b`, `npm run build`, `npm run test` (42/42) e `npm run lint` limpos. Regressão
 permanente (`auth`/`session-isolation`/`login`/`cursor`) verde.
+
+## Painel de detalhe — bloco "Histórico" recolhível
+
+Pedido do dono, mesma conversa do item acima: "esse painel já tá ficando grande demais não?" —
+cada seção de auditoria (Histórico de conferências, Pausas, Ajustes de duração) fazia sentido
+isolada quando entrou, mas a soma virou muita coisa empilhada num painel de 432px de largura.
+
+`shared/ui/collapsible.tsx` (novo, via `npx shadcn add collapsible` — sem gotcha desta vez, não
+usa `cn`, nenhuma dependência espúria instalada). `PainelDetalheProtocolo.tsx` ganha
+`BlocoHistorico` — agrupa as 3 seções condicionais num único `Collapsible`, **fechado por
+padrão** (`useState(false)`), com o gatilho mostrando só "HISTÓRICO · N" (soma das 3 contagens)
+e um `ChevronDownIcon` que gira 180° quando aberto. O bloco inteiro não renderiza nada quando as
+3 seções estão vazias (mesmo critério que cada uma já usava sozinha). Cada subseção manteve seu
+próprio título ("CONFERÊNCIAS ANTERIORES"/"PAUSAS"/"AJUSTES DE DURAÇÃO") dentro do conteúdo
+expandido — só o agrupamento e o toggle são novos, nenhuma lógica de cada subseção mudou.
+
+Verificado via Playwright contra a API/Postgres local (spec temporário, apagado depois): criado
+um protocolo, reaberto, pausado/retomado e com a duração ajustada (gera 1 pausa + 1 ajuste —
+reabrir a mesma linha não gera `HistoricoConferencia`, isso é só pra outras linhas com o mesmo
+Número via continuidade/reimportação); confirmado "HISTÓRICO · 2" fechado por padrão (subseções
+não visíveis), clique expande mostrando as duas, nos dois temas. `npx tsc -b`, `npm run build` e
+`npm run lint` limpos.
