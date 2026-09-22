@@ -17,6 +17,19 @@ type SessionState = {
 // corrigir a sessão — achado em produção (conta real, sessão aberta desde antes do deploy).
 type UsuarioPersistidoV0 = { id: string; nome: string; email: string; papel: Papel }
 
+type EstadoPersistido = { token: string | null; usuario: UsuarioPersistidoV0 | Usuario | null }
+
+// Extraída como função nomeada (não fica só inline no `migrate` do `persist`) pra dar pra testar
+// como lógica pura, sem precisar montar o Zustand/localStorage inteiro — ver session-store.test.ts.
+export const migrarSessao = (persisted: unknown, versaoPersistida: number): EstadoPersistido => {
+  const estado = persisted as EstadoPersistido
+  if (versaoPersistida < 1 && estado.usuario && !('papeis' in estado.usuario) && 'papel' in estado.usuario) {
+    const { id, nome, email, papel } = estado.usuario
+    return { ...estado, usuario: { id, nome, email, papeis: [papel] } }
+  }
+  return estado
+}
+
 // Persistido no localStorage pra sobreviver a um F5 — mas o token guardado aqui é só um
 // ponto de partida otimista pro boot da aplicação. Quem confirma que ele ainda é válido de
 // verdade é o GET /auth/me (ver entities/usuario/model/use-current-user.ts), nunca o valor
@@ -32,14 +45,7 @@ export const useSessionStore = create<SessionState>()(
     {
       name: 'dispatch-session',
       version: 1,
-      migrate: (persisted, versaoPersistida) => {
-        const estado = persisted as { token: string | null; usuario: UsuarioPersistidoV0 | Usuario | null }
-        if (versaoPersistida < 1 && estado.usuario && !('papeis' in estado.usuario) && 'papel' in estado.usuario) {
-          const { id, nome, email, papel } = estado.usuario
-          return { ...estado, usuario: { id, nome, email, papeis: [papel] } }
-        }
-        return estado
-      },
+      migrate: migrarSessao,
     },
   ),
 )
