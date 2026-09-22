@@ -12,6 +12,7 @@ import {
   PrazoTooltip,
   TIPO_PRAZO_LABEL,
   useDetalheProtocolo,
+  type AjusteDeDuracao,
   type AlcadaConferente,
   type DetalheProtocolo,
   type HistoricoConferencia,
@@ -20,6 +21,7 @@ import {
 } from '@/entities/protocolo'
 import { fraseDaRegra, MOTIVO_ALCADA_LABEL, useRegrasAlcada } from '@/entities/regraAlcada'
 import { useTiposAto } from '@/entities/tipoAto'
+import { useAjustarDuracao } from '@/features/protocolo/ajustar-duracao'
 import { useAtribuirAoMenosCarregado } from '@/features/protocolo/atribuir-ao-menos-carregado'
 import { useAtribuirManualmente } from '@/features/protocolo/atribuir-manualmente'
 import { useDevolverAoPool } from '@/features/protocolo/devolver-ao-pool'
@@ -28,7 +30,12 @@ import { useDefinirPrioridade } from '@/features/protocolo/definir-prioridade'
 import { useExcluirProtocolo } from '@/features/protocolo/excluir'
 import { useReabrirConferencia } from '@/features/protocolo/reabrir-conferencia'
 import { useRestaurarProtocolo } from '@/features/protocolo/restaurar'
-import { formatDataHora, formatDuracaoConcluida, formatDuracaoCurta } from '@/shared/lib/format'
+import {
+  formatDataHora,
+  formatDuracaoConcluida,
+  formatDuracaoCurta,
+  parseDuracaoParaMinutos,
+} from '@/shared/lib/format'
 import { useNow } from '@/shared/lib/use-now'
 import { cn } from '@/shared/lib/utils'
 import {
@@ -44,6 +51,7 @@ import {
 import { Button } from '@/shared/ui/button'
 import { Carregando } from '@/shared/ui/carregando'
 import { Chip } from '@/shared/ui/chip'
+import { Input } from '@/shared/ui/input'
 import { SeletorUnico } from '@/shared/ui/seletor-unico'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/shared/ui/sheet'
 import { ProtocoloManualDialog } from '@/widgets/protocolo-manual'
@@ -159,6 +167,9 @@ export const PainelDetalheProtocolo = ({ protocoloId, onFechar }: PainelDetalheP
         { k: 'Vencimento', v: detalhe.vencimentoEm ? formatDataHora(detalhe.vencimentoEm) : '—' },
         { k: 'Prioridade', v: PRIORIDADE_LABEL[detalhe.prioridade] },
         { k: 'Dono', v: detalhe.donoId ? (nomePorConferenteId.get(detalhe.donoId) ?? '—') : 'sem dono' },
+        // Só existe depois de concluído (Duracao no Domain exige IniciadoEm+ConcluidoEm) —
+        // mesma regra de nulidade que já vale pros outros campos condicionais desta lista.
+        ...(detalhe.duracao ? [{ k: 'Duração', v: formatDuracaoConcluida(detalhe.duracao) }] : []),
       ]
     : []
 
@@ -265,6 +276,15 @@ export const PainelDetalheProtocolo = ({ protocoloId, onFechar }: PainelDetalheP
                       PAUSAS
                     </div>
                     <HistoricoDePausas pausas={detalhe.pausas} />
+                  </>
+                )}
+
+                {detalhe.ajustesDeDuracao.length > 0 && (
+                  <>
+                    <div className="mt-4.5 mb-2 font-mono text-[10.5px] tracking-[0.04em] text-muted-foreground">
+                      AJUSTES DE DURAÇÃO
+                    </div>
+                    <HistoricoDeAjustesDeDuracao ajustes={detalhe.ajustesDeDuracao} />
                   </>
                 )}
 
@@ -440,6 +460,33 @@ const HistoricoDePausas = ({ pausas }: { pausas: PausaConferencia[] }) => {
   )
 }
 
+// Pedido do dono ("como distribuidora e admin, quero editar o tempo de conferência de um
+// protocolo") — histórico auditável (RNF-02), sempre visível pra quem abre o painel. Nome de
+// quem ajustou já vem resolvido do back (AjustadoPorId é sempre uma Distribuidora, não
+// necessariamente alguém na lista de Conferentes que o front carrega — ver entities/protocolo).
+// Mesmo padrão visual de HistoricoDePausas (resumo + lista de cards).
+const HistoricoDeAjustesDeDuracao = ({ ajustes }: { ajustes: AjusteDeDuracao[] }) => (
+  <div className="flex flex-col gap-1.5">
+    <span className="text-[11.5px] text-muted-foreground">
+      {ajustes.length} {ajustes.length === 1 ? 'ajuste' : 'ajustes'}
+    </span>
+    {ajustes.map((a) => (
+      <div key={a.ajustadoEm} className="flex flex-col gap-1 rounded-lg border border-border bg-card px-2.5 py-1.5">
+        <div className="flex items-center justify-between gap-2.5">
+          <span className="text-[11px] text-muted-foreground">
+            {a.ajustadoPorNome} · {formatDataHora(a.ajustadoEm)}
+          </span>
+          <span className="text-[11px] font-medium text-text-5">
+            {a.duracaoAnterior ? formatDuracaoConcluida(a.duracaoAnterior) : '—'} →{' '}
+            {formatDuracaoConcluida(a.duracaoNova)}
+          </span>
+        </div>
+        {a.motivo && <span className="text-[12.5px] text-pretty text-text-5">{a.motivo}</span>}
+      </div>
+    ))}
+  </div>
+)
+
 // Idem — os botões de ação dependentes de status (cada um só faz sentido pra alguns status),
 // mais o erro de "Atribuir ao menos carregado" (único que pode falhar de um jeito que vale a
 // pena explicar: sem ninguém com alçada na escala). Cada mutation mora aqui dentro, não no
@@ -450,8 +497,12 @@ const AcoesDeStatus = ({ detalhe, conferentes }: { detalhe: DetalheProtocolo; co
   const atribuirManualmente = useAtribuirManualmente()
   const reabrirConferencia = useReabrirConferencia()
   const definirPrioridade = useDefinirPrioridade()
+  const ajustarDuracao = useAjustarDuracao()
   const [atribuindo, setAtribuindo] = useState(false)
   const [conferenteEscolhidoId, setConferenteEscolhidoId] = useState('')
+  const [ajustandoDuracao, setAjustandoDuracao] = useState(false)
+  const [duracaoMinutos, setDuracaoMinutos] = useState('')
+  const [motivoAjuste, setMotivoAjuste] = useState('')
 
   const podeDevolverAoPool = detalhe.status === 'Atribuido'
   const podeAtribuirAoMenosCarregado = detalhe.status === 'Pool' || detalhe.status === 'Excecao'
@@ -467,12 +518,31 @@ const AcoesDeStatus = ({ detalhe, conferentes }: { detalhe: DetalheProtocolo; co
   // A importação nunca marca prioridade alta (não vem no relatório) — este botão é o único
   // jeito real de um protocolo virar urgente. Não faz sentido depois de concluído/descartado.
   const podeDefinirPrioridade = !['Aprovado', 'Reprovado', 'Descartado'].includes(detalhe.status)
+  // Pedido do dono ("como distribuidora e admin, quero editar o tempo de conferência") — só faz
+  // sentido pra um protocolo que já tem uma Duracao de verdade pra corrigir (mesma guarda do
+  // caso de uso no back, AjustarDuracaoProtocolo).
+  const podeAjustarDuracao = detalhe.status === 'Aprovado' || detalhe.status === 'Reprovado'
 
   const handleConfirmarAtribuicao = () => {
     if (!conferenteEscolhidoId) return
     atribuirManualmente.mutate(
       { protocoloId: detalhe.id, conferenteId: conferenteEscolhidoId },
       { onSuccess: () => setAtribuindo(false) },
+    )
+  }
+
+  const handleAbrirAjusteDuracao = () => {
+    setDuracaoMinutos(detalhe.duracao ? String(parseDuracaoParaMinutos(detalhe.duracao)) : '')
+    setMotivoAjuste('')
+    setAjustandoDuracao(true)
+  }
+
+  const handleConfirmarAjusteDuracao = () => {
+    const minutos = Number(duracaoMinutos)
+    if (!Number.isFinite(minutos) || minutos < 0) return
+    ajustarDuracao.mutate(
+      { protocoloId: detalhe.id, duracaoMinutos: minutos, motivo: motivoAjuste.trim() || null },
+      { onSuccess: () => setAjustandoDuracao(false) },
     )
   }
 
@@ -486,7 +556,8 @@ const AcoesDeStatus = ({ detalhe, conferentes }: { detalhe: DetalheProtocolo; co
     !podeAtribuirAoMenosCarregado &&
     !podeAtribuirManualmente &&
     !podeReabrirConferencia &&
-    !podeDefinirPrioridade
+    !podeDefinirPrioridade &&
+    !podeAjustarDuracao
   ) {
     return null
   }
@@ -539,6 +610,11 @@ const AcoesDeStatus = ({ detalhe, conferentes }: { detalhe: DetalheProtocolo; co
             {detalhe.prioridade === 'Alta' ? 'Remover urgência' : 'Marcar como urgente'}
           </Button>
         )}
+        {podeAjustarDuracao && !ajustandoDuracao && (
+          <Button variant="outline" size="sm" onClick={handleAbrirAjusteDuracao}>
+            Editar tempo de conferência
+          </Button>
+        )}
       </div>
       {podeAtribuirManualmente && atribuindo && (
         <div className="mt-2 flex items-center gap-1.5">
@@ -560,11 +636,42 @@ const AcoesDeStatus = ({ detalhe, conferentes }: { detalhe: DetalheProtocolo; co
           </Button>
         </div>
       )}
+      {podeAjustarDuracao && ajustandoDuracao && (
+        <div className="mt-2 flex flex-wrap items-center gap-1.5">
+          <Input
+            type="number"
+            min={0}
+            value={duracaoMinutos}
+            onChange={(e) => setDuracaoMinutos(e.target.value)}
+            placeholder="minutos"
+            className="w-24"
+          />
+          <Input
+            value={motivoAjuste}
+            onChange={(e) => setMotivoAjuste(e.target.value)}
+            placeholder="motivo (opcional)"
+            className="min-w-[160px] flex-1"
+          />
+          <Button variant="outline" size="sm" onClick={() => setAjustandoDuracao(false)}>
+            Cancelar
+          </Button>
+          <Button
+            size="sm"
+            onClick={handleConfirmarAjusteDuracao}
+            disabled={!duracaoMinutos || ajustarDuracao.isPending}
+          >
+            Confirmar
+          </Button>
+        </div>
+      )}
       {atribuirMenosCarregado.isError && (
         <p className="mt-2 text-[12.5px] text-bad-fg">Ninguém com alçada na escala agora.</p>
       )}
       {atribuirManualmente.isError && (
         <p className="mt-2 text-[12.5px] text-bad-fg">Não foi possível atribuir. Tente de novo.</p>
+      )}
+      {ajustarDuracao.isError && (
+        <p className="mt-2 text-[12.5px] text-bad-fg">Não foi possível ajustar a duração. Tente de novo.</p>
       )}
     </>
   )

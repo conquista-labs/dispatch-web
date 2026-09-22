@@ -2813,3 +2813,38 @@ cards com os intervalos certos (conferido via `innerText` do conteúdo do Sheet,
 screenshot — o Sheet tem rolagem própria, um `fullPage` screenshot sozinho não capturava o
 conteúdo abaixo da dobra). `npx tsc -b`, `npm run build`, `npm run test` (42/42) e `npm run lint`
 limpos.
+
+## Ajustar duração — a distribuidora corrige o tempo final de conferência
+
+Pedido do dono ("como distribuidora e admin do sistema, editar o tempo de conferência de um
+protocolo") — ver `dispatch-api/CLAUDE.md`, mesma seção, pro desenho do back (`AjusteDeDuracao`,
+histórico auditável, reflete no Dashboard/RF-46).
+
+`entities/protocolo`: `DetalheProtocolo.duracao`/`.ajustesDeDuracao` (tipo `AjusteDeDuracao`).
+**Exceção ao padrão "back manda o fato cru, front resolve o nome"**: `AjustadoPorId` é sempre
+uma Distribuidora, não necessariamente alguém na lista de Conferentes que o front já carrega —
+sem `GET /usuarios` geral, o back resolve o nome e manda pronto (`ajustadoPorNome: string`), não
+o Guid cru. `features/protocolo/ajustar-duracao` (`POST /protocolos/{id}/ajustar-duracao`,
+`{ protocoloId, duracaoMinutos, motivo }`, invalida a query de detalhe + `['dashboard']` inteiro
+por prefixo — a mutation não sabe qual aba do Dashboard está aberta).
+
+`PainelDetalheProtocolo.tsx`:
+- Linha "Duração" nos metadados do topo (`linhas`), já existia — só passou a ficar visível de
+  verdade agora que há uma ação pra editá-la.
+- Seção "AJUSTES DE DURAÇÃO" (`HistoricoDeAjustesDeDuracao`, só renderizada quando há pelo menos
+  um ajuste) — mesmo padrão visual de `HistoricoDePausas`: resumo ("N ajustes") + um card por
+  ajuste (nome de quem ajustou + data, `duracaoAnterior → duracaoNova`, motivo se houver).
+- `AcoesDeStatus` ganha "Editar tempo de conferência" (visível só quando `status` é
+  `Aprovado`/`Reprovado` — mesma guarda do caso de uso no back), mesmo padrão de toggle inline
+  já usado por "Atribuir a…": clique abre um campo de minutos (`Input type="number"`,
+  pré-preenchido via `parseDuracaoParaMinutos(detalhe.duracao)`) + campo de motivo opcional +
+  Cancelar/Confirmar.
+
+Verificado via Playwright contra a API/Postgres local (spec temporário, apagado depois): criado
+protocolo, atribuído, concluído (~2s de duração real) como conferente de teste; como
+distribuidora, "Editar tempo de conferência" → 45min + motivo → `POST .../ajustar-duracao`
+confirmado por resposta de rede (204); seção "AJUSTES DE DURAÇÃO" aparece com "Distribuidora
+Teste · {data}", "0 min → 45 min" e o motivo, nos dois temas; `GET /dashboard` confirmado (via
+API, não só UI) com `tempoMedio: "00:45:00"` pro conferente — reflete no Dashboard como pedido.
+`npx tsc -b`, `npm run build`, `npm run test` (42/42) e `npm run lint` limpos. Regressão
+permanente (`auth`/`session-isolation`/`login`/`cursor`) verde.

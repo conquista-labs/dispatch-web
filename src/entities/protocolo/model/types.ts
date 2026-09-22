@@ -112,6 +112,11 @@ export type DetalheProtocolo = {
   // Pedido do dono ("como garantir que ninguém abusa da pausa pra melhorar o tempo dela?") —
   // visibilidade, não bloqueio: quantas vezes e por quanto tempo este ato ficou pausado.
   pausas: PausaConferencia[]
+  duracao: string | null
+  // Pedido do dono ("como distribuidora e admin, quero editar o tempo de conferência de um
+  // protocolo") — histórico de ajustes manuais já aplicados (RNF-02: quem, quando, valor
+  // anterior/novo, motivo).
+  ajustesDeDuracao: AjusteDeDuracao[]
 }
 
 // PausaConferenciaResponse (Api) — uma pausa já encerrada (pausar/retomar, RF não numerado).
@@ -119,6 +124,18 @@ export type PausaConferencia = {
   pausadoEm: string
   retomadoEm: string
   duracao: string
+}
+
+// AjusteDeDuracaoResponse (Api) — um ajuste manual de duração já aplicado. Exceção ao padrão
+// "back manda o fato cru, front resolve o nome": AjustadoPorId é sempre uma Distribuidora, não
+// necessariamente alguém na lista de Conferentes que o front já carrega — sem GET /usuarios
+// geral, o back resolve o nome e manda já pronto (`ajustadoPorNome`), não o id cru.
+export type AjusteDeDuracao = {
+  ajustadoPorNome: string
+  ajustadoEm: string
+  duracaoAnterior: string | null
+  duracaoNova: string
+  motivo: string | null
 }
 
 // HistoricoConferenciaResponse (Api) — continuidade de conferência: outras linhas com o mesmo

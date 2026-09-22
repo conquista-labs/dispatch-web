@@ -32,10 +32,13 @@ export const formatDataHora = (iso: string): string =>
     minute: '2-digit',
   })
 
-// Duracao do back vem como TimeSpan do .NET, formato "[d.]hh:mm:ss[.fffffff]" — parseia só o
-// que precisa pra virar "21 min" (RF-24, lista de concluídos hoje).
-export const formatDuracaoConcluida = (duracaoTimeSpan: string): string => {
+// Duracao do back vem como TimeSpan do .NET, formato "[d.]hh:mm:ss[.fffffff]" — parseia pro
+// total de minutos, a base tanto pro texto "21 min" (RF-24, lista de concluídos hoje) quanto
+// pro campo numérico do ajuste manual de duração (widgets/painel-detalhe-protocolo).
+export const parseDuracaoParaMinutos = (duracaoTimeSpan: string): number => {
   const [, dias, horas, minutos] = duracaoTimeSpan.match(/^(?:(\d+)\.)?(\d+):(\d+):/) ?? []
-  const totalMinutos = (Number(dias ?? 0) * 24 + Number(horas ?? 0)) * 60 + Number(minutos ?? 0)
-  return `${totalMinutos} min`
+  return (Number(dias ?? 0) * 24 + Number(horas ?? 0)) * 60 + Number(minutos ?? 0)
 }
+
+export const formatDuracaoConcluida = (duracaoTimeSpan: string): string =>
+  `${parseDuracaoParaMinutos(duracaoTimeSpan)} min`

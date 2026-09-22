@@ -1,4 +1,5 @@
 export type {
+  AjusteDeDuracao,
   AlcadaConferente,
   ConcluidosHojePorConferente,
   DetalheProtocolo,
