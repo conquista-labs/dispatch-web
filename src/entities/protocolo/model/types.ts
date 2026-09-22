@@ -13,7 +13,10 @@ export type StatusProtocolo =
 export type FaixaSemaforo = 'Verde' | 'Amarelo' | 'Laranja' | 'Vermelho'
 
 // TipoPrazo (Dispatch.Domain) — prazo bruto de uma Equipe, antes de virar vencimento.
-export type TipoPrazo = 'UmaHora' | 'D0' | 'D1' | 'D2'
+// CorteDeHorario só existe transitoriamente num protocolo específico — nunca é o TipoPrazo
+// base configurado numa Equipe (ver entities/equipe, corte de horário é um par de campos à
+// parte, opcional por etapa).
+export type TipoPrazo = 'UmaHora' | 'D0' | 'D1' | 'D2' | 'CorteDeHorario'
 
 // "Normal" é o valor gravado no banco pro nível do meio (Dispatch.Domain.Prioridade não foi
 // renomeado, pra não quebrar a leitura de protocolos já existentes) — o rótulo exibido

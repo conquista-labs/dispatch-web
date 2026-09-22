@@ -1,10 +1,11 @@
 import { ptBR } from 'date-fns/locale'
-import { CalendarIcon, ChevronDownIcon, MinusIcon, PlusIcon } from 'lucide-react'
+import { CalendarIcon, ChevronDownIcon } from 'lucide-react'
 import { useState } from 'react'
 
 import { Button } from '@/shared/ui/button'
 import { Calendar } from '@/shared/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
+import { Stepper } from '@/shared/ui/stepper'
 
 type DateTimePickerProps = { value: Date; onChange: (date: Date) => void }
 
@@ -188,67 +189,5 @@ export const DateTimePicker = ({ value, onChange }: DateTimePickerProps) => {
         </div>
       </PopoverContent>
     </Popover>
-  )
-}
-
-type StepperProps = {
-  valor: string
-  min: number
-  max: number
-  onAlterar: (valor: number) => void
-  onDecrementar: () => void
-  onIncrementar: () => void
-}
-
-// O número do meio era só um <span> (não editável) — trocado por um <input> pra dar pra digitar
-// direto em vez de clicar em −/+ um por um (ver comentário do DateTimePicker acima).
-const Stepper = ({ valor, min, max, onAlterar, onDecrementar, onIncrementar }: StepperProps) => {
-  const [texto, setTexto] = useState(valor)
-
-  // Mesmo padrão do DateTimePicker acima — ajusta durante o render, sem efeito.
-  const [valorRefletido, setValorRefletido] = useState(valor)
-  if (valor !== valorRefletido) {
-    setValorRefletido(valor)
-    setTexto(valor)
-  }
-
-  const commit = () => {
-    const numero = Number(texto)
-    if (texto.trim() !== '' && Number.isInteger(numero) && numero >= min && numero <= max) onAlterar(numero)
-    else setTexto(valor)
-  }
-
-  return (
-    <div className="flex items-center gap-px rounded-md border border-border bg-background p-0.5">
-      <button
-        type="button"
-        onClick={onDecrementar}
-        className="flex size-5 items-center justify-center rounded text-text-2 hover:bg-secondary"
-      >
-        <MinusIcon className="size-3" />
-      </button>
-      <input
-        value={texto}
-        onChange={(event) => setTexto(event.target.value.replace(/\D/g, '').slice(0, 2))}
-        onBlur={commit}
-        onKeyDown={(event) => {
-          if (event.key === 'Enter') {
-            commit()
-            event.currentTarget.blur()
-          }
-        }}
-        onFocus={(event) => event.target.select()}
-        inputMode="numeric"
-        size={2}
-        className="w-[22px] flex-none border-none bg-transparent text-center font-mono text-[12.5px] font-medium outline-none"
-      />
-      <button
-        type="button"
-        onClick={onIncrementar}
-        className="flex size-5 items-center justify-center rounded text-text-2 hover:bg-secondary"
-      >
-        <PlusIcon className="size-3" />
-      </button>
-    </div>
   )
 }

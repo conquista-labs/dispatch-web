@@ -27,7 +27,18 @@ const protocoloBase: ProtocoloResumo = {
   andamentoEm: '2026-01-01T00:00:00Z',
 }
 
-const equipes: Equipe[] = [{ id: 'eq1', nome: 'Equipe RIO', prazoPreConferencia: 'D1', prazoPosConferencia: 'D1' }]
+const equipes: Equipe[] = [
+  {
+    id: 'eq1',
+    nome: 'Equipe RIO',
+    prazoPreConferencia: 'D1',
+    prazoPosConferencia: 'D1',
+    cortePreConferenciaHorarioCorte: null,
+    cortePreConferenciaHorarioVencimento: null,
+    cortePosConferenciaHorarioCorte: null,
+    cortePosConferenciaHorarioVencimento: null,
+  },
+]
 const tiposAto: TipoAto[] = [{ id: 't1', nome: 'Venda e Compra', ativo: true, grupo: null }]
 
 // RF-14: o resolver mais reaproveitado do app (DistribuicaoBoard/MinhaFilaBoard/

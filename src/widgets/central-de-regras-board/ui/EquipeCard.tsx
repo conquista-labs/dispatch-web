@@ -5,11 +5,18 @@ import type { Escrevente } from '@/entities/escrevente'
 import { TIPO_PRAZO_LABEL } from '@/entities/protocolo'
 import type { TipoPrazo } from '@/entities/protocolo'
 import { useEditarEquipe } from '@/features/equipe/editar'
+import { CampoHorario } from '@/shared/ui/campo-horario'
 import { SurfaceCard } from '@/shared/ui/surface-card'
 
 import { PillToggle } from '@/shared/ui/pill-toggle'
 
-const TIPOS_PRAZO = Object.keys(TIPO_PRAZO_LABEL) as TipoPrazo[]
+// CorteDeHorario nunca é um TipoPrazo base escolhível pela distribuidora — ele só existe como
+// resultado transitório de Equipe.PrazoPara (ver dispatch-api/CLAUDE.md), então some da lista
+// de pills de prazo normal.
+const TIPOS_PRAZO = (Object.keys(TIPO_PRAZO_LABEL) as TipoPrazo[]).filter((tipo) => tipo !== 'CorteDeHorario')
+
+const CORTE_PADRAO_HORARIO_CORTE = '16:00'
+const CORTE_PADRAO_HORARIO_VENCIMENTO = '10:00'
 
 type EquipeCardProps = {
   equipe: Equipe
@@ -41,26 +48,50 @@ export const EquipeCard = ({
   }
   const editar = useEditarEquipe()
 
+  // Base comum de todo PUT /equipes/{id} — cada handler só sobrescreve o(s) campo(s) que mudou,
+  // preservando o resto intacto (mesmo padrão que alterarPrazo já usava).
+  const requestBase = () => ({
+    equipeId: equipe.id,
+    nome: equipe.nome,
+    prazoPreConferencia: equipe.prazoPreConferencia,
+    prazoPosConferencia: equipe.prazoPosConferencia,
+    cortePreConferenciaHorarioCorte: equipe.cortePreConferenciaHorarioCorte,
+    cortePreConferenciaHorarioVencimento: equipe.cortePreConferenciaHorarioVencimento,
+    cortePosConferenciaHorarioCorte: equipe.cortePosConferenciaHorarioCorte,
+    cortePosConferenciaHorarioVencimento: equipe.cortePosConferenciaHorarioVencimento,
+  })
+
   const commitNome = () => {
     const aparado = nome.trim()
     if (aparado && aparado !== equipe.nome) {
-      editar.mutate({
-        equipeId: equipe.id,
-        nome: aparado,
-        prazoPreConferencia: equipe.prazoPreConferencia,
-        prazoPosConferencia: equipe.prazoPosConferencia,
-      })
+      editar.mutate({ ...requestBase(), nome: aparado })
     } else {
       setNome(equipe.nome)
     }
   }
 
   const alterarPrazo = (campo: 'prazoPreConferencia' | 'prazoPosConferencia', valor: TipoPrazo) => {
+    editar.mutate({ ...requestBase(), [campo]: valor })
+  }
+
+  // Pedido do dono ("equipe X entra na etapa Y depois das 16h, vence às 10h do dia seguinte")
+  // — acréscimo opcional ao TipoPrazo normal de cada etapa, genérico por Equipe+Etapa. Os dois
+  // horários (corte e vencimento) sempre viajam juntos: liga com valores padrão editáveis,
+  // desliga limpando os dois — nunca um preenchido e o outro nulo (o back rejeitaria com 400).
+  const alterarCorte = (etapa: 'pre' | 'pos', campo: 'horarioCorte' | 'horarioVencimento', valor: string | null) => {
+    const prefixo = etapa === 'pre' ? 'cortePreConferencia' : 'cortePosConferencia'
     editar.mutate({
-      equipeId: equipe.id,
-      nome: equipe.nome,
-      prazoPreConferencia: campo === 'prazoPreConferencia' ? valor : equipe.prazoPreConferencia,
-      prazoPosConferencia: campo === 'prazoPosConferencia' ? valor : equipe.prazoPosConferencia,
+      ...requestBase(),
+      [`${prefixo}${campo === 'horarioCorte' ? 'HorarioCorte' : 'HorarioVencimento'}`]: valor,
+    })
+  }
+
+  const toggleCorte = (etapa: 'pre' | 'pos', ligar: boolean) => {
+    const prefixo = etapa === 'pre' ? 'cortePreConferencia' : 'cortePosConferencia'
+    editar.mutate({
+      ...requestBase(),
+      [`${prefixo}HorarioCorte`]: ligar ? CORTE_PADRAO_HORARIO_CORTE : null,
+      [`${prefixo}HorarioVencimento`]: ligar ? CORTE_PADRAO_HORARIO_VENCIMENTO : null,
     })
   }
 
@@ -95,6 +126,13 @@ export const EquipeCard = ({
           ))}
         </div>
       </div>
+      <BlocoCorte
+        horarioCorte={equipe.cortePreConferenciaHorarioCorte}
+        horarioVencimento={equipe.cortePreConferenciaHorarioVencimento}
+        onToggle={(ligar) => toggleCorte('pre', ligar)}
+        onAlterarCorte={(valor) => alterarCorte('pre', 'horarioCorte', valor)}
+        onAlterarVencimento={(valor) => alterarCorte('pre', 'horarioVencimento', valor)}
+      />
       <div className="mt-1.5 flex items-center gap-2">
         <span className="w-[74px] flex-none text-[11.5px] font-medium text-text-2">Pós-conf.</span>
         <div className="flex flex-wrap gap-1">
@@ -108,6 +146,13 @@ export const EquipeCard = ({
           ))}
         </div>
       </div>
+      <BlocoCorte
+        horarioCorte={equipe.cortePosConferenciaHorarioCorte}
+        horarioVencimento={equipe.cortePosConferenciaHorarioVencimento}
+        onToggle={(ligar) => toggleCorte('pos', ligar)}
+        onAlterarCorte={(valor) => alterarCorte('pos', 'horarioCorte', valor)}
+        onAlterarVencimento={(valor) => alterarCorte('pos', 'horarioVencimento', valor)}
+      />
 
       <div className="mt-3 flex flex-wrap gap-1.5 border-t border-secondary pt-3">
         {escreventes.length === 0 && (
@@ -133,5 +178,44 @@ export const EquipeCard = ({
         </button>
       )}
     </SurfaceCard>
+  )
+}
+
+type BlocoCorteProps = {
+  horarioCorte: string | null
+  horarioVencimento: string | null
+  onToggle: (ligar: boolean) => void
+  onAlterarCorte: (valor: string) => void
+  onAlterarVencimento: (valor: string) => void
+}
+
+// Pedido do dono ("equipe X entra na etapa Y depois das 16h, vence às 10h do dia seguinte") —
+// acréscimo opcional ao TipoPrazo normal de cada etapa (pills acima), não substituição: sem
+// corte configurado, o comportamento continua exatamente o de sempre.
+const BlocoCorte = ({
+  horarioCorte,
+  horarioVencimento,
+  onToggle,
+  onAlterarCorte,
+  onAlterarVencimento,
+}: BlocoCorteProps) => {
+  const ativo = horarioCorte !== null && horarioVencimento !== null
+
+  return (
+    <div className="mt-1 ml-[82px] flex flex-wrap items-center gap-2">
+      <label className="flex items-center gap-1.5 text-[11px] text-text-2">
+        <input type="checkbox" checked={ativo} onChange={(event) => onToggle(event.target.checked)} />
+        corte de horário
+      </label>
+      {ativo && (
+        <>
+          <span className="text-[10.5px] text-muted-foreground">depois de</span>
+          <CampoHorario value={horarioCorte} onChange={onAlterarCorte} />
+          <span className="text-[10.5px] text-muted-foreground">vence às</span>
+          <CampoHorario value={horarioVencimento} onChange={onAlterarVencimento} />
+          <span className="text-[10.5px] text-muted-foreground">do dia seguinte</span>
+        </>
+      )}
+    </div>
   )
 }

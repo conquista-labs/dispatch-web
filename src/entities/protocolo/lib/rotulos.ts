@@ -13,6 +13,7 @@ export const TIPO_PRAZO_LABEL: Record<TipoPrazo, string> = {
   D0: 'D+0',
   D1: 'D+1',
   D2: 'D+2',
+  CorteDeHorario: 'Corte de horário',
 }
 
 // RF-18e/RF-24f: rótulo curto de cada faixa do semáforo, usado nas opções da barra de filtros

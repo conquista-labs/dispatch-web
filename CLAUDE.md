@@ -2975,3 +2975,39 @@ garante a curva, não um número com prazo.
 Verificado: `npm run check` (tsc + oxlint + cobertura) exit 0, `npm run build` limpo (jsdom/RTL
 são devDependencies, nada vazou pro bundle — chunk principal segue 284 kB / 89 kB gzip), 60/60
 testes passando.
+
+## Corte de horário — prazo condicional por horário de entrada (Equipe + Etapa)
+
+Front do que ficou pronto no back — ver `dispatch-api/CLAUDE.md`, mesma seção, pro desenho
+completo (genérico por Equipe+Etapa, acréscimo ao `TipoPrazo` normal, fuso de Brasília).
+
+- `entities/protocolo`: `TipoPrazo` ganha `'CorteDeHorario'`; `TIPO_PRAZO_LABEL` ganha
+  `CorteDeHorario: 'Corte de horário'`.
+- `entities/equipe`: `Equipe` ganha 4 campos `string | null` (`corte{Pre,Pos}ConferenciaHorario
+{Corte,Vencimento}`) — `TimeOnly` do back chega como string `"HH:mm:ss"`.
+- `features/equipe/{criar,editar}`: os mesmos 4 campos no payload de request.
+- **`shared/ui/stepper.tsx`** (novo) — `Stepper` extraído de dentro de `datetime-picker.tsx`
+  (era privado ali) pra virar reutilizável; `datetime-picker.tsx` passou a importar dele em vez
+  de manter uma cópia própria, comportamento idêntico.
+- **`shared/ui/campo-horario.tsx`** (novo) — par hora:minuto digitável (`CampoHorario`, formato
+  `"HH:mm"`), reaproveita `Stepper` sem o resto do `DateTimePicker` (data/calendário/popover) —
+  é só um horário do dia solto, não um instante completo. Sem `<input type="time">` nativo
+  (RNF-07).
+- **`EquipeCard.tsx`** — `TIPOS_PRAZO` (as opções de pill de prazo normal) filtra
+  `CorteDeHorario` de propósito — nunca é uma escolha direta de `TipoPrazo` base, só um
+  resultado transitório calculado pelo back. Abaixo de cada linha de pills (pré/pós), um bloco
+  novo opcional (`BlocoCorte`): checkbox "corte de horário" + (quando ligado) dois
+  `CampoHorario` ("depois de" / "vence às"). Liga com valores padrão editáveis (16:00/10:00, só
+  ponto de partida — qualquer equipe pode usar horários diferentes); desliga limpando os dois
+  juntos (nunca um preenchido e o outro nulo, o back rejeitaria com 400). Commit imediato ao
+  mudar, mesmo padrão dos pills de prazo — sem passo de "salvar" separado, `PUT /equipes/{id}`
+  sempre com o objeto inteiro.
+
+Verificado via Playwright contra a API/Postgres local (spec temporário, apagado depois): ligar
+o corte numa equipe nova → `PUT /equipes/{id}` confirmado por resposta (204) → seção "corte de
+horário" aparece com os steppers 16:00/10:00 → confirmado via `GET /equipes` que persistiu
+certo. Nos dois temas (screenshot escopado ao card, não `fullPage` — a tela acumulou muitas
+equipes de sessões de teste anteriores, `fullPage` ficou grande o bastante pra um comportamento
+estranho de scroll/render que não se repete escopando ao elemento). `npx tsc -b`, `npm run
+build`, `npm run lint` e `npm run test` (132/132) limpos. Regressão permanente
+(`auth`/`session-isolation`/`login`/`cursor`) verde.

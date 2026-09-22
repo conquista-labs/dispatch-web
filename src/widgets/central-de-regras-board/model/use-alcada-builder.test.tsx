@@ -30,7 +30,18 @@ const conferentes: Conferente[] = [
     capacidadeEstimada: 20,
   },
 ]
-const equipes: Equipe[] = [{ id: 'eq1', nome: 'Equipe RIO', prazoPreConferencia: 'D1', prazoPosConferencia: 'D1' }]
+const equipes: Equipe[] = [
+  {
+    id: 'eq1',
+    nome: 'Equipe RIO',
+    prazoPreConferencia: 'D1',
+    prazoPosConferencia: 'D1',
+    cortePreConferenciaHorarioCorte: null,
+    cortePreConferenciaHorarioVencimento: null,
+    cortePosConferenciaHorarioCorte: null,
+    cortePosConferenciaHorarioVencimento: null,
+  },
+]
 const tiposAto: TipoAto[] = [{ id: 't1', nome: 'Venda e Compra', ativo: true, grupo: null }]
 
 const wrapper = ({ children }: { children: ReactNode }) => {

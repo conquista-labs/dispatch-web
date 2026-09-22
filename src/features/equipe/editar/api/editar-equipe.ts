@@ -6,6 +6,10 @@ export type EditarEquipeRequest = {
   nome: string
   prazoPreConferencia: TipoPrazo
   prazoPosConferencia: TipoPrazo
+  cortePreConferenciaHorarioCorte: string | null
+  cortePreConferenciaHorarioVencimento: string | null
+  cortePosConferenciaHorarioCorte: string | null
+  cortePosConferenciaHorarioVencimento: string | null
 }
 
 // PUT /equipes/{id} (RF-35/RF-36) — renomear e/ou trocar prazo. O back recalcula sozinho o
