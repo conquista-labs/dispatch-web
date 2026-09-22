@@ -2870,3 +2870,108 @@ reabrir a mesma linha não gera `HistoricoConferencia`, isso é só pra outras l
 Número via continuidade/reimportação); confirmado "HISTÓRICO · 2" fechado por padrão (subseções
 não visíveis), clique expande mostrando as duas, nos dois temas. `npx tsc -b`, `npm run build` e
 `npm run lint` limpos.
+
+## Estratégia de testes — cobertura com ratchet + primeiros testes de componente (RTL)
+
+Pedido do dono: "não temos nada de teste unitário no front e sinto falta de um coverage no
+backend". O levantamento matizou a primeira metade: vitest já existia com 5 suítes (~42 testes),
+mas **só de função pura** — ambiente `node`, sem DOM, nenhum componente ou hook exercitado — e
+**nenhuma medição de cobertura** (`@vitest/coverage-v8` nem estava instalado). Convenções
+adotadas do repo vizinho `swap/frontend/swap-benefits-web` (skills `testing-strategy`/`gate`,
+`docs/patterns/testing-strategy.md`, ADR-0002/0005), que o dono apontou como já validadas por
+ele em projeto real — adaptadas, não copiadas: lá o registro de decisão são ADRs em `docs/`,
+aqui é este arquivo, e lá existe uma regra de "E2E obrigatório pra operação financeira" que não
+tem equivalente neste domínio.
+
+### A adaptação que mais importa: aqui a regra de negócio não mora no front
+
+O critério nº 1 de priorização do swap é "decide elegibilidade/valor/compliance → teste unitário
+primeiro". Neste projeto isso **cai pro back**: motor de distribuição, alçada, prazo e score do
+Dashboard vivem no `dispatch-api` por decisão de arquitetura ("o front só chama endpoint e
+renderiza"). Então a ordem efetiva aqui é: lógica pura → **regressão de bug que já aconteceu** →
+estado de hook → componente com condicional. Está registrado assim na skill `testing-strategy`
+nova, com o contra-exemplo real do projeto (o simulador "Testar" que inferia destino por
+contagem em vez de usar a regra do motor).
+
+### Cobertura com ratchet
+
+- `@vitest/coverage-v8`, `reporter: ['text', 'html']`, `include: ['src/**/*.{ts,tsx}']` — o
+  `include` importa: sem ele o v8 só reporta arquivo que algum teste carregou, escondendo
+  justamente o que ninguém testa.
+- `exclude` mínimo, cada item com motivo no próprio arquivo (regra do swap: exclusão é
+  "estruturalmente 0% pra sempre", nunca "falta testar") — `*.d.ts`, os próprios testes,
+  `main.tsx` (só monta o root) e o helper de teste. **Os primitivos vendorizados do shadcn
+  ficam no denominador de propósito**: neste projeto eles são editados à mão (`progress.tsx`
+  teve fix de bug, `calendar.tsx` foi reestruturado, `popover.tsx` ganhou fix de scroll), então
+  não são "gerado, nunca editado".
+- `thresholds.autoUpdate: true` — a primeira run reescreveu o piso pro real: **lines 7,53% ·
+  functions 5,32% · branches 4,99% · statements 7,86%**. Número baixo e honesto, mesmo ponto de
+  partida do swap (~0,7%). Daqui pra frente só sobe; esse diff do `vitest.config.ts` é commitado
+  junto com os testes que o ganharam, nunca abaixado na mão.
+- **Confirmado que o ratchet tem dente, não é só configuração**: rodando com
+  `--coverage.thresholds.lines=50`, o vitest sai com **exit 1** e a mensagem
+  "Coverage for lines (7.53%) does not meet global threshold (50%)" — então `npm run check`
+  falha de verdade se a cobertura regredir.
+- Scripts novos: `test:coverage` e `check` (`tsc -b && oxlint && vitest run --coverage`, o tier 1
+  da skill `gate` nova).
+
+### RTL entrando pela primeira vez
+
+`@testing-library/react` + `/dom` + `/jest-dom` + `/user-event` + `jsdom`. `vitest.config.ts`
+passou a `environment: 'jsdom'` global (as suítes puras rodam igual nele — mais simples que
+pragma por arquivo), ganhou `plugins: [react()]` (JSX nos `*.test.tsx`) e `setupFiles`.
+
+- **`vitest.setup.ts`** — `afterEach(cleanup)` (o Vitest não dá o `afterEach` global que o Jest
+  dá de graça pra RTL; sem isso um render vaza pro teste seguinte e as queries passam a achar
+  dois elementos) e **polyfill de `window.matchMedia`**. O polyfill aqui **não é opcional** como
+  no swap: `shared/lib/theme-store.ts` chama `matchMedia('(prefers-color-scheme: dark)')` na
+  própria inicialização da store (no import, não em efeito) e `use-is-mobile.ts` também usa —
+  qualquer teste que importe `AppShell` ou a store de tema explodiria sem ele.
+- **`shared/lib/test/render-with-providers.tsx`** — `QueryClient` novo por teste (`retry: false`;
+  o `queryClient` de `shared/lib/query-client.ts` é o singleton do app e vazaria cache entre
+  casos) + `MemoryRouter` (componente com `<Link>`/`useNavigate` quebra fora de um Router — o
+  `LoginForm` tem dois).
+
+### Primeira leva: 4 suítes (42 → 60 testes)
+
+1. **`shared/ui/progress.test.tsx`** — regressão do bug já documentado: o componente gerado pelo
+   `shadcn add` não repassava `value` pro `ProgressPrimitive.Root`, a Root ficava
+   `data-state="indeterminate"` e a barra renderizava invisível, sem erro no console. Agora
+   travado por asserção de `data-state`/`aria-valuenow`/`transform`.
+2. **`shared/ui/surface-card.test.tsx`** — o `compoundVariants` (`destaque` sempre vence `tom`),
+   regra deliberada e não óbvia lendo o JSX. *(`Chip` ficou de fora: apresentacional puro, sem
+   condicional — pela política, não prioriza teste.)*
+3. **`widgets/filtro-protocolos/model/use-filtro-protocolos.test.ts`** — `renderHook`. A função
+   pura embaixo já tinha suíte; o que nunca fora exercitado é a fiação de estado: alternar liga e
+   desliga, "sem equipe" como valor legítimo (não ausência de filtro), eixos combinando com E,
+   contagem contra o conjunto completo (RF-18e), `texto`/`data` fora do badge, `limpar`.
+4. **`features/auth/login/ui/LoginForm.test.tsx`** — caminho mais crítico do app. Mocka **só**
+   `api/login` (`vi.mock`), mantendo `LoginForm → useLogin → login()` real. **Sem MSW** (não
+   instalado): entra se/quando vários testes precisarem de mock de rede consistente.
+
+### Dois gotchas novos, achados rodando
+
+- **TanStack Query v5 passa um 2º argumento pra toda `mutationFn`** (`{ client, meta,
+  mutationKey }`). Um `expect(mock).toHaveBeenCalledWith({ email, senha })` falha por causa dele
+  mesmo com o payload certo — a asserção tem que olhar `mock.calls[0][0]`.
+- **Os matchers do jest-dom passavam em runtime e quebravam o `tsc -b`.** O `vitest.setup.ts`
+  fica fora do `include: ["src"]` do `tsconfig.app.json`, então a augmentação
+  `declare module 'vitest'` nunca entrava no programa de tipos. Resolvido com
+  `src/vitest-env.d.ts` (um `import '@testing-library/jest-dom/vitest'`), mesmo padrão do
+  `vite-env.d.ts` já existente ao lado — e os `*.test.tsx` **são** type-checados pelo `tsc -b`,
+  já que `include: ["src"]` os pega.
+
+### Skills novas
+
+`.claude/skills/testing-strategy/` (que teste uma mudança pede, onde o arquivo vive por segmento
+FSD, o que fazer quando o ratchet mexe) e `.claude/skills/gate/` (a cadeia de verificação em 3
+tiers, como filtrar a saída sem inundar o transcript, e as armadilhas que este repositório já
+pagou). O `dispatch-api` ganhou uma `gate` equivalente.
+
+**Fora de escopo, consciente**: `vitest` não entrou no `lint-staged` (fricção em todo commit sem
+CI pra também gatear — o `check`/`gate` é o momento de rodar) e não há meta de 80%; o ratchet
+garante a curva, não um número com prazo.
+
+Verificado: `npm run check` (tsc + oxlint + cobertura) exit 0, `npm run build` limpo (jsdom/RTL
+são devDependencies, nada vazou pro bundle — chunk principal segue 284 kB / 89 kB gzip), 60/60
+testes passando.
