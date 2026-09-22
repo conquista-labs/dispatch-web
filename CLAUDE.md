@@ -3011,3 +3011,34 @@ equipes de sessões de teste anteriores, `fullPage` ficou grande o bastante pra 
 estranho de scroll/render que não se repete escopando ao elemento). `npx tsc -b`, `npm run
 build`, `npm run lint` e `npm run test` (132/132) limpos. Regressão permanente
 (`auth`/`session-isolation`/`login`/`cursor`) verde.
+
+### Segunda rodada: checkbox nativo feio + clique lento (achado em produção, uso real)
+
+Dois problemas relatados pelo dono usando a feature em produção: o `<input type="checkbox">`
+cru destoava do resto do design system (nenhum outro toggle do app usa checkbox nativo), e
+clicar nele parecia travar por alguns segundos.
+
+- **`shared/ui/switch.tsx`** (novo, via `npx shadcn add switch`) — mesmo gotcha já catalogado
+  nesta sessão pro `pagination.tsx`/`tooltip.tsx`: import quebrado (`from "cn"`) corrigido pro
+  alias `@/shared/lib/utils`, `npm uninstall cn` removeu a dependência espúria de novo.
+  `size="sm"` (14×24px) pro contexto compacto — o padrão (18.4×32px) ficaria grande demais ao
+  lado de texto 11px.
+- **Causa real da lentidão, investigada antes de "consertar" qualquer coisa**: `Recalculo
+DeVencimentos.AplicarAsync` (o RF-38 que roda a cada `PUT /equipes/{id}`) não tem nenhum
+  N+1 nem query ineficiente — é 2 buscas + um loop em memória + 1 save. A lentidão real é a
+  combinação de (a) nenhum feedback visual antes de o `PUT` completar (checkbox só mudava
+  depois do round-trip inteiro: rede + recálculo + refetch) com (b) o cold start normal do
+  Render/Neon no plano free (já documentado, fora do nosso controle sem virar plano pago) —
+  antes, nenhuma outra ação do app dependia de feedback tão imediato quanto um toggle.
+- **`BlocoCorte`** (`EquipeCard.tsx`) ganhou estado otimista local — mesmo padrão de "ajusta
+  durante o render, sem efeito" já usado no `nome` deste mesmo arquivo: um valor otimista é
+  mostrado na hora do clique (switch liga/desliga, steppers mudam), e some sozinho assim que os
+  dados reais (`equipe.corte*`) alcançam o que já foi exibido — sem esperar o `PUT` completar
+  pra reagir, mas sem inventar um sistema de rollback genérico só pra isso (o padrão
+  "commit imediato, sem undo" já é como o resto da tela funciona).
+
+Verificado via Playwright (spec temporário, apagado depois): `page.route` atrasando a resposta
+do `PUT` artificialmente em 2s, confirmado que o texto "depois de"/"vence às" aparece em menos
+de 300ms do clique (prova que é otimista, não só round-trip rápido por acaso) — e que o valor
+persiste de verdade assim que a chamada atrasada completa. Nos dois temas. `npx tsc -b`, `npm
+run build`, `npm run lint` e `npm run test` (132/132) limpos. Regressão permanente verde.

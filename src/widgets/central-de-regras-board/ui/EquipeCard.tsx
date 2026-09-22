@@ -7,6 +7,7 @@ import type { TipoPrazo } from '@/entities/protocolo'
 import { useEditarEquipe } from '@/features/equipe/editar'
 import { CampoHorario } from '@/shared/ui/campo-horario'
 import { SurfaceCard } from '@/shared/ui/surface-card'
+import { Switch } from '@/shared/ui/switch'
 
 import { PillToggle } from '@/shared/ui/pill-toggle'
 
@@ -192,6 +193,13 @@ type BlocoCorteProps = {
 // Pedido do dono ("equipe X entra na etapa Y depois das 16h, vence às 10h do dia seguinte") —
 // acréscimo opcional ao TipoPrazo normal de cada etapa (pills acima), não substituição: sem
 // corte configurado, o comportamento continua exatamente o de sempre.
+//
+// Estado otimista local: sem isso, o switch/steppers só refletem a mudança depois do PUT
+// completar + refetch (RF-38 recalcula vencimento de todo protocolo aberto da equipe — em
+// produção, uma equipe com muitos protocolos abertos faz isso demorar visivelmente, e o Neon
+// no plano free ainda pode ter cold start). Mostra a mudança na hora, sem esperar a rede; some
+// sozinho assim que os dados reais (equipe.corte*) alcançam o que já foi mostrado — mesmo
+// padrão de "nome"/"nomeRefletido" já usado neste arquivo.
 const BlocoCorte = ({
   horarioCorte,
   horarioVencimento,
@@ -199,20 +207,49 @@ const BlocoCorte = ({
   onAlterarCorte,
   onAlterarVencimento,
 }: BlocoCorteProps) => {
-  const ativo = horarioCorte !== null && horarioVencimento !== null
+  const [otimista, setOtimista] = useState<{ horarioCorte: string | null; horarioVencimento: string | null } | null>(
+    null,
+  )
+  const [refletido, setRefletido] = useState({ horarioCorte, horarioVencimento })
+  if (refletido.horarioCorte !== horarioCorte || refletido.horarioVencimento !== horarioVencimento) {
+    setRefletido({ horarioCorte, horarioVencimento })
+    setOtimista(null)
+  }
+
+  const exibido = otimista ?? { horarioCorte, horarioVencimento }
+  const ativo = exibido.horarioCorte !== null && exibido.horarioVencimento !== null
+
+  const handleToggle = (ligar: boolean) => {
+    setOtimista(
+      ligar
+        ? { horarioCorte: CORTE_PADRAO_HORARIO_CORTE, horarioVencimento: CORTE_PADRAO_HORARIO_VENCIMENTO }
+        : { horarioCorte: null, horarioVencimento: null },
+    )
+    onToggle(ligar)
+  }
+
+  const handleAlterarCorte = (valor: string) => {
+    setOtimista({ ...exibido, horarioCorte: valor })
+    onAlterarCorte(valor)
+  }
+
+  const handleAlterarVencimento = (valor: string) => {
+    setOtimista({ ...exibido, horarioVencimento: valor })
+    onAlterarVencimento(valor)
+  }
 
   return (
-    <div className="mt-1 ml-[82px] flex flex-wrap items-center gap-2">
+    <div className="mt-1.5 ml-[82px] flex flex-wrap items-center gap-2">
       <label className="flex items-center gap-1.5 text-[11px] text-text-2">
-        <input type="checkbox" checked={ativo} onChange={(event) => onToggle(event.target.checked)} />
+        <Switch size="sm" checked={ativo} onCheckedChange={handleToggle} />
         corte de horário
       </label>
       {ativo && (
         <>
           <span className="text-[10.5px] text-muted-foreground">depois de</span>
-          <CampoHorario value={horarioCorte} onChange={onAlterarCorte} />
+          <CampoHorario value={exibido.horarioCorte!} onChange={handleAlterarCorte} />
           <span className="text-[10.5px] text-muted-foreground">vence às</span>
-          <CampoHorario value={horarioVencimento} onChange={onAlterarVencimento} />
+          <CampoHorario value={exibido.horarioVencimento!} onChange={handleAlterarVencimento} />
           <span className="text-[10.5px] text-muted-foreground">do dia seguinte</span>
         </>
       )}
