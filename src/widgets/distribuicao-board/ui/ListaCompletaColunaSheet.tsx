@@ -15,6 +15,14 @@ type ListaCompletaColunaSheetProps = {
 // RF-18c: "+N protocolos" abre a lista integral da coluna (não só os ocultos), ordenada por
 // vencimento. Sem "quantos têm alçada" por item (simplificação consciente, ver CLAUDE.md) — a
 // mesma informação já está um clique adiante, no painel de detalhe de cada protocolo.
+//
+// Pedido do dono: clicar num protocolo aqui não deveria "perder o lugar" na lista — fechar o
+// painel de detalhe devolvia pro quadro principal, obrigando a clicar em "+N protocolos" de
+// novo e reencontrar o mesmo item. Por isso o clique só chama `onAbrirDetalhe`, sem fechar este
+// sheet — quem decide fechá-lo visualmente é o pai (`ProtocoloColuna`, via a prop `aberto`
+// combinada com "o painel de detalhe está aberto?"), então ele reaparece sozinho quando o
+// detalhe fecha, sem perder a rolagem/posição. `onFechar` continua existindo pro fechamento
+// explícito (clicar fora, Esc, X).
 export const ListaCompletaColunaSheet = ({
   aberto,
   onFechar,
@@ -47,10 +55,7 @@ export const ListaCompletaColunaSheet = ({
               <button
                 key={protocolo.id}
                 type="button"
-                onClick={() => {
-                  onAbrirDetalhe(protocolo.id)
-                  onFechar()
-                }}
+                onClick={() => onAbrirDetalhe(protocolo.id)}
                 className="rounded-[10px] border border-border bg-card p-2.5 text-left hover:border-muted-foreground/40"
               >
                 <div className="flex items-center justify-between gap-1.5">

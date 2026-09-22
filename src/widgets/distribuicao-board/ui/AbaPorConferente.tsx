@@ -16,6 +16,7 @@ type AbaPorConferenteProps = {
   now: number
   resolverInfo: (protocolo: ProtocoloResumo) => InfoProtocolo
   onAbrirDetalhe: (protocoloId: string) => void
+  detalheAberto: boolean
 }
 
 // RF-13/RF-14 — "Pool aberto" + uma coluna por conferente. `porConferente` só traz quem já tem
@@ -29,6 +30,7 @@ export const AbaPorConferente = ({
   now,
   resolverInfo,
   onAbrirDetalhe,
+  detalheAberto,
 }: AbaPorConferenteProps) => {
   const feitosHojePorConferenteId = new Map(concluidosHojePorConferente.map((c) => [c.conferenteId, c.total]))
 
@@ -43,6 +45,7 @@ export const AbaPorConferente = ({
         variant="conferente"
         resolverInfo={resolverInfo}
         onAbrirDetalhe={onAbrirDetalhe}
+        detalheAberto={detalheAberto}
       />
 
       {conferentes.map((conferente) => {
@@ -64,6 +67,7 @@ export const AbaPorConferente = ({
             variant="conferente"
             resolverInfo={resolverInfo}
             onAbrirDetalhe={onAbrirDetalhe}
+            detalheAberto={detalheAberto}
           />
         )
       })}

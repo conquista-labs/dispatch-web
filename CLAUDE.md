@@ -3042,3 +3042,36 @@ do `PUT` artificialmente em 2s, confirmado que o texto "depois de"/"vence às" a
 de 300ms do clique (prova que é otimista, não só round-trip rápido por acaso) — e que o valor
 persiste de verdade assim que a chamada atrasada completa. Nos dois temas. `npx tsc -b`, `npm
 run build`, `npm run lint` e `npm run test` (132/132) limpos. Regressão permanente verde.
+
+## "+N protocolos" (RF-18c) — fechar o detalhe devolvia pro quadro, não pra lista
+
+Relatado pelo dono: clicar num protocolo dentro da lista completa ("+N protocolos", RF-18c)
+abre o painel de detalhe — até aqui certo — mas fechar o painel devolvia direto pro quadro
+principal, "perdendo o lugar" na lista. A distribuidora precisava clicar em "+N protocolos" de
+novo e reencontrar o mesmo protocolo.
+
+**Causa**: `ListaCompletaColunaSheet.tsx` fechava a si mesma (`onFechar()`) no mesmo clique que
+abria o detalhe (`onAbrirDetalhe(id)`) — perdendo de vez a intenção "a distribuidora queria
+estar vendo essa lista".
+
+**Fix, sem inventar um sistema de navegação novo**: `listaCompletaAberta` (estado local de
+`ProtocoloColuna.tsx`) muda de sentido — passa a significar "o usuário quer ver a lista", não
+"a lista está visível agora". O clique num item da lista só chama `onAbrirDetalhe`, nunca mais
+fecha a si mesma. A visibilidade real do `Sheet` vira `listaCompletaAberta && !detalheAberto` —
+`detalheAberto` é uma prop nova (`DistribuicaoBoard.tsx` → `AbaPorConferente`/`AbaPorStatus` →
+`ProtocoloColuna`), computada como `protocoloDetalheId !== null`. Enquanto o painel de detalhe
+está aberto, a lista fica visualmente escondida (sem perder o estado); assim que o painel
+fecha, ela reaparece sozinha, com a mesma rolagem/posição — sem round-trip de rede nenhum
+envolvido, é só re-render local.
+
+`ListaCompletaPoolSheet.tsx` (Minha fila/Fila do conferente, mesmo padrão de "+N protocolos")
+**não precisou do mesmo fix** — RF-24e (clicar no card abre o painel de detalhe) ainda não
+existe em nenhuma coluna de Minha fila (gap já documentado), então não tem "voltar pro detalhe"
+nenhum pra perder ali.
+
+Verificado via Playwright contra a API/Postgres local (spec temporário, apagado depois): criados
+7 protocolos pra estourar o truncamento da coluna "Pool aberto", aberto "+N protocolos", clicado
+no primeiro item (painel de detalhe abre, lista some), fechado o painel ("Fechar") — confirmado
+que a lista completa reaparece sozinha, com o mesmo item visível, sem precisar reabrir "+N
+protocolos". `npx tsc -b`, `npm run build`, `npm run lint` e `npm run test` (132/132) limpos.
+Regressão permanente verde.

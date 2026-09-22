@@ -134,6 +134,7 @@ export const DistribuicaoBoard = () => {
             now={now}
             resolverInfo={resolverInfoProtocolo}
             onAbrirDetalhe={setProtocoloDetalheId}
+            detalheAberto={protocoloDetalheId !== null}
           />
         )}
         {aba === 'status' && (
@@ -143,6 +144,7 @@ export const DistribuicaoBoard = () => {
             now={now}
             resolverInfo={resolverInfoProtocolo}
             onAbrirDetalhe={setProtocoloDetalheId}
+            detalheAberto={protocoloDetalheId !== null}
           />
         )}
         {aba === 'excecoes' && (

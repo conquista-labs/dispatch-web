@@ -9,11 +9,19 @@ type AbaPorStatusProps = {
   now: number
   resolverInfo: (protocolo: ProtocoloResumo) => InfoProtocolo
   onAbrirDetalhe: (protocoloId: string) => void
+  detalheAberto: boolean
 }
 
 // RF-13/RF-14 — Pool, Atribuídos, Em conferência, Concluídos: o mesmo conjunto de protocolos,
 // só que agrupado por status em vez de por dono.
-export const AbaPorStatus = ({ visao, conferentes, now, resolverInfo, onAbrirDetalhe }: AbaPorStatusProps) => {
+export const AbaPorStatus = ({
+  visao,
+  conferentes,
+  now,
+  resolverInfo,
+  onAbrirDetalhe,
+  detalheAberto,
+}: AbaPorStatusProps) => {
   // RNF-10: nome completo — dois conferentes com o mesmo primeiro nome ficariam
   // indistinguíveis no card de protocolo (mesmo cuidado de AbaPorConferente.tsx).
   const nomePorConferenteId = new Map(conferentes.map((c) => [c.id, c.nome]))
@@ -34,6 +42,7 @@ export const AbaPorStatus = ({ visao, conferentes, now, resolverInfo, onAbrirDet
         resolverInfo={resolverInfo}
         variant="status"
         onAbrirDetalhe={onAbrirDetalhe}
+        detalheAberto={detalheAberto}
       />
       <ProtocoloColuna
         nome="Atribuídos"
@@ -44,6 +53,7 @@ export const AbaPorStatus = ({ visao, conferentes, now, resolverInfo, onAbrirDet
         resolverInfo={resolverInfo}
         variant="status"
         onAbrirDetalhe={onAbrirDetalhe}
+        detalheAberto={detalheAberto}
       />
       <ProtocoloColuna
         nome="Em conferência"
@@ -54,6 +64,7 @@ export const AbaPorStatus = ({ visao, conferentes, now, resolverInfo, onAbrirDet
         resolverInfo={resolverInfo}
         variant="status"
         onAbrirDetalhe={onAbrirDetalhe}
+        detalheAberto={detalheAberto}
       />
       <ProtocoloColuna
         nome="Concluídos"
@@ -64,6 +75,7 @@ export const AbaPorStatus = ({ visao, conferentes, now, resolverInfo, onAbrirDet
         resolverInfo={resolverInfo}
         variant="status"
         onAbrirDetalhe={onAbrirDetalhe}
+        detalheAberto={detalheAberto}
       />
     </div>
   )

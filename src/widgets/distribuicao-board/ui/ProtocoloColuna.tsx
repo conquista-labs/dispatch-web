@@ -23,6 +23,10 @@ type ProtocoloColunaProps = {
    */
   variant?: 'conferente' | 'status'
   onAbrirDetalhe?: (protocoloId: string) => void
+  /** O painel de detalhe (de qualquer protocolo, de qualquer coluna) está aberto agora? Usado
+   * só pra decidir se a lista completa DESTA coluna deve reaparecer sozinha quando o detalhe
+   * fechar — ver comentário em ListaCompletaColunaSheet.tsx. */
+  detalheAberto?: boolean
 }
 
 // Coluna reaproveitada pelas abas "Por conferente" e "Por status" (RF-13) — mesma estrutura
@@ -38,10 +42,15 @@ export const ProtocoloColuna = ({
   resolverInfo,
   variant = 'conferente',
   onAbrirDetalhe,
+  detalheAberto = false,
 }: ProtocoloColunaProps) => {
   const maxVisiveis = variant === 'conferente' ? 5 : 4
   const visiveis = protocolos.slice(0, maxVisiveis)
   const restantes = Math.max(0, protocolos.length - maxVisiveis)
+  // "O usuário quer ver a lista completa" — não é "a lista está visível agora". Fica `true`
+  // mesmo enquanto o painel de detalhe está por cima (a visibilidade real é
+  // `listaCompletaAberta && !detalheAberto`, abaixo), pra reaparecer sozinha quando o detalhe
+  // fechar, sem perder o lugar.
   const [listaCompletaAberta, setListaCompletaAberta] = useState(false)
 
   return (
@@ -101,7 +110,7 @@ export const ProtocoloColuna = ({
 
       {onAbrirDetalhe && (
         <ListaCompletaColunaSheet
-          aberto={listaCompletaAberta}
+          aberto={listaCompletaAberta && !detalheAberto}
           onFechar={() => setListaCompletaAberta(false)}
           nome={nome}
           protocolos={protocolos}
