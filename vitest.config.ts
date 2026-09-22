@@ -42,10 +42,10 @@ export default defineConfig({
       // código morto junto com o teste dele) é decisão explícita de PR, com nota.
       thresholds: {
         autoUpdate: true,
-        lines: 13.97,
-        functions: 11.71,
-        branches: 10.95,
-        statements: 14.54,
+        lines: 14.47,
+        functions: 12.35,
+        branches: 11.8,
+        statements: 15,
       },
     },
   },
