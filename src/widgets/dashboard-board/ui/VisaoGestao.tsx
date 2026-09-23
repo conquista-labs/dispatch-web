@@ -117,30 +117,35 @@ export const VisaoGestao = ({ dashboard, periodoLabel }: VisaoGestaoProps) => {
           <div className="mt-[3px] mb-3 text-[11.5px] text-muted-foreground">
             onde o prazo combinado não está sendo cumprido
           </div>
-          {cumprimentoPrazoEquipe.map((c, indice) => {
-            const tom = corDoCumprimento(c.percentualNoPrazo)
-            return (
-              <div key={indice} className="flex items-center gap-2.5 border-t border-border py-1.75">
-                <span className="w-33 min-w-0 flex-none">
-                  <span className="block truncate text-[12.5px]">{c.equipeNome}</span>
-                  <span className="block text-[10.5px] text-muted-foreground">
-                    {ETAPA_LABEL[c.etapa]}
-                    {c.prazo && ` · ${TIPO_PRAZO_LABEL[c.prazo]}`}
+          {/* Uma linha por equipe+etapa — cresce rápido (cada equipe tem até 2, pré e pós). Mesmo
+              teto de altura + scroll já usado em AbaAprendizado/AbaAlcadaCamadas (central de
+              regras) pra listas deste tamanho, em vez de deixar o card empurrar a página. */}
+          <div className="max-h-[420px] overflow-y-auto">
+            {cumprimentoPrazoEquipe.map((c, indice) => {
+              const tom = corDoCumprimento(c.percentualNoPrazo)
+              return (
+                <div key={indice} className="flex items-center gap-2.5 border-t border-border py-1.75">
+                  <span className="w-33 min-w-0 flex-none">
+                    <span className="block truncate text-[12.5px]">{c.equipeNome}</span>
+                    <span className="block text-[10.5px] text-muted-foreground">
+                      {ETAPA_LABEL[c.etapa]}
+                      {c.prazo && ` · ${TIPO_PRAZO_LABEL[c.prazo]}`}
+                    </span>
                   </span>
-                </span>
-                <span className="block h-2 flex-1 overflow-hidden rounded-full bg-secondary">
-                  <span
-                    className={`block h-2 rounded-full ${BARRA_TOM[tom]}`}
-                    style={{ width: pct(c.percentualNoPrazo) }}
-                  />
-                </span>
-                <span className={`w-10.5 flex-none text-right font-mono text-[12.5px] font-medium ${TEXTO_TOM[tom]}`}>
-                  {pct(c.percentualNoPrazo)}
-                </span>
-                <span className="w-14.5 flex-none text-right text-[11px] text-muted-foreground">{c.total} atos</span>
-              </div>
-            )
-          })}
+                  <span className="block h-2 flex-1 overflow-hidden rounded-full bg-secondary">
+                    <span
+                      className={`block h-2 rounded-full ${BARRA_TOM[tom]}`}
+                      style={{ width: pct(c.percentualNoPrazo) }}
+                    />
+                  </span>
+                  <span className={`w-10.5 flex-none text-right font-mono text-[12.5px] font-medium ${TEXTO_TOM[tom]}`}>
+                    {pct(c.percentualNoPrazo)}
+                  </span>
+                  <span className="w-14.5 flex-none text-right text-[11px] text-muted-foreground">{c.total} atos</span>
+                </div>
+              )
+            })}
+          </div>
           {cumprimentoPrazoEquipe.length === 0 && (
             <p className="text-[12.5px] text-muted-foreground">Nada concluído neste período.</p>
           )}
@@ -155,20 +160,22 @@ export const VisaoGestao = ({ dashboard, periodoLabel }: VisaoGestaoProps) => {
             <span className="w-14.5 text-right">Tempo</span>
             <span className="w-14.5 text-right">Repro.</span>
           </div>
-          {porTipoAto.map((t) => (
-            <div key={t.tipoAtoId} className="flex items-center border-t border-border py-1.75 text-[12.5px]">
-              <span className="min-w-0 flex-1 truncate text-text-5">{t.nome}</span>
-              <span className="w-14.5 text-right font-mono text-[12.5px] font-medium">{t.volume}</span>
-              <span className="w-14.5 text-right text-text-2">
-                {t.tempoMedio ? formatDuracaoConcluida(t.tempoMedio) : '—'}
-              </span>
-              <span
-                className={`w-14.5 text-right font-mono text-[12.5px] font-medium ${t.percentualReprovacao >= 0.3 ? 'text-bad-fg' : t.percentualReprovacao >= 0.2 ? 'text-warn-fg' : 'text-text-2'}`}
-              >
-                {pct(t.percentualReprovacao)}
-              </span>
-            </div>
-          ))}
+          <div className="max-h-[420px] overflow-y-auto">
+            {porTipoAto.map((t) => (
+              <div key={t.tipoAtoId} className="flex items-center border-t border-border py-1.75 text-[12.5px]">
+                <span className="min-w-0 flex-1 truncate text-text-5">{t.nome}</span>
+                <span className="w-14.5 text-right font-mono text-[12.5px] font-medium">{t.volume}</span>
+                <span className="w-14.5 text-right text-text-2">
+                  {t.tempoMedio ? formatDuracaoConcluida(t.tempoMedio) : '—'}
+                </span>
+                <span
+                  className={`w-14.5 text-right font-mono text-[12.5px] font-medium ${t.percentualReprovacao >= 0.3 ? 'text-bad-fg' : t.percentualReprovacao >= 0.2 ? 'text-warn-fg' : 'text-text-2'}`}
+                >
+                  {pct(t.percentualReprovacao)}
+                </span>
+              </div>
+            ))}
+          </div>
           {porTipoAto.length === 0 && (
             <p className="text-[12.5px] text-muted-foreground">Nada concluído neste período.</p>
           )}

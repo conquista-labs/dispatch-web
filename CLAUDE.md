@@ -3075,3 +3075,23 @@ no primeiro item (painel de detalhe abre, lista some), fechado o painel ("Fechar
 que a lista completa reaparece sozinha, com o mesmo item visível, sem precisar reabrir "+N
 protocolos". `npx tsc -b`, `npm run build`, `npm run lint` e `npm run test` (132/132) limpos.
 Regressão permanente verde.
+
+## Dashboard — cards de "Cumprimento de prazo por equipe" e "Por tipo de ato" sem teto de altura
+
+Relatado pelo dono: com o número real de equipes/tipos de ato crescendo em produção (bem mais do
+que os ~4-6 itens do protótipo mockado), esses dois cards do `VisaoGestao.tsx` — um com uma linha
+por combinação equipe+etapa, outro com uma linha por tipo de ato — cresciam sem limite e
+empurravam o resto da página pra baixo.
+
+**Fix**: mesmo padrão já usado em 3 lugares da Central de regras (`AbaAprendizado.tsx`,
+`AbaAlcadaCamadas.tsx`, `AbaRegrasEmVigor.tsx`) — envolver só a lista (não o card inteiro, o
+título/subtítulo continuam fixos) num `div` com `max-h-[420px] overflow-y-auto`. Nenhuma mudança
+de dado/contagem, só contém a altura.
+
+Localmente só havia 4 itens em cada lista (não estoura os 420px) — build limpo e screenshot nos
+dois temas confirmaram que envolver a lista num `div` extra não quebrou espaçamento/borda entre
+as linhas (`border-t` de cada linha continua batendo direito com a linha anterior, dentro do
+scroll container). O comportamento de estouro (scrollbar aparecendo, header do card fixo) não foi
+visto rodando de verdade por falta de volume de dado local suficiente — é o mesmo padrão já usado
+e visualmente aprovado nos 3 lugares citados acima, então o risco de divergência visual é baixo,
+mas vale um olhar quando produção tiver volume suficiente pra realmente estourar 420px.
