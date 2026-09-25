@@ -57,6 +57,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/shared/ui
 import { Input } from '@/shared/ui/input'
 import { SeletorUnico } from '@/shared/ui/seletor-unico'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/shared/ui/sheet'
+import { Tag } from '@/shared/ui/tag'
 import { ProtocoloManualDialog } from '@/widgets/protocolo-manual'
 
 type PainelDetalheProtocoloProps = {
@@ -150,13 +151,21 @@ export const PainelDetalheProtocolo = ({ protocoloId, onFechar }: PainelDetalheP
     : undefined
 
   const chip = detalhe ? prazoChip(detalhe.semaforo, detalhe.vencimentoEm, now) : null
+  // Rodadas anteriores (mesmo número, andamento antes deste) entram na linha do tempo, como no
+  // protótipo; as posteriores (quem abre uma linha antiga) ficam no bloco recolhível de histórico.
+  const conferenciasAnteriores = detalhe
+    ? detalhe.historicoConferencias
+        .filter((h) => h.andamentoEm < detalhe.andamentoEm)
+        .sort((a, b) => a.andamentoEm.localeCompare(b.andamentoEm))
+    : []
 
   const linhas = detalhe
     ? [
-        { k: 'Etapa', v: ETAPA_LABEL[detalhe.etapa] },
+        // Inicial maiúscula como no protótipo e nos chips das filas ("Pós-conferência").
+        { k: 'Etapa', v: ETAPA_LABEL[detalhe.etapa].charAt(0).toUpperCase() + ETAPA_LABEL[detalhe.etapa].slice(1) },
         { k: 'Escrevente', v: escrevente?.nome ?? '—' },
         { k: 'Equipe', v: equipeNome ?? 'sem equipe' },
-        { k: 'Prazo', v: detalhe.prazo ? TIPO_PRAZO_LABEL[detalhe.prazo] : '—' },
+        { k: 'Prazo acordado', v: detalhe.prazo ? TIPO_PRAZO_LABEL[detalhe.prazo] : '—' },
         {
           k: 'Regra aplicada',
           v: regraAplicada
@@ -169,7 +178,7 @@ export const PainelDetalheProtocolo = ({ protocoloId, onFechar }: PainelDetalheP
         },
         { k: 'Vencimento', v: detalhe.vencimentoEm ? formatDataHora(detalhe.vencimentoEm) : '—' },
         { k: 'Prioridade', v: PRIORIDADE_LABEL[detalhe.prioridade] },
-        { k: 'Dono', v: detalhe.donoId ? (nomePorConferenteId.get(detalhe.donoId) ?? '—') : 'sem dono' },
+        { k: 'Conferente', v: detalhe.donoId ? (nomePorConferenteId.get(detalhe.donoId) ?? '—') : 'sem dono' },
         // Só existe depois de concluído (Duracao no Domain exige IniciadoEm+ConcluidoEm) —
         // mesma regra de nulidade que já vale pros outros campos condicionais desta lista.
         ...(detalhe.duracao ? [{ k: 'Duração', v: formatDuracaoConcluida(detalhe.duracao) }] : []),
@@ -254,7 +263,14 @@ export const PainelDetalheProtocolo = ({ protocoloId, onFechar }: PainelDetalheP
                 </div>
                 <div className="rounded-[10px] border border-border bg-card p-3">
                   <LinhaDoTempo rotulo="Andamento" quando={detalhe.andamentoEm} />
-                  <LinhaDoTempo rotulo="Atribuído" quando={detalhe.atribuidoEm} />
+                  {conferenciasAnteriores.map((h) => (
+                    <RodadaAnterior key={h.protocoloId} rodada={h} nomePorConferenteId={nomePorConferenteId} />
+                  ))}
+                  <LinhaDoTempo
+                    rotulo="Atribuído"
+                    quando={detalhe.atribuidoEm}
+                    tag={detalhe.numeroDaConferencia > 1 ? `${detalhe.numeroDaConferencia}ª` : undefined}
+                  />
                   <LinhaDoTempo rotulo="Iniciado" quando={detalhe.iniciadoEm} />
                   <LinhaDoTempo rotulo="Concluído" quando={detalhe.concluidoEm} />
                   <LinhaDoTempo rotulo="Corrigido" quando={detalhe.corrigidoEm} />
@@ -272,7 +288,12 @@ export const PainelDetalheProtocolo = ({ protocoloId, onFechar }: PainelDetalheP
                 <div className="mt-4.5 mb-2 font-mono text-[10.5px] tracking-[0.04em] text-muted-foreground">
                   OBSERVAÇÃO
                 </div>
-                <ObservacaoField protocoloId={detalhe.id} observacao={detalhe.observacao} />
+                <ObservacaoField
+                  key={`${detalhe.id}:${detalhe.observacao ?? ''}`}
+                  protocoloId={detalhe.id}
+                  observacao={detalhe.observacao}
+                  sempreAberto
+                />
 
                 <AcoesDeStatus detalhe={detalhe} conferentes={conferentes ?? []} />
 
@@ -338,13 +359,40 @@ export const PainelDetalheProtocolo = ({ protocoloId, onFechar }: PainelDetalheP
   )
 }
 
-const LinhaDoTempo = ({ rotulo, quando }: { rotulo: string; quando: string | null }) => (
+const LinhaDoTempo = ({ rotulo, quando, tag }: { rotulo: string; quando: string | null; tag?: string }) => (
   <div className="flex items-baseline gap-2.5 py-1">
     <span className={cn('mt-1 block size-1.5 flex-none rounded-full', quando ? 'bg-foreground' : 'bg-border')} />
     <span className="w-[70px] flex-none text-xs text-text-2">{rotulo}</span>
-    <span className={cn('flex-1 text-xs text-pretty', quando ? 'text-text-5' : 'text-muted-foreground')}>
+    <span className={cn('flex-1 text-xs text-pretty', quando ? 'text-text-5' : 'text-apoio')}>
       {quando ? formatDataHora(quando) : '—'}
     </span>
+    {tag && <Tag>{tag}</Tag>}
+  </div>
+)
+
+// Uma conferência anterior do mesmo número, dentro da linha do tempo (protótipo v2): "1ª conferência
+// · não aprovado — <observação daquela rodada>" com a tag da rodada. Mantém quem conferiu e quando,
+// que o protótipo não mostra.
+const RodadaAnterior = ({
+  rodada,
+  nomePorConferenteId,
+}: {
+  rodada: HistoricoConferencia
+  nomePorConferenteId: Map<string, string>
+}) => (
+  <div className="flex items-baseline gap-2.5 py-1">
+    <span className="mt-1 block size-1.5 flex-none rounded-full bg-foreground" />
+    <span className="w-[70px] flex-none text-xs text-text-2">Conferido</span>
+    <span className="min-w-0 flex-1 text-xs text-pretty text-text-5">
+      {rodada.numeroDaConferencia}ª conferência · {STATUS_LABEL[rodada.status].toLowerCase()}
+      {rodada.status === 'Reprovado' && rodada.observacao ? ` — ${rodada.observacao}` : ''}
+      <span className="block text-[11px] text-apoio">
+        {[rodada.donoId ? nomePorConferenteId.get(rodada.donoId) : null, formatDataHora(rodada.andamentoEm)]
+          .filter(Boolean)
+          .join(' · ')}
+      </span>
+    </span>
+    <Tag>{rodada.numeroDaConferencia}ª</Tag>
   </div>
 )
 
@@ -361,11 +409,15 @@ const ListaAlcada = ({ alcada, conferentes }: { alcada: AlcadaConferente[]; conf
           key={a.conferenteId}
           className={cn(
             'flex items-center justify-between gap-2.5 rounded-lg border px-2.5 py-1.5',
-            a.elegivel ? 'border-ok-border bg-ok-bg' : 'border-bad-border-2 bg-bad-bg',
+            // Protótipo v2: só quem pode conferir se destaca (verde); barrado fica neutro — com vários
+            // barrados, o vermelho virava uma parede e escondia quem importa.
+            a.elegivel ? 'border-ok-border bg-ok-bg' : 'border-border bg-background',
           )}
         >
-          <span className="text-[12.5px] text-text-5">{conferente?.nome ?? '—'}</span>
-          <span className={cn('text-right text-[11px]', a.elegivel ? 'text-ok-fg' : 'text-bad-fg')}>
+          <span className={cn('text-[12.5px]', a.elegivel ? 'text-text-5' : 'text-text-2')}>
+            {conferente?.nome ?? '—'}
+          </span>
+          <span className={cn('text-right text-[11px]', a.elegivel ? 'text-ok-fg' : 'text-apoio')}>
             {[
               conferente && rotuloAnalista(conferente.nivel),
               a.elegivel ? 'pode conferir' : a.motivo ? MOTIVO_ALCADA_LABEL[a.motivo] : 'barrado',
@@ -393,7 +445,9 @@ const BlocoHistorico = ({
   nomePorConferenteId: Map<string, string>
 }) => {
   const [aberto, setAberto] = useState(false)
-  const total = detalhe.historicoConferencias.length + detalhe.pausas.length + detalhe.ajustesDeDuracao.length
+  // As rodadas anteriores já estão na linha do tempo; aqui só as posteriores (linha antiga aberta).
+  const posteriores = detalhe.historicoConferencias.filter((h) => h.andamentoEm > detalhe.andamentoEm)
+  const total = posteriores.length + detalhe.pausas.length + detalhe.ajustesDeDuracao.length
   if (total === 0) return null
 
   return (
@@ -405,15 +459,12 @@ const BlocoHistorico = ({
         />
       </CollapsibleTrigger>
       <CollapsibleContent className="flex flex-col gap-4">
-        {detalhe.historicoConferencias.length > 0 && (
+        {posteriores.length > 0 && (
           <div>
             <div className="mt-2 mb-2 font-mono text-[10.5px] tracking-[0.04em] text-muted-foreground">
-              CONFERÊNCIAS ANTERIORES
+              CONFERÊNCIAS POSTERIORES
             </div>
-            <HistoricoConferencias
-              historico={detalhe.historicoConferencias}
-              nomePorConferenteId={nomePorConferenteId}
-            />
+            <HistoricoConferencias historico={posteriores} nomePorConferenteId={nomePorConferenteId} />
           </div>
         )}
         {detalhe.pausas.length > 0 && (
