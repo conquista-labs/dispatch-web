@@ -28,6 +28,15 @@ export { useSimularProtocoloManual } from './model/use-simular-protocolo-manual'
 export type { SimularProtocoloManualParams } from './api/simular-protocolo-manual'
 export { prazoChip } from './lib/prazo-chip'
 export { PrazoTooltip } from './ui/PrazoTooltip'
-export { ETAPA_LABEL, FAIXA_SEMAFORO_LABEL, PRIORIDADE_LABEL, TIPO_PRAZO_LABEL } from './lib/rotulos'
+export { NumeroConferenciaTag } from './ui/NumeroConferenciaTag'
+export { PrioridadeAltaTag } from './ui/PrioridadeAltaTag'
+export {
+  ETAPA_LABEL,
+  FAIXA_SEMAFORO_LABEL,
+  PRIORIDADE_LABEL,
+  TIPO_PRAZO_LABEL,
+  rotuloNumeroConferencia,
+  type VarianteNumeroConferencia,
+} from './lib/rotulos'
 export { contagemFiltrosAtivos, filtroVazio, protocoloPassaNoFiltro, type FiltroProtocolo } from './lib/filtros'
 export { criarResolverInfoProtocolo } from './lib/resolver-info-protocolo'

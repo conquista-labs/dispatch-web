@@ -1,4 +1,11 @@
-import { prazoChip, PrazoTooltip, type InfoProtocolo, type ProtocoloResumo } from '@/entities/protocolo'
+import {
+  NumeroConferenciaTag,
+  prazoChip,
+  PrazoTooltip,
+  PrioridadeAltaTag,
+  type InfoProtocolo,
+  type ProtocoloResumo,
+} from '@/entities/protocolo'
 import { ObservacaoField } from '@/features/protocolo/definir-observacao'
 import { formatDataHora } from '@/shared/lib/format'
 import { Button } from '@/shared/ui/button'
@@ -54,11 +61,8 @@ export const ProtocoloCard = ({
       </div>
       <div className="mt-1.5 text-[13px] text-pretty text-text-5">{info.tipoAtoNome ?? '—'}</div>
       <div className="mt-1 flex flex-wrap items-center gap-1.5">
-        {protocolo.prioridade === 'Alta' && (
-          <span className="flex-none rounded-full border border-bad-border bg-bad-bg px-1.5 text-[10.5px] font-semibold text-bad-fg">
-            Alta
-          </span>
-        )}
+        {protocolo.prioridade === 'Alta' && <PrioridadeAltaTag />}
+        <NumeroConferenciaTag numero={protocolo.numeroDaConferencia} />
         <Chip tom={info.equipeNome ? 'neutro' : 'vencido'} fonte="padrao" className="font-medium">
           {info.equipeNome ?? 'sem equipe'}
         </Chip>

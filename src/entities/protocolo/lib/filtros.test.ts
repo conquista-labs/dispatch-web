@@ -23,6 +23,7 @@ const novoProtocolo = (sobrescreve: Partial<ProtocoloResumo> = {}): ProtocoloRes
   concluidoEm: null,
   duracao: null,
   andamentoEm: '2026-08-28T09:00:00Z',
+  numeroDaConferencia: 1,
   ...sobrescreve,
 })
 

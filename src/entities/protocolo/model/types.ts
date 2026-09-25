@@ -49,6 +49,9 @@ export type ProtocoloResumo = {
   duracao: string | null
   // "Data de entrada" (RF-18f) — quando o ato chegou de verdade, sempre preenchido.
   andamentoEm: string
+  // RF-24k: 1 = primeira conferência; 2+ = voltou depois de não aprovado ("↻ 2ª conferência").
+  // Calculado no back na leitura (dispatch-api ADR-0038).
+  numeroDaConferencia: number
 }
 
 // GrupoPorConferenteResponse (Api) — VisaoDistribuicaoResponse (RF-13). Não carrega nome do
@@ -120,6 +123,8 @@ export type DetalheProtocolo = {
   // protocolo") — histórico de ajustes manuais já aplicados (RNF-02: quem, quando, valor
   // anterior/novo, motivo).
   ajustesDeDuracao: AjusteDeDuracao[]
+  // RF-24k — mesmo campo de ProtocoloResumo.
+  numeroDaConferencia: number
 }
 
 // PausaConferenciaResponse (Api) — uma pausa já encerrada (pausar/retomar, RF não numerado).
@@ -151,6 +156,10 @@ export type HistoricoConferencia = {
   status: StatusProtocolo
   donoId: string | null
   concluidoEm: string | null
+  // RF-24k: nº da conferência desta linha e a observação dela — o "motivo da não aprovação" que
+  // o painel mostra (decisão do dono: o "Não aprovar" não pede motivo à parte).
+  numeroDaConferencia: number
+  observacao: string | null
 }
 
 // Nomes resolvidos localmente a partir de ProtocoloResumo (que só traz EscreventeId/TipoAtoId

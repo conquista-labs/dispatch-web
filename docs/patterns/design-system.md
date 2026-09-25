@@ -97,10 +97,18 @@ semáforo).
 | `Tooltip`                          | Explicação de dado no hover                                                                                                        | `TooltipProvider` único em `app-providers.tsx`, `delayDuration={300}` (não o `0` do shadcn — é explicação, não menu). Antes dele, só `title` nativo                             |
 | `Collapsible`                      | Agrupar seções de auditoria                                                                                                        | Ex.: bloco "HISTÓRICO · N" do painel de detalhe, fechado por padrão                                                                                                             |
 
-Badges que **não** usam o `Chip`: `NavBadge` (menu, `var(--text-3)`) e o badge "Alta"
-(`10.5px`, `font-semibold`, `border-bad-border`/`bg-bad-bg`/`text-bad-fg`, `rounded-full`, rótulo
-"Alta", na linha da meta — nunca na linha do número). Só `Alta` ganha destaque visual; `Média`/
-`Baixa` são informativas/filtráveis.
+Badges que **não** usam o `Chip`: `NavBadge` (menu, `var(--text-3)`) e as etiquetas de texto do
+`Tag` (`shared/ui/tag.tsx`, `10.5px`, fonte comum, `rounded-full`, `flex-none`), sempre na linha da
+meta — nunca na linha do número:
+
+- `tom="critico"` → `PrioridadeAltaTag` ("Alta", `font-semibold`, `bad-*`). Só `Alta` ganha
+  destaque visual; `Média`/`Baixa` são informativas/filtráveis.
+- `tom="neutro"` → `NumeroConferenciaTag` (RF-24k, "↻ 2ª conferência"): borda **tracejada**
+  `text-2`, texto `text-3`, fundo `card`, `font-medium` — copiado do protótipo, pra não parecer
+  urgência ao lado do "Alta" e do semáforo. Nada na 1ª conferência. Variantes: `completa` (cards e
+  cabeçalho do detalhe), `curta` ("↻ 2ª", coluna estreita de Distribuição → Por conferente; não
+  aparece em Por status) e `media` ("↻ 2ª conf.", lista completa da coluna); o texto completo vai
+  sempre no `title`.
 
 ## Rótulos de domínio
 

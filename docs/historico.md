@@ -759,3 +759,22 @@ Verificado com 7 protocolos criados.
 
 "Cumprimento de prazo por equipe" e "Por tipo de ato" com a lista em `max-h-[420px]
 overflow-y-auto`. Localmente só 4 itens — o estouro não foi visto rodando ([gaps §25](gaps-requisitos.md)).
+
+## 2026-09-25 — Tag de rodada "↻ 2ª conferência" (RF-24k)
+
+Feature 1 do `PLANO-melhorias.md`, lado do front (o back é dispatch-api ADR-0038).
+`numeroDaConferencia` em `ProtocoloResumo`/`DetalheProtocolo`/`HistoricoConferencia` (+ `observacao`
+no histórico). Novo primitivo `shared/ui/tag.tsx` (`tom: critico | neutro`) e, em
+`entities/protocolo/ui/`, `PrioridadeAltaTag` (substitui as 4 cópias inline do "Alta") e
+`NumeroConferenciaTag` (variantes `completa`/`media`/`curta`, `title` com o texto completo);
+`rotuloNumeroConferencia` em `lib/rotulos.ts`. Onde entra: `ProtocoloCard`, `EmConferenciaCard`,
+`DistribuicaoProtocoloCard` (só variante "conferente"), `ListaCompletaColunaSheet`, cabeçalho e
+linhas do histórico do `PainelDetalheProtocolo` ("Nª conferência — <observação>" na linha
+reprovada).
+
+Verificado: testes de `rotuloNumeroConferencia`, `NumeroConferenciaTag` e `ProtocoloCard` (as duas
+pílulas). O ratchet de cobertura, que já falhava no `HEAD`, voltou acima do piso (linhas 15,58%,
+funções 13,19%, statements 16,13%, branches 12,78%; pisos reescritos pelo `autoUpdate`). `verify-visual`
+com cenário real via API local (importar → reprovar com observação → reimportar → marcar Alta): Minha
+fila, Distribuição (coluna estreita) e painel nos dois temas, screenshots lidos; dado de teste apagado
+depois. `npm run check` e `npm run build` limpos.

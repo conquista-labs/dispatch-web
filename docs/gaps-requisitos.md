@@ -30,7 +30,7 @@ depois", "fora de escopo", "simplificação consciente" e "divergência".
 | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 🔴 Aberto      | §1 .csv/.xlsx · §2 RF-24e · §3 RF-34c · §7 casos concretos · §16 tipo de ato livre no manual · §19 tema antes do login · §20 tema por usuário · §21 atribuir grupo · §22 busca em Conferentes · §27 rótulos de exceção · §28 cenários e2e manuais · §34 RNF-10 no `SeletorUnico` |
 | 🔍 Verificação | §24 scrollbar · §25 teto do Dashboard                                                                                                                                                                                                                                            |
-| ✅ Fechado     | §5 · §6 · §10 · §11 · §12 · §13 · §14 · §15 · §17 · §18 · §30 · §31 · §32 · §33 · §35 · §36                                                                                                                                                                                      |
+| ✅ Fechado     | §5 · §6 · §10 · §11 · §12 · §13 · §14 · §15 · §17 · §18 · §30 · §31 · §32 · §33 · §35 · §36 · §39                                                                                                                                                                                |
 | ⚪ Sem mudança | §4 RF-01m/n · §8 KPIs mock · §9 SAÍDAS · §23 paginação no back · §26 ícone em botões · §29 alçada por item · §37 Subscritor · §38 CI                                                                                                                                             |
 
 **Não auditado**: este levantamento só cobre o que o histórico registrou. Requisitos que nunca
@@ -266,3 +266,13 @@ código — confira antes de assumir que estão prontos ou faltando.
 
 - **Decisão**: sem CI; `vitest` fora do `lint-staged`; deploy manual
   ([ADR-0011](decisions/0011-adotar-vitest.md), [ADR-0022](decisions/0022-deploy-manual-no-netlify-com-build-remoto.md)).
+
+### §39 ✅ RF-24k — tag de rodada ("↻ 2ª conferência")
+
+- **Fechado em 2026-09-25**: `NumeroConferenciaTag` nos cards de Minha fila e Em conferência, na
+  coluna estreita de Distribuição → Por conferente ("↻ 2ª"), na lista completa da coluna e no
+  cabeçalho do detalhe; cada linha do histórico mostra "Nª conferência — <observação>" quando foi
+  reprovada. O número vem do back (`numeroDaConferencia`, dispatch-api ADR-0038).
+- **Diverge de**: o motivo da não aprovação é a observação da linha reprovada, não um campo próprio
+  (decisão do dono); a tag não aparece em Distribuição → Por status nem em Concluídos hoje (igual ao
+  protótipo).

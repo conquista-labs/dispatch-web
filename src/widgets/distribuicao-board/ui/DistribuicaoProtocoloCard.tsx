@@ -1,4 +1,11 @@
-import { prazoChip, PrazoTooltip, type InfoProtocolo, type ProtocoloResumo } from '@/entities/protocolo'
+import {
+  NumeroConferenciaTag,
+  prazoChip,
+  PrazoTooltip,
+  PrioridadeAltaTag,
+  type InfoProtocolo,
+  type ProtocoloResumo,
+} from '@/entities/protocolo'
 import { ObservacaoField } from '@/features/protocolo/definir-observacao'
 import { formatCronometro, formatDataHora, formatDuracaoConcluida } from '@/shared/lib/format'
 import { Chip } from '@/shared/ui/chip'
@@ -111,11 +118,10 @@ export const DistribuicaoProtocoloCard = ({
           `p.meta`, não de `p.protocolo`/`p.prazoLabel`). Botar o badge de prioridade na linha
           de cima quebrava o card em telas de coluna estreita (achado ao vivo pelo dono). */}
       <div className="mt-0.5 flex items-center gap-1.5">
-        {protocolo.prioridade === 'Alta' && (
-          <span className="flex-none rounded-full border border-bad-border bg-bad-bg px-1.5 text-[10.5px] font-semibold text-bad-fg">
-            Alta
-          </span>
-        )}
+        {protocolo.prioridade === 'Alta' && <PrioridadeAltaTag />}
+        {/* RF-24k: só na coluna estreita de Por conferente ("↻ 2ª", texto completo no title) —
+            o protótipo não mostra a tag em Por status. */}
+        {variant === 'conferente' && <NumeroConferenciaTag numero={protocolo.numeroDaConferencia} variante="curta" />}
         <div
           className="min-w-0 flex-1 overflow-hidden text-[11.5px] text-ellipsis whitespace-nowrap text-muted-foreground"
           title={`${info.escreventeNome ?? '—'} · ${info.equipeNome ?? 'sem equipe'}${variant === 'conferente' ? ` · ${ETAPA_LABEL[protocolo.etapa]}` : ''}`}
