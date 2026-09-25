@@ -1031,3 +1031,20 @@ largura total. Véu do Dialog e do AlertDialog igual ao do Sheet (escuro, sem de
 
 Verificado: testes de `AlcadaBuilderDialog`, `falta` e `fraseDaRegra`; screenshots a 1440 (dois temas) e 390px;
 `central-de-regras`/`alcada-v3` param no cenário do gaps §28, como no `main`.
+
+## 2026-09-25 — Central de regras: Tipos em tabela, Configuração e Prazos (terceira leva)
+
+Tipos de ato vira tabela com cabeçalho a partir de 760px (Tipo de ato | Histórico | Complexidade | Tempo de
+referência | Ações), com rolagem só da tabela entre 760 e ~1000px e linhas empilhadas no celular; o nome é um
+botão que quebra linha e vira campo ao clicar (o `<input>` fixo cortava nomes longos; Enter salva, Esc desfaz);
+coluna Histórico com `conferenciasNoHistorico`; peso com "×"; "ninguém com alçada" em vermelho; "Novo tipo de
+ato" ao lado da busca, diálogo com "Adicionar tipo". Configuração: controle unificado de 36px com a unidade dentro
+("− 4 h + | − 0 min +"), rótulos acessíveis por segmento (não tinham), percentual "60 %", aspas curvas e botões
+de salvar em tamanho normal. Prazos: pílulas de prazo em mono, "+ corte de horário" compacto no fim da linha
+quando desligado (o switch desligado gastava uma linha por etapa), rótulo da etapa alinhado ao topo, card do
+padrão com o prazo em pílula e "ver e ajustar" com borda, dica ao lado de "N equipes com prazo próprio",
+"Escolher escreventes…" (`vazioLabel` no `SeletorMultiplo`). `central-de-regras.spec` acha a linha do tipo pelo
+texto do nome.
+
+Verificado: testes de `TipoAtoRow` e `AbaConfiguracao`; CRUD de Tipos no e2e passando; screenshots a 1440,
+1000 (escuro) e 390px.

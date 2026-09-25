@@ -4,7 +4,6 @@ import { useState, type ReactNode } from 'react'
 
 import { useConfiguracao, type Configuracao } from '@/entities/configuracao'
 import { useAtualizarConfiguracao } from '@/features/configuracao/atualizar'
-import { formatDuracaoCurta } from '@/shared/lib/format'
 import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/ui/button'
 import { Carregando } from '@/shared/ui/carregando'
@@ -93,7 +92,7 @@ const SECOES: { nome: string; sub: string; campos: CampoConfig[] }[] = [
       },
       {
         chave: 'limiarTipoDesconhecido',
-        rotulo: 'Casos para propor "tipo desconhecido"',
+        rotulo: 'Casos para propor “tipo desconhecido”',
         ajuda: 'Quantas vezes um tipo fora do catálogo precisa aparecer antes de o sistema sugerir cadastrá-lo.',
         tipo: 'num',
         unidade: 'casos',
@@ -102,7 +101,7 @@ const SECOES: { nome: string; sub: string; campos: CampoConfig[] }[] = [
       },
       {
         chave: 'limiarPrazoIrrealCasos',
-        rotulo: 'Casos para propor "prazo irreal"',
+        rotulo: 'Casos para propor “prazo irreal”',
         ajuda: 'Volume mínimo de atos observados antes de o sistema questionar o prazo de uma equipe.',
         tipo: 'num',
         unidade: 'casos',
@@ -111,13 +110,13 @@ const SECOES: { nome: string; sub: string; campos: CampoConfig[] }[] = [
       },
       {
         chave: 'limiarPrazoIrrealEstouro',
-        rotulo: 'Estouro para propor "prazo irreal"',
+        rotulo: 'Estouro para propor “prazo irreal”',
         ajuda: 'Percentual desses casos que precisa ter estourado o prazo para a sugestão nascer.',
         tipo: 'pct',
       },
       {
         chave: 'limiarEscreventeOrfao',
-        rotulo: 'Casos para propor "escrevente órfão"',
+        rotulo: 'Casos para propor “escrevente órfão”',
         ajuda: 'Quantos atos de um escrevente sem equipe bastam para o sistema pedir que ele seja alocado.',
         tipo: 'num',
         unidade: 'casos',
@@ -126,7 +125,7 @@ const SECOES: { nome: string; sub: string; campos: CampoConfig[] }[] = [
       },
       {
         chave: 'limiarRiscoQualidadeCasos',
-        rotulo: 'Casos para propor "risco de qualidade"',
+        rotulo: 'Casos para propor “risco de qualidade”',
         ajuda: 'Volume mínimo de atos conferidos antes de o sistema olhar a taxa de reprovação.',
         tipo: 'num',
         unidade: 'casos',
@@ -135,7 +134,7 @@ const SECOES: { nome: string; sub: string; campos: CampoConfig[] }[] = [
       },
       {
         chave: 'limiarRiscoQualidadeReprovacao',
-        rotulo: 'Reprovação para propor "risco de qualidade"',
+        rotulo: 'Reprovação para propor “risco de qualidade”',
         ajuda: 'Taxa de reprovação a partir da qual o sistema sugere revisar alçada ou treinar a pessoa.',
         tipo: 'pct',
       },
@@ -235,19 +234,19 @@ const validar = (v: Configuracao): Partial<Record<keyof Configuracao, string>> =
   return e
 }
 
-type MiniStepperProps = {
+type SegmentoProps = {
   valor: number
   min: number
   passo?: number
+  unidade?: string
+  rotulo: string
   onAlterar: (valor: number) => void
-  comErro?: boolean
 }
 
-// Grupo −/valor/+ compartilhado pelos 3 tipos de campo (dur usa dois lado a lado — horas e
-// minutos — num usa um só). Mesmo padrão visual de TipoAtoRow (peso) e do Stepper do
-// DateTimePicker (hora/minuto), sem reaproveitar o componente deles direto — os dois já são
-// específicos demais do próprio contexto (clamp 2 dígitos, decimais) pra generalizar aqui.
-const MiniStepper = ({ valor, min, passo = 1, onAlterar, comErro }: MiniStepperProps) => {
+// Um segmento −/valor/+ do controle. Protótipo v2: controle único de ~36px com a unidade DENTRO
+// ("− 4 h + | − 0 min +") e o valor em mono negrito — antes eram dois steppers de 28px com a
+// unidade do lado de fora, e botões de 20px difíceis de acertar no celular.
+const Segmento = ({ valor, min, passo = 1, unidade, rotulo, onAlterar }: SegmentoProps) => {
   const [texto, setTexto] = useState(String(valor))
   const [refletido, setRefletido] = useState(valor)
   if (valor !== refletido) {
@@ -264,17 +263,16 @@ const MiniStepper = ({ valor, min, passo = 1, onAlterar, comErro }: MiniStepperP
     onAlterar(Math.max(min, numero))
   }
 
+  const botao =
+    'flex size-7 flex-none items-center justify-center rounded-[6px] text-text-2 hover:bg-secondary max-mobile:size-9'
+
   return (
-    <div
-      className={cn(
-        'flex items-center gap-px rounded-md border bg-background p-0.5',
-        comErro ? 'border-bad-border-2' : 'border-border',
-      )}
-    >
+    <div className="flex items-center">
       <button
         type="button"
+        aria-label={`Diminuir ${rotulo}`}
         onClick={() => onAlterar(Math.max(min, valor - passo))}
-        className="flex size-6 flex-none items-center justify-center rounded text-text-2 hover:bg-secondary"
+        className={botao}
       >
         <MinusIcon className="size-3.5" />
       </button>
@@ -285,19 +283,33 @@ const MiniStepper = ({ valor, min, passo = 1, onAlterar, comErro }: MiniStepperP
         onKeyDown={(event) => event.key === 'Enter' && event.currentTarget.blur()}
         onFocus={(event) => event.target.select()}
         inputMode="numeric"
+        aria-label={rotulo}
         size={3}
-        className="w-[34px] flex-none border-none bg-transparent text-center font-mono text-[12.5px] font-medium outline-none"
+        className="w-[30px] flex-none border-none bg-transparent text-right font-mono text-[13px] font-semibold outline-none"
       />
+      {unidade && <span className="pr-0.5 pl-1 font-mono text-[11.5px] text-muted-foreground">{unidade}</span>}
       <button
         type="button"
+        aria-label={`Aumentar ${rotulo}`}
         onClick={() => onAlterar(valor + passo)}
-        className="flex size-6 flex-none items-center justify-center rounded text-text-2 hover:bg-secondary"
+        className={botao}
       >
         <PlusIcon className="size-3.5" />
       </button>
     </div>
   )
 }
+
+const Controle = ({ comErro, children }: { comErro?: boolean; children: ReactNode }) => (
+  <div
+    className={cn(
+      'flex h-9 items-center rounded-[8px] border bg-background px-0.5 max-mobile:h-11',
+      comErro ? 'border-bad-border-2' : 'border-border',
+    )}
+  >
+    {children}
+  </div>
+)
 
 type CampoProps = {
   campo: CampoConfig
@@ -331,19 +343,23 @@ const Campo = ({ campo, valor, erro, onAlterar }: CampoProps) => {
     const horas = Math.floor(Math.max(0, valor) / 60)
     const minutos = Math.max(0, Math.round(valor)) % 60
     return linha(
-      <>
-        <div className="flex items-center gap-1.5">
-          <MiniStepper valor={horas} min={0} comErro={!!erro} onAlterar={(h) => onAlterar(h * 60 + minutos)} />
-          <span className="font-mono text-[11px] text-text-2">h</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <MiniStepper valor={minutos} min={0} comErro={!!erro} onAlterar={(m) => onAlterar(horas * 60 + m)} />
-          <span className="font-mono text-[11px] text-text-2">min</span>
-        </div>
-      </>,
-      <span className="w-16 flex-none text-right font-mono text-[11.5px] text-text-2">
-        {formatDuracaoCurta(valor * 60_000)}
-      </span>,
+      <Controle comErro={!!erro}>
+        <Segmento
+          valor={horas}
+          min={0}
+          unidade="h"
+          rotulo={`horas — ${campo.rotulo}`}
+          onAlterar={(h) => onAlterar(h * 60 + minutos)}
+        />
+        <span aria-hidden className="mx-0.5 h-5 w-px bg-border" />
+        <Segmento
+          valor={minutos}
+          min={0}
+          unidade="min"
+          rotulo={`minutos — ${campo.rotulo}`}
+          onAlterar={(m) => onAlterar(horas * 60 + m)}
+        />
+      </Controle>,
     )
   }
 
@@ -362,18 +378,27 @@ const Campo = ({ campo, valor, erro, onAlterar }: CampoProps) => {
       />,
       <span
         className={cn(
-          'flex w-16 flex-none items-center justify-center gap-0.5 rounded-md border bg-background px-1.5 py-1 font-mono text-[12.5px] font-medium',
+          'flex h-9 w-[68px] flex-none items-center justify-center gap-1 rounded-[8px] border bg-background font-mono',
           erro ? 'border-bad-border-2' : 'border-border',
         )}
       >
-        {percentual}%
+        <span className="text-[13px] font-semibold">{percentual}</span>
+        <span className="text-[11.5px] text-muted-foreground">%</span>
       </span>,
     )
   }
 
   return linha(
-    <MiniStepper valor={valor} min={campo.min ?? 0} passo={campo.passo ?? 1} comErro={!!erro} onAlterar={onAlterar} />,
-    <span className="w-14 flex-none font-mono text-[11.5px] text-text-2">{campo.unidade}</span>,
+    <Controle comErro={!!erro}>
+      <Segmento
+        valor={valor}
+        min={campo.min ?? 0}
+        passo={campo.passo ?? 1}
+        unidade={campo.unidade}
+        rotulo={campo.rotulo}
+        onAlterar={onAlterar}
+      />
+    </Controle>,
   )
 }
 
@@ -489,11 +514,11 @@ export const AbaConfiguracao = () => {
       </div>
 
       <div className="mt-4 flex gap-1.5">
-        <Button size="sm" onClick={salvar} disabled={!sujo || atualizar.isPending}>
+        <Button onClick={salvar} disabled={!sujo || atualizar.isPending}>
           {sujo ? 'Salvar configuração' : 'Nada alterado'}
         </Button>
         {sujo && (
-          <Button variant="outline" size="sm" onClick={descartar}>
+          <Button variant="outline" onClick={descartar}>
             Descartar
           </Button>
         )}

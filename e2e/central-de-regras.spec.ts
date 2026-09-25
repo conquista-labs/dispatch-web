@@ -1,35 +1,15 @@
 import { expect, type Page, test } from '@playwright/test'
 
-// Nome de tipo de ato vive num <input> controlado (edição inline) — React não reflete a prop
-// `value` como atributo DOM, então nem CSS `[value=...]` nem `hasText` acham a linha certa.
-// Acha pelo valor de verdade via .inputValue() de cada <input> candidato.
-const linhaPeloNomeDoTipoAto = async (page: Page, nome: string) => {
-  const inputs = page.locator('input')
-  const total = await inputs.count()
-  for (let i = 0; i < total; i++) {
-    const candidato = inputs.nth(i)
-    if ((await candidato.inputValue()) === nome) {
-      return { input: candidato, linha: candidato.locator('xpath=..') }
-    }
-  }
-  return null
-}
+// O nome do tipo de ato é um botão com o texto (vira campo só ao clicar pra renomear) — a linha é
+// achada pelo botão com o nome exato, e cada passo re-resolve a linha do zero (a lista é ordenada
+// por nome e um refetch no meio reordena as linhas).
+const linhaDoTipo = (page: Page, nome: string) =>
+  page.locator('[data-tipo-ato-linha]').filter({ has: page.getByRole('button', { name: nome, exact: true }) })
 
-// Espera a linha aparecer (poll) e devolve o mesmo resultado que fez a asserção passar — duas
-// chamadas separadas (uma pro poll, outra pra pegar o valor) arriscam uma corrida com o
-// refetch do TanStack Query no meio; aqui é uma leitura só, reaproveitada.
 const esperarLinhaPeloNome = async (page: Page, nome: string) => {
-  let achado: Awaited<ReturnType<typeof linhaPeloNomeDoTipoAto>> = null
-  await expect
-    .poll(
-      async () => {
-        achado = await linhaPeloNomeDoTipoAto(page, nome)
-        return achado !== null
-      },
-      { timeout: 10_000 },
-    )
-    .toBe(true)
-  return achado!
+  const linha = linhaDoTipo(page, nome)
+  await expect(linha).toHaveCount(1, { timeout: 10_000 })
+  return { linha }
 }
 
 // Verificação visual da tela Central de regras (RF-31 a RF-41) contra dados reais — precisa da
@@ -132,7 +112,7 @@ test('Tipos de ato — CRUD completo reflete na tela', async ({ page }) => {
   await page.getByLabel('Nome').fill(nomeOriginal)
   const [respostaCriar] = await Promise.all([
     page.waitForResponse((r) => r.request().method() === 'POST' && /\/tipos-ato$/.test(r.url())),
-    page.getByRole('button', { name: 'Cadastrar' }).click(),
+    page.getByRole('button', { name: 'Adicionar tipo' }).click(),
   ])
   expect(respostaCriar.status()).toBe(201)
   // Espera o diálogo fechar de verdade antes de mexer na busca — ele só fecha no onSuccess da
@@ -151,9 +131,8 @@ test('Tipos de ato — CRUD completo reflete na tela', async ({ page }) => {
     page.getByPlaceholder('buscar tipo de ato…').fill('Tipo Teste'),
   ])
 
-  const { input: inputNome, linha } = await esperarLinhaPeloNome(page, nomeOriginal)
+  const { linha } = await esperarLinhaPeloNome(page, nomeOriginal)
   await expect(linha).toBeVisible()
-  await expect(inputNome).toHaveValue(nomeOriginal)
 
   // Renomear inline (commit no blur). A lista é ordenada por nome (ListarTiposAtoComUso), então
   // renomear pode mudar a posição da linha — reachar pelo novo nome em vez de reusar `linha`
@@ -161,7 +140,9 @@ test('Tipos de ato — CRUD completo reflete na tela', async ({ page }) => {
   // "Renomeado" com maiúscula — o back normaliza (capitaliza a primeira letra de cada
   // palavra), então "renomeado" viraria "Renomeado" e o texto não bateria mais.
   const nomeRenomeado = `${nomeOriginal} Renomeado`
-  await inputNome.fill(nomeRenomeado)
+  await linha.getByRole('button', { name: nomeOriginal, exact: true }).click()
+  // Em edição a linha perde o botão do nome (vira campo) — só um campo de nome existe por vez.
+  await page.getByLabel('Nome do tipo de ato').fill(nomeRenomeado)
   const [respostaRenomear] = await Promise.all([
     page.waitForResponse((r) => r.request().method() === 'PUT' && /\/tipos-ato\/[^/]+$/.test(r.url())),
     // Clique em outro lugar em vez de locator.blur() — dispara o blur "de verdade", como um
@@ -184,8 +165,7 @@ test('Tipos de ato — CRUD completo reflete na tela', async ({ page }) => {
   expect(respostaPeso.status()).toBe(204)
   await page.waitForLoadState('networkidle')
   ;({ linha: linhaRenomeada } = await esperarLinhaPeloNome(page, nomeRenomeado))
-  // Peso agora é um <input> digitável (2º input da linha, o 1º é o nome) — não dá pra achar
-  // por getByText como antes de virar input (mesma armadilha do nome, documentada acima).
+  // Peso é um <input> digitável — achado pelo rótulo acessível, não por texto.
   const inputPeso = linhaRenomeada.getByLabel('Peso de complexidade')
   await expect(inputPeso).toHaveValue('1,05')
 
@@ -227,11 +207,5 @@ test('Tipos de ato — CRUD completo reflete na tela', async ({ page }) => {
     linhaRenomeada.getByRole('button', { name: 'Remover' }).click(),
   ])
   expect(respostaRemover.status()).toBe(204)
-  // waitForFunction roda dentro do browser (sem round-trip do CDP por elemento, como
-  // linhaPeloNomeDoTipoAto faz) — mais rápido e evitou uma corrida onde o poll baseado em
-  // Locator nunca convergia mesmo com a linha já removida de verdade (confirmado via API).
-  await page.waitForFunction(
-    (nome) => !Array.from(document.querySelectorAll('input')).some((el) => (el as HTMLInputElement).value === nome),
-    nomeRenomeado,
-  )
+  await expect(linhaDoTipo(page, nomeRenomeado)).toHaveCount(0)
 })

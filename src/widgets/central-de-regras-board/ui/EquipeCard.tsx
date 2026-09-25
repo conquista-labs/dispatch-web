@@ -115,46 +115,48 @@ export const EquipeCard = ({
         </span>
       </div>
 
-      <div className="mt-3 flex items-center gap-2">
-        <span className="w-[74px] flex-none text-[11.5px] font-medium text-text-2">Pré-conf.</span>
-        <div className="flex flex-wrap gap-1">
+      <div className="mt-3 flex items-start gap-2">
+        <span className="w-[74px] flex-none pt-[3px] text-[11.5px] font-medium text-text-2">Pré-conf.</span>
+        <div className="flex flex-wrap items-center gap-1">
           {TIPOS_PRAZO.map((tipo) => (
             <PillToggle
               key={tipo}
               label={TIPO_PRAZO_LABEL[tipo]}
+              mono
               selecionado={equipe.prazoPreConferencia === tipo}
               onClick={() => alterarPrazo('prazoPreConferencia', tipo)}
             />
           ))}
+          <BlocoCorte
+            horarioCorte={equipe.cortePreConferenciaHorarioCorte}
+            horarioVencimento={equipe.cortePreConferenciaHorarioVencimento}
+            onToggle={(ligar) => toggleCorte('pre', ligar)}
+            onAlterarCorte={(valor) => alterarCorte('pre', 'horarioCorte', valor)}
+            onAlterarVencimento={(valor) => alterarCorte('pre', 'horarioVencimento', valor)}
+          />
         </div>
       </div>
-      <BlocoCorte
-        horarioCorte={equipe.cortePreConferenciaHorarioCorte}
-        horarioVencimento={equipe.cortePreConferenciaHorarioVencimento}
-        onToggle={(ligar) => toggleCorte('pre', ligar)}
-        onAlterarCorte={(valor) => alterarCorte('pre', 'horarioCorte', valor)}
-        onAlterarVencimento={(valor) => alterarCorte('pre', 'horarioVencimento', valor)}
-      />
-      <div className="mt-1.5 flex items-center gap-2">
-        <span className="w-[74px] flex-none text-[11.5px] font-medium text-text-2">Pós-conf.</span>
-        <div className="flex flex-wrap gap-1">
+      <div className="mt-1.5 flex items-start gap-2">
+        <span className="w-[74px] flex-none pt-[3px] text-[11.5px] font-medium text-text-2">Pós-conf.</span>
+        <div className="flex flex-wrap items-center gap-1">
           {TIPOS_PRAZO.map((tipo) => (
             <PillToggle
               key={tipo}
               label={TIPO_PRAZO_LABEL[tipo]}
+              mono
               selecionado={equipe.prazoPosConferencia === tipo}
               onClick={() => alterarPrazo('prazoPosConferencia', tipo)}
             />
           ))}
+          <BlocoCorte
+            horarioCorte={equipe.cortePosConferenciaHorarioCorte}
+            horarioVencimento={equipe.cortePosConferenciaHorarioVencimento}
+            onToggle={(ligar) => toggleCorte('pos', ligar)}
+            onAlterarCorte={(valor) => alterarCorte('pos', 'horarioCorte', valor)}
+            onAlterarVencimento={(valor) => alterarCorte('pos', 'horarioVencimento', valor)}
+          />
         </div>
       </div>
-      <BlocoCorte
-        horarioCorte={equipe.cortePosConferenciaHorarioCorte}
-        horarioVencimento={equipe.cortePosConferenciaHorarioVencimento}
-        onToggle={(ligar) => toggleCorte('pos', ligar)}
-        onAlterarCorte={(valor) => alterarCorte('pos', 'horarioCorte', valor)}
-        onAlterarVencimento={(valor) => alterarCorte('pos', 'horarioVencimento', valor)}
-      />
 
       <div className="mt-3 flex flex-wrap gap-1.5 border-t border-secondary pt-3">
         {escreventes.length === 0 && (
@@ -239,8 +241,23 @@ const BlocoCorte = ({
     onAlterarVencimento(valor)
   }
 
+  // Desligado, o corte é só um "+ corte de horário" no fim da linha das pílulas — o switch
+  // desligado gastava uma linha inteira por etapa em cada card (auditoria do protótipo v2). Ligado,
+  // ocupa a linha de baixo com o switch (pra desligar) e os horários.
+  if (!ativo) {
+    return (
+      <button
+        type="button"
+        onClick={() => handleToggle(true)}
+        className="ml-1 text-[11px] font-medium text-muted-foreground hover:text-foreground max-mobile:min-h-9"
+      >
+        + corte de horário
+      </button>
+    )
+  }
+
   return (
-    <div className="mt-1.5 ml-[82px] flex flex-wrap items-center gap-2">
+    <div className="mt-1 flex basis-full flex-wrap items-center gap-2">
       <label className="flex items-center gap-1.5 text-[11px] text-text-2">
         <Switch size="sm" checked={ativo} onCheckedChange={handleToggle} />
         corte de horário

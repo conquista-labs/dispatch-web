@@ -32,9 +32,7 @@ export const NovoTipoAtoDialog = () => {
   return (
     <Dialog open={aberto} onOpenChange={handleAbrir}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
-          Novo tipo de ato
-        </Button>
+        <Button variant="outline">Novo tipo de ato</Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
@@ -43,7 +41,13 @@ export const NovoTipoAtoDialog = () => {
 
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="nome-tipo-ato">Nome</Label>
-          <Input id="nome-tipo-ato" value={nome} onChange={(event) => setNome(event.target.value)} autoFocus />
+          <Input
+            id="nome-tipo-ato"
+            value={nome}
+            onChange={(event) => setNome(event.target.value)}
+            placeholder="Nome do tipo que a importação vai reconhecer"
+            autoFocus
+          />
           {jaExiste && <p className="text-[13px] text-bad-fg">Já existe um tipo de ato com esse nome.</p>}
           {criar.isError && !jaExiste && (
             <p className="text-[13px] text-bad-fg">Não foi possível cadastrar. Tente de novo.</p>
@@ -55,7 +59,7 @@ export const NovoTipoAtoDialog = () => {
             Cancelar
           </Button>
           <Button onClick={handleSalvar} disabled={nome.trim().length === 0 || criar.isPending}>
-            {criar.isPending ? 'Cadastrando…' : 'Cadastrar'}
+            {criar.isPending ? 'Adicionando…' : 'Adicionar tipo'}
           </Button>
         </DialogFooter>
       </DialogContent>
