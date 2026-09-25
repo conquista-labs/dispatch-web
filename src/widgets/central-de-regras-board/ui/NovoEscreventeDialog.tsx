@@ -42,9 +42,7 @@ export const NovoEscreventeDialog = () => {
   return (
     <Dialog open={aberto} onOpenChange={handleAbrir}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
-          Novo escrevente
-        </Button>
+        <Button variant="outline">Novo escrevente</Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>

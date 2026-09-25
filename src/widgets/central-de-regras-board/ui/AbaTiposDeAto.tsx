@@ -43,8 +43,8 @@ export const AbaTiposDeAto = () => {
 
   return (
     <div className="max-w-[900px]">
-      <div className="mt-5 mb-1 flex items-baseline justify-between gap-3">
-        <h2 className="m-0 text-[15px] font-semibold tracking-[-0.01em]">Tipos de ato</h2>
+      <div className="mb-1.5 flex items-baseline justify-between gap-3">
+        <h2 className="m-0 text-xl font-semibold tracking-[-0.015em]">Catálogo de tipos de ato</h2>
         <NovoTipoAtoDialog />
       </div>
       <p className="m-0 mb-3.5 max-w-[74ch] text-[12.5px] text-pretty text-muted-foreground">

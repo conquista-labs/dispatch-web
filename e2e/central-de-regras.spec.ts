@@ -58,14 +58,14 @@ test('Central de regras — as 3 abas renderizam com dados reais', async ({ page
 
   // Tipos de ato.
   await page.getByRole('button', { name: 'Tipos de ato' }).click()
-  await expect(page.getByRole('heading', { name: 'Tipos de ato' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Catálogo de tipos de ato' })).toBeVisible()
   await expect(page.getByText('em circulação').first()).toBeVisible()
   await page.screenshot({ path: 'e2e/.screenshots/central-de-regras-tipos-claro.png', fullPage: true })
 
   // Aprendizado.
   await page.getByRole('button', { name: 'Aprendizado' }).click()
   await expect(page.getByText('Propostas na fila')).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Aplicar' }).first()).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Aplicar regra' }).first()).toBeVisible()
   await page.screenshot({ path: 'e2e/.screenshots/central-de-regras-aprendizado-claro.png', fullPage: true })
 
   // Alçada.
@@ -73,7 +73,7 @@ test('Central de regras — as 3 abas renderizam com dados reais', async ({ page
   // substring "alçada" (match de nome é case-insensitive por padrão) — sem isso, dá strict
   // mode violation quando a aba "vigor" já está na tela (ex.: logo após um reload).
   await page.getByRole('button', { name: 'Alçada', exact: true }).click()
-  await expect(page.getByRole('heading', { name: 'Regras de alçada' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Alçada', exact: true })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'O que cada um alcança hoje' })).toBeVisible()
   await page.screenshot({ path: 'e2e/.screenshots/central-de-regras-alcada-claro.png', fullPage: true })
 
@@ -98,7 +98,7 @@ test('Central de regras — as 3 abas renderizam com dados reais', async ({ page
   // substring "alçada" (match de nome é case-insensitive por padrão) — sem isso, dá strict
   // mode violation quando a aba "vigor" já está na tela (ex.: logo após um reload).
   await page.getByRole('button', { name: 'Alçada', exact: true }).click()
-  await expect(page.getByRole('heading', { name: 'Regras de alçada' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Alçada', exact: true })).toBeVisible()
   await page.screenshot({ path: 'e2e/.screenshots/central-de-regras-alcada-escuro.png', fullPage: true })
 
   await page.getByRole('button', { name: 'Regras em vigor' }).click()
@@ -122,7 +122,7 @@ test('Tipos de ato — CRUD completo reflete na tela', async ({ page }) => {
 
   await page.goto('/central-de-regras')
   await page.getByRole('button', { name: 'Tipos de ato' }).click()
-  await expect(page.getByRole('heading', { name: 'Tipos de ato' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Catálogo de tipos de ato' })).toBeVisible()
 
   // Nome sem letra maiúscula "ambígua" pro back normalizar (NormalizadorDeTexto.ParaNomeProprio
   // capitaliza só a primeira letra de cada palavra) — só dígitos depois da primeira palavra,
@@ -166,7 +166,7 @@ test('Tipos de ato — CRUD completo reflete na tela', async ({ page }) => {
     page.waitForResponse((r) => r.request().method() === 'PUT' && /\/tipos-ato\/[^/]+$/.test(r.url())),
     // Clique em outro lugar em vez de locator.blur() — dispara o blur "de verdade", como um
     // usuário faria, e evitou uma corrida onde o PUT nunca era observado.
-    page.getByRole('heading', { name: 'Tipos de ato' }).click(),
+    page.getByRole('heading', { name: 'Catálogo de tipos de ato' }).click(),
   ])
   expect(respostaRenomear.status()).toBe(204)
 
@@ -194,7 +194,7 @@ test('Tipos de ato — CRUD completo reflete na tela', async ({ page }) => {
   await inputPeso.fill('1,6')
   const [respostaPesoDigitado] = await Promise.all([
     page.waitForResponse((r) => r.request().method() === 'PUT' && r.url().includes('/peso')),
-    page.getByRole('heading', { name: 'Tipos de ato' }).click(),
+    page.getByRole('heading', { name: 'Catálogo de tipos de ato' }).click(),
   ])
   expect(respostaPesoDigitado.status()).toBe(204)
   await page.waitForLoadState('networkidle')

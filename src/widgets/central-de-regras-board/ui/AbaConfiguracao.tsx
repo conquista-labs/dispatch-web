@@ -438,7 +438,7 @@ export const AbaConfiguracao = () => {
 
   return (
     <div className="max-w-[800px]">
-      <h2 className="mt-5.5 mb-0 text-[15px] font-semibold tracking-[-0.01em]">Configuração do sistema</h2>
+      <h2 className="m-0 text-xl font-semibold tracking-[-0.015em]">Configuração do sistema</h2>
       <p className="mt-1.5 max-w-[72ch] text-[13px] text-pretty text-text-2">
         Os números que o motor de distribuição, o semáforo de prazo e o módulo de aprendizado consultam. Alterar aqui
         muda o comportamento de todo o cartório a partir do próximo protocolo — nada é aplicado retroativamente.

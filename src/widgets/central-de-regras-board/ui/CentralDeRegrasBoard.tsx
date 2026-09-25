@@ -81,7 +81,7 @@ export const CentralDeRegrasBoard = () => {
                     onClick={() => setAba(item.aba)}
                     aria-current={aba === item.aba ? 'page' : undefined}
                     className={cn(
-                      'flex items-center justify-between gap-2 rounded-[7px] px-2.5 py-1.75 text-left text-[13.5px] hover:bg-secondary hover:text-foreground',
+                      'flex items-center justify-between gap-2 rounded-[7px] px-2.5 py-1.25 text-left text-[13.5px] hover:bg-secondary hover:text-foreground',
                       aba === item.aba ? 'bg-secondary font-semibold text-foreground' : 'font-medium text-text-2',
                     )}
                   >
@@ -123,19 +123,23 @@ export const CentralDeRegrasBoard = () => {
           </div>
         </div>
 
-        {aba === 'vigor' && (
-          <AbaRegrasEmVigor
-            onIrParaAlcada={() => setAba('alcada')}
-            onIrParaTipos={() => setAba('tipos')}
-            onIrParaPrazos={() => setAba('prazos')}
-            onIrParaConfig={() => setAba('config')}
-          />
-        )}
-        {aba === 'aprendizado' && <AbaAprendizado />}
-        {aba === 'alcada' && <AbaAlcada />}
-        {aba === 'tipos' && <AbaTiposDeAto />}
-        {aba === 'prazos' && <AbaPrazos />}
-        {aba === 'config' && <AbaConfiguracao />}
+        {/* O título de cada aba (20px, protótipo v2) alinha com o "Central de regras" da coluna
+            lateral em tela larga; abaixo disso, desce um respiro depois das pílulas. */}
+        <div className="mt-5.5 min-[1180px]:mt-0">
+          {aba === 'vigor' && (
+            <AbaRegrasEmVigor
+              onIrParaAlcada={() => setAba('alcada')}
+              onIrParaTipos={() => setAba('tipos')}
+              onIrParaPrazos={() => setAba('prazos')}
+              onIrParaConfig={() => setAba('config')}
+            />
+          )}
+          {aba === 'aprendizado' && <AbaAprendizado />}
+          {aba === 'alcada' && <AbaAlcada />}
+          {aba === 'tipos' && <AbaTiposDeAto />}
+          {aba === 'prazos' && <AbaPrazos />}
+          {aba === 'config' && <AbaConfiguracao />}
+        </div>
       </div>
     </div>
   )

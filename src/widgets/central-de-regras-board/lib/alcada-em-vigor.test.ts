@@ -99,19 +99,20 @@ describe('itensDeAlcadaEmVigor', () => {
     expect(itens[0].detalhe).toBe('3 aplicações')
   })
 
-  it('regra por pessoa continua com a frase de sempre', () => {
+  it('pra distribuidora, as regras de uma pessoa viram uma linha com o resumo, como no admin', () => {
     const itens = itensDeAlcadaEmVigor(
-      [regra({ id: 'r1', sujeitoConferenteId: 'c1', alvoTipoAtoId: 't1', origem: 'Aprendida' })],
+      [
+        regra({ id: 'r1', sujeitoConferenteId: 'c2', alvoEtapa: 'PreConferencia', usos: 3 }),
+        regra({ id: 'r2', sujeitoConferenteId: 'c1', permissao: 'Permite', alvoTipoAtoId: 't1', usos: 1 }),
+        regra({ id: 'r3', sujeitoConferenteId: 'c1', permissao: 'Permite', alvoTipoAtoId: 't2', usos: 1 }),
+      ],
       lookups,
       false,
     )
 
-    expect(itens).toEqual([{ frase: expect.stringContaining('Conferente c1'), detalhe: 'aprendida pelo sistema' }])
-  })
-
-  it('regra manual vista pela distribuidora é "definida pela administração", não "por você"', () => {
-    const regraManual = regra({ id: 'r1', sujeitoConferenteId: 'c1', alvoTipoAtoId: 't1', origem: 'Manual' })
-
-    expect(itensDeAlcadaEmVigor([regraManual], lookups, false)[0].detalhe).toBe('definida pela administração')
+    expect(itens).toEqual([
+      { frase: 'Conferente c1: libera 2 tipos', detalhe: '2 regras · 2 aplicações' },
+      { frase: 'Conferente c2: bloqueia pré-conferência', detalhe: '1 regra · 3 aplicações' },
+    ])
   })
 })
