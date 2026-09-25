@@ -21,7 +21,8 @@ function AlertDialogOverlay({ className, ...props }: React.ComponentProps<typeof
     <AlertDialogPrimitive.Overlay
       data-slot="alert-dialog-overlay"
       className={cn(
-        'fixed inset-0 z-50 bg-black/10 duration-100 supports-backdrop-filter:backdrop-blur-xs data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0',
+        // Mesmo véu do Sheet e do protótipo (rgba(9,9,11,.45), sem desfoque) — ver sheet.tsx.
+        'fixed inset-0 z-50 bg-zinc-950/45 duration-100 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0',
         className,
       )}
       {...props}
