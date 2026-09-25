@@ -30,6 +30,10 @@ export type DesempenhoConferente = {
   // Opcional porque a API anterior não manda — o front cai no `percentualAprovado`.
   percentualAprovadoNaPrimeira?: number | null
   complexidadeMedia: number
+  // Fatia 6: tempo real ÷ referência dos tipos conferidos (1,00 = referência; menor = mais rápido) e
+  // a referência média desses atos. Opcionais: a API anterior não manda (a tabela mostra T. médio).
+  ritmo?: number | null
+  tempoMedioReferencia?: string | null
   // null pra distribuidora (RF-43a): nível, score, faixa e parcelas só vêm pro Administrador
   // (dispatch-api ADR-0039). Na visão do conferente, o próprio score vem.
   score: number | null
@@ -53,6 +57,16 @@ export type KpisDashboard = {
   percentualAprovado: number
   percentualAprovadoNaPrimeira?: number | null
   tempoMedio: string | null
+  ritmo?: number | null
+}
+
+// Visão restrita (RF-46b): o tempo do conferente em cada tipo contra a referência daquele tipo.
+export type MeuTempoPorTipo = {
+  tipoAtoId: string
+  nome: string
+  atos: number
+  meuTempoMedio: string
+  referenciaMinutos: number
 }
 
 // Série do gráfico "Conferidos por dia/semana" (RF-42c): um ponto por dia útil (Semana/Mês) ou por
@@ -93,6 +107,7 @@ export type Dashboard = {
   // Fatia 2: metas só na visão de gestão; pesos pra quem vê score (admin e o próprio conferente).
   metas?: { noPrazo: number; aprovadoNaPrimeira: number } | null
   pesos?: PesosDoScore | null
+  meuTempoPorTipo?: MeuTempoPorTipo[] | null
   kpis: KpisDashboard
   desempenho: DesempenhoConferente[]
   mediaDaCasa: DesempenhoConferente | null

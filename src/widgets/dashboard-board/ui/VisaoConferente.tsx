@@ -5,7 +5,9 @@ import { SurfaceCard } from '@/shared/ui/surface-card'
 
 import { contagem, formatarComplexidade } from '../lib/apresentacao'
 import { aprovadoNaPrimeira, PESOS_PADRAO, variacaoDeTempo, variacaoDeVolume, variacaoEmPontos } from '../lib/variacao'
+import { explicacaoDoRitmo, formatarRitmo, textoDoRitmo, variacaoDoRitmo } from '../lib/ritmo'
 import { KpiCard } from './KpiCard'
+import { TempoPorTipoCard } from './TempoPorTipoCard'
 
 const pct = (fracao: number) => `${Math.round(fracao * 100)}%`
 
@@ -21,7 +23,7 @@ type LinhaComparacao = { label: string; voce: string; media: string; melhorOuIgu
 // protótipo aprovado (Dispatch v2): 4 KPIs, e score e "você e a média" lado a lado. O 4º KPI do
 // protótipo é "Ritmo"; aqui é o tempo médio bruto até o back calcular ritmo (ADR-0010).
 export const VisaoConferente = ({ dashboard, periodoLabel, comparadoCom }: VisaoConferenteProps) => {
-  const { kpis, kpisAnterior, desempenho, mediaDaCasa } = dashboard
+  const { kpis, kpisAnterior, desempenho, mediaDaCasa, meuTempoPorTipo } = dashboard
   const pesos = dashboard.pesos ?? PESOS_PADRAO
   const meu = desempenho[0]
 
@@ -62,12 +64,20 @@ export const VisaoConferente = ({ dashboard, periodoLabel, comparadoCom }: Visao
           media: aprovadoNaPrimeira(mediaDaCasa) === null ? '—' : pct(aprovadoNaPrimeira(mediaDaCasa)!),
           melhorOuIgual: (aprovadoNaPrimeira(meu) ?? 0) >= (aprovadoNaPrimeira(mediaDaCasa) ?? 0),
         },
-        {
-          label: 'Tempo médio',
-          voce: meu.tempoMedio ? formatDuracaoConcluida(meu.tempoMedio) : '—',
-          media: mediaDaCasa.tempoMedio ? formatDuracaoConcluida(mediaDaCasa.tempoMedio) : '—',
-          melhorOuIgual: meuTempo === null || tempoDaCasa === null || meuTempo <= tempoDaCasa,
-        },
+        meu.ritmo === undefined
+          ? {
+              label: 'Tempo médio',
+              voce: meu.tempoMedio ? formatDuracaoConcluida(meu.tempoMedio) : '—',
+              media: mediaDaCasa.tempoMedio ? formatDuracaoConcluida(mediaDaCasa.tempoMedio) : '—',
+              melhorOuIgual: meuTempo === null || tempoDaCasa === null || meuTempo <= tempoDaCasa,
+            }
+          : {
+              label: 'Ritmo (ajustado ao tipo)',
+              voce: meu.ritmo === null ? '—' : formatarRitmo(meu.ritmo),
+              media:
+                mediaDaCasa.ritmo === null || mediaDaCasa.ritmo === undefined ? '—' : formatarRitmo(mediaDaCasa.ritmo),
+              melhorOuIgual: meu.ritmo === null || !mediaDaCasa.ritmo || meu.ritmo <= mediaDaCasa.ritmo,
+            },
       ]
     : []
 
@@ -110,13 +120,29 @@ export const VisaoConferente = ({ dashboard, periodoLabel, comparadoCom }: Visao
             'com apontamento',
           )}
         />
-        <KpiCard
-          label="Tempo médio"
-          valor={meu.tempoMedio ? formatDuracaoConcluida(meu.tempoMedio) : '—'}
-          variacao={variacaoDeTempo(kpis.tempoMedio, kpisAnterior?.tempoMedio)}
-          sub="por ato, bruto"
-        />
+        {meu.ritmo !== undefined && meu.ritmo !== null ? (
+          <KpiCard
+            label="Ritmo"
+            valor={formatarRitmo(meu.ritmo)}
+            variacao={variacaoDoRitmo(kpis.ritmo, kpisAnterior?.ritmo)}
+            sub={textoDoRitmo(meu.ritmo)}
+          />
+        ) : (
+          <KpiCard
+            label="Tempo médio"
+            valor={meu.tempoMedio ? formatDuracaoConcluida(meu.tempoMedio) : '—'}
+            variacao={variacaoDeTempo(kpis.tempoMedio, kpisAnterior?.tempoMedio)}
+            sub="por ato, bruto"
+          />
+        )}
       </div>
+
+      {meuTempoPorTipo && meuTempoPorTipo.length > 0 && (
+        <TempoPorTipoCard
+          tipos={meuTempoPorTipo}
+          explicacao={explicacaoDoRitmo(meu.tempoMedio, meu.tempoMedioReferencia ?? null, meu.ritmo ?? null)}
+        />
+      )}
 
       <div className="mt-6.5 grid grid-cols-2 gap-2 max-mobile:grid-cols-1">
         <SurfaceCard className="p-4.5">
