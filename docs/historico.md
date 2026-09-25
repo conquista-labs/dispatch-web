@@ -928,3 +928,17 @@ somar 100"); com a API anterior a seção não aparece.
 
 Verificado: testes; contra a API local da branch da API: barra de meta pro admin e pra distribuidora, nada pro
 conferente, distribuidora sem legenda de score, seção na Configuração com a soma e o erro de 105.
+
+## 2026-09-25 — Central de regras: navegação lateral e Regras em vigor agrupadas (Parte 1)
+
+Protótipo v2. `CentralDeRegrasBoard`: a partir de 1180px, coluna fixa de 188px com o título e os grupos
+VISÃO/REGRAS/SISTEMA (badge de sugestões em Aprendizado); abaixo disso, título + pílulas que quebram de linha
+(40px no celular). Só CSS (`min-[1180px]:`), sem medir a janela em JS; o título saiu da página pro board.
+Regras em vigor (admin): uma linha por sujeito — níveis, depois pessoas — com o resumo do protótipo
+("libera 12 tipos · bloqueia pré-conferência", `resumoDasRegras`), trios "equipe não faz etapa" numa linha, e
+cabeçalho "N pessoas e níveis · M regras"; Prazo com o prazo mais comum numa linha só ("17 equipes no prazo
+padrão", `lib/prazo-em-vigor.ts`) e as equipes com prazo próprio uma a uma. Cabeçalho do grupo quebra de linha
+no celular.
+
+Verificado: testes de `alcada-em-vigor` e `prazo-em-vigor`; `central-de-regras.spec.ts`; screenshots a 1280px
+(navegação lateral), 1000px (pílulas), celular sem rolagem lateral e distribuidora.

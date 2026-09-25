@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import type { LookupsFraseRegra, RegraAlcada } from '@/entities/regraAlcada'
 
-import { itensDeAlcadaEmVigor } from './alcada-em-vigor'
+import { contagemDaAlcadaEmVigor, itensDeAlcadaEmVigor } from './alcada-em-vigor'
 
 const lookups: LookupsFraseRegra = {
   nomeConferente: (id) => `Conferente ${id}`,
@@ -30,18 +30,40 @@ const regra = (sobrescreve: Partial<RegraAlcada>): RegraAlcada => ({
 })
 
 describe('itensDeAlcadaEmVigor', () => {
-  it('pro admin, uma linha por regra ativa, com o nível na frase', () => {
+  it('pro admin, uma linha por sujeito com o resumo do protótipo — níveis antes de pessoas', () => {
     const itens = itensDeAlcadaEmVigor(
       [
-        regra({ id: 'r1', sujeitoNivel: 'Junior', alvoTipoAtoId: 't1' }),
-        regra({ id: 'r2', sujeitoNivel: 'Pleno', alvoTipoAtoId: 't1', ativa: false }),
+        regra({ id: 'p1', sujeitoConferenteId: 'c1', permissao: 'Permite', alvoTodosOsAtos: true, usos: 2 }),
+        regra({ id: 'n1', sujeitoNivel: 'Junior', permissao: 'Permite', alvoTipoAtoId: 't1', usos: 5 }),
+        regra({ id: 'n2', sujeitoNivel: 'Junior', permissao: 'Permite', alvoTipoAtoId: 't2', usos: 1 }),
+        regra({ id: 'n3', sujeitoNivel: 'Junior', permissao: 'Nega', alvoEtapa: 'PreConferencia' }),
+        regra({ id: 'n4', sujeitoNivel: 'Pleno', alvoTipoAtoId: 't1', ativa: false }),
       ],
       lookups,
       true,
     )
 
-    expect(itens).toHaveLength(1)
-    expect(itens[0].frase).toContain('Nível Júnior')
+    expect(itens).toEqual([
+      { frase: 'Analista Júnior: libera 2 tipos · bloqueia pré-conferência', detalhe: '3 regras · 6 aplicações' },
+      { frase: 'Conferente c1: libera todos os atos', detalhe: '1 regra · 2 aplicações' },
+    ])
+  })
+
+  it('pro admin, o trio "equipe não faz etapa" (uma regra por nível) vira uma linha só', () => {
+    const trio = (['Junior', 'Pleno', 'Senior'] as const).map((nivel) =>
+      regra({
+        id: nivel,
+        sujeitoNivel: nivel,
+        alvoEhEquipeEEtapa: true,
+        alvoEquipeId: 'e1',
+        alvoEtapa: 'PosConferencia',
+      }),
+    )
+
+    expect(itensDeAlcadaEmVigor(trio, lookups, true)).toEqual([
+      { frase: 'Equipe Equipe e1 não faz pós-conferência', detalhe: '3 regras · 0 aplicações' },
+    ])
+    expect(contagemDaAlcadaEmVigor(trio)).toBe('0 pessoas e níveis · 3 regras')
   })
 
   it('pra distribuidora, as regras base viram uma linha só, somando as aplicações', () => {
@@ -91,6 +113,5 @@ describe('itensDeAlcadaEmVigor', () => {
     const regraManual = regra({ id: 'r1', sujeitoConferenteId: 'c1', alvoTipoAtoId: 't1', origem: 'Manual' })
 
     expect(itensDeAlcadaEmVigor([regraManual], lookups, false)[0].detalhe).toBe('definida pela administração')
-    expect(itensDeAlcadaEmVigor([regraManual], lookups, true)[0].detalhe).toBe('definida por você')
   })
 })
