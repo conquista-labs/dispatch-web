@@ -26,6 +26,9 @@ export type DesempenhoConferente = {
   tempoMedio: string | null
   percentualNoPrazo: number
   percentualAprovado: number
+  // Fatia 4 do Dashboard v2: das 1ªs conferências do período, a fração aprovada (null sem nenhuma).
+  // Opcional porque a API anterior não manda — o front cai no `percentualAprovado`.
+  percentualAprovadoNaPrimeira?: number | null
   complexidadeMedia: number
   // null pra distribuidora (RF-43a): nível, score, faixa e parcelas só vêm pro Administrador
   // (dispatch-api ADR-0039). Na visão do conferente, o próprio score vem.
@@ -46,7 +49,22 @@ export type KpisDashboard = {
   atosConferidos: number
   percentualNoPrazo: number
   percentualAprovado: number
+  percentualAprovadoNaPrimeira?: number | null
   tempoMedio: string | null
+}
+
+// Série do gráfico "Conferidos por dia/semana" (RF-42c): um ponto por dia útil (Semana/Mês) ou por
+// semana (Trimestre) do período inteiro — os que ainda não chegaram vêm com `futuro: true`.
+export type PontoDaSerie = {
+  inicio: string // data local, "2026-09-01"
+  conferidos: number
+  estourados: number
+  futuro: boolean
+}
+
+export type SerieDashboard = {
+  granularidade: 'Dia' | 'Semana'
+  pontos: PontoDaSerie[]
 }
 
 // CumprimentoPrazoEquipeResponse — equipeId nulo = "sem equipe" (equipeNome já vem como "sem
@@ -64,6 +82,12 @@ export type CumprimentoPrazoEquipe = {
 // conferente: `desempenho` tem só a própria linha, `mediaDaCasa` preenchido, `porTipoAto` e
 // `cumprimentoPrazoEquipe` vazios (RF-45 não pede nenhum dos dois pro conferente).
 export type Dashboard = {
+  // Fatia 3 do Dashboard v2 (período por calendário): opcionais porque a API anterior não manda —
+  // sem eles a variação e o gráfico simplesmente não aparecem.
+  periodoInicio?: string
+  periodoFim?: string
+  kpisAnterior?: KpisDashboard | null
+  serie?: SerieDashboard | null
   kpis: KpisDashboard
   desempenho: DesempenhoConferente[]
   mediaDaCasa: DesempenhoConferente | null
