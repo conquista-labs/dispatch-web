@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { ChevronDownIcon } from 'lucide-react'
 import { toast } from 'sonner'
 
-import { NIVEL_LABEL, useConferentes, type Conferente } from '@/entities/conferente'
+import { NIVEL_LABEL, rotuloAnalista, useConferentes, type Conferente } from '@/entities/conferente'
 import { useEquipes } from '@/entities/equipe'
 import { useEscreventes } from '@/entities/escrevente'
 import {
@@ -366,8 +366,12 @@ const ListaAlcada = ({ alcada, conferentes }: { alcada: AlcadaConferente[]; conf
         >
           <span className="text-[12.5px] text-text-5">{conferente?.nome ?? '—'}</span>
           <span className={cn('text-right text-[11px]', a.elegivel ? 'text-ok-fg' : 'text-bad-fg')}>
-            {conferente ? `Analista ${NIVEL_LABEL[conferente.nivel]}` : ''} ·{' '}
-            {a.elegivel ? 'pode conferir' : a.motivo ? MOTIVO_ALCADA_LABEL[a.motivo] : 'barrado'}
+            {[
+              conferente && rotuloAnalista(conferente.nivel),
+              a.elegivel ? 'pode conferir' : a.motivo ? MOTIVO_ALCADA_LABEL[a.motivo] : 'barrado',
+            ]
+              .filter(Boolean)
+              .join(' · ')}
           </span>
         </div>
       )
@@ -590,7 +594,11 @@ const AcoesDeStatus = ({ detalhe, conferentes }: { detalhe: DetalheProtocolo; co
   // RNF-11: mesmo seletor com busca já usado em todo canto que escolhe um conferente/tipo/
   // equipe (ex.: ProtocoloManualDialog) — o Select puro do shadcn (sem busca) destoava do
   // resto do app (achado pelo dono comparando os dois lado a lado).
-  const conferenteOpcoes = conferentes.map((c) => ({ valor: c.id, label: c.nome, sub: NIVEL_LABEL[c.nivel] }))
+  const conferenteOpcoes = conferentes.map((c) => ({
+    valor: c.id,
+    label: c.nome,
+    sub: c.nivel ? NIVEL_LABEL[c.nivel] : undefined,
+  }))
 
   if (
     !podeDevolverAoPool &&

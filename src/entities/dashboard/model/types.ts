@@ -27,7 +27,9 @@ export type DesempenhoConferente = {
   percentualNoPrazo: number
   percentualAprovado: number
   complexidadeMedia: number
-  score: number
+  // null pra distribuidora (RF-43a): nível, score, faixa e parcelas só vêm pro Administrador
+  // (dispatch-api ADR-0039). Na visão do conferente, o próprio score vem.
+  score: number | null
   faixa: FaixaBonificacao | null
   parcelas: ParcelasScore | null
 }

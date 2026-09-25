@@ -2,6 +2,7 @@ import { useAlcance, useCobertura, useConferentes } from '@/entities/conferente'
 import { useEquipes } from '@/entities/equipe'
 import { fraseDaRegra, useRegrasAlcada } from '@/entities/regraAlcada'
 import { useTiposAto } from '@/entities/tipoAto'
+import { useEhAdministrador } from '@/entities/usuario'
 import { Carregando } from '@/shared/ui/carregando'
 import { SurfaceCard } from '@/shared/ui/surface-card'
 
@@ -10,6 +11,7 @@ import { ConferenteCard } from './ConferenteCard'
 // RF-25 a RF-30 — lista de conferentes + KPIs do dia + aviso de cobertura. Sem busca/filtro/
 // paginação (o protótipo aprovado também não tem — time pequeno o bastante pra não precisar).
 export const ConferentesBoard = () => {
+  const ehAdministrador = useEhAdministrador()
   const { data: conferentes, isLoading } = useConferentes()
   const { data: alcance } = useAlcance()
   const { data: cobertura } = useCobertura()
@@ -48,7 +50,11 @@ export const ConferentesBoard = () => {
     conferentes.map((c) => [
       c.id,
       (regras ?? [])
-        .filter((r) => r.ativa && (r.sujeitoConferenteId === c.id || r.sujeitoNivel === c.nivel))
+        // Pra quem não é admin o nível vem null dos dois lados (conferente e regra) — sem o
+        // `!== null`, toda regra de nível mascarada "casaria" com todo mundo.
+        .filter(
+          (r) => r.ativa && (r.sujeitoConferenteId === c.id || (r.sujeitoNivel !== null && r.sujeitoNivel === c.nivel)),
+        )
         .map((r) => fraseDaRegra(r, lookups)),
     ]),
   )
@@ -87,10 +93,12 @@ export const ConferentesBoard = () => {
         )}
       </div>
 
-      <p className="mt-3 max-w-[70ch] text-[12.5px] text-text-2">
-        A alçada de cada um vem das regras da Central de regras. Marcar alguém como ausente devolve os protocolos dele
-        ao pool na hora.
-      </p>
+      {ehAdministrador && (
+        <p className="mt-3 max-w-[70ch] text-[12.5px] text-text-2">
+          A alçada de cada um vem das regras da Central de regras — clique no nível para mudar de faixa. Marcar alguém
+          como ausente devolve os protocolos dele ao pool na hora.
+        </p>
+      )}
 
       {cobertura && <AvisoCobertura cobertura={cobertura} />}
     </div>

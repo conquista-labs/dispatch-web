@@ -2,17 +2,16 @@ import { isAxiosError } from 'axios'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
+import { avaliarRegrasSenha, CamposNovaSenha } from '@/entities/usuario'
 import { useIniciarRecuperacao } from '@/features/auth/iniciar-recuperacao'
 import { useRedefinirSenha } from '@/features/auth/redefinir-senha'
 import { useValidarCodigoRecuperacao } from '@/features/auth/validar-codigo-recuperacao'
 import { ROUTES } from '@/shared/config/routes'
 import { Logo } from '@/shared/ui/logo'
 
-import { avaliarRegrasSenha } from '../lib/regras-senha'
 import { PassoCodigo } from './PassoCodigo'
 import { PassoIdentificacao } from './PassoIdentificacao'
 import { PassoOk } from './PassoOk'
-import { PassoSenha } from './PassoSenha'
 
 type Passo = 'ident' | 'codigo' | 'senha' | 'ok'
 
@@ -167,7 +166,13 @@ export const RecuperarSenhaPage = () => {
             {passo === 'ident' && <PassoIdentificacao email={email} onEmailChange={setEmail} />}
             {passo === 'codigo' && <PassoCodigo codigo={codigo} onCodigoChange={setCodigo} temErro={!!erro} />}
             {passo === 'senha' && (
-              <PassoSenha senha1={senha1} onSenha1Change={setSenha1} senha2={senha2} onSenha2Change={setSenha2} />
+              <CamposNovaSenha
+                idPrefixo="rec"
+                senha1={senha1}
+                onSenha1Change={setSenha1}
+                senha2={senha2}
+                onSenha2Change={setSenha2}
+              />
             )}
             {passo === 'ok' && <PassoOk />}
 

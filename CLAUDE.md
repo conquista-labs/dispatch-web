@@ -73,31 +73,32 @@ no back — o front chama endpoint e renderiza. Por quê e alternativas:
 
 ### Decisões (`docs/decisions/`) — ADRs, template em `TEMPLATE.md`
 
-| ADR                                                                                        | Decisão                                                                                               |
-| ------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
-| [0001](docs/decisions/0001-adotar-feature-sliced-design.md)                                | FSD em vez da Clean Architecture de front do `financas-front`                                         |
-| [0002](docs/decisions/0002-sessao-sem-decodificar-jwt.md)                                  | Front nunca decodifica JWT; `/auth/me` revalida; cliente HTTP por injeção                             |
-| [0003](docs/decisions/0003-prototipo-aprovado-como-fonte-de-design.md)                     | Protótipo aprovado manda no design; tokens zinc nos nomes do shadcn                                   |
-| [0004](docs/decisions/0004-cva-e-primitivos-contra-parede-de-classes.md)                   | `cva` + primitivos na 3ª repetição contra parede de `className`                                       |
-| [0005](docs/decisions/0005-lazy-loading-por-pagina.md)                                     | Lazy loading por página                                                                               |
-| [0006](docs/decisions/0006-back-manda-fato-cru-front-resolve-nomes.md)                     | Back manda ids/enums crus; front resolve nomes e não inventa dado                                     |
-| [0007](docs/decisions/0007-filtros-de-protocolo-no-cliente.md)                             | Filtros 100% client-side via predicado (eixo Prazo substituído pelo 0008)                             |
-| [0008](docs/decisions/0008-eixo-prazo-como-alternador-urgente.md)                          | Eixo Prazo = alternador "urgente"; painel de Filtros com Combo                                        |
-| [0009](docs/decisions/0009-manter-atribuicao-manual-de-excecao.md)                         | Resolver exceção exige escolha manual, não auto-atribuir                                              |
-| [0010](docs/decisions/0010-divergencias-deliberadas-do-prototipo.md)                       | Tabela das divergências deliberadas do protótipo — **confira antes de "corrigir" algo pro protótipo** |
-| [0011](docs/decisions/0011-adotar-vitest.md)                                               | Vitest, config própria, testes colados (ambiente substituído pelo 0012)                               |
-| [0012](docs/decisions/0012-cobertura-com-ratchet-e-rtl.md)                                 | Cobertura com ratchet + RTL em jsdom, sem meta fixa                                                   |
-| [0013](docs/decisions/0013-oxlint-por-categorias-e-pre-commit.md)                          | oxlint por categorias, 6 regras desligadas, pre-commit sem `--max-warnings 0`                         |
-| [0014](docs/decisions/0014-prettier-com-plugin-tailwind.md)                                | Prettier (sem `;`, aspas simples, 120) + plugin Tailwind                                              |
-| [0015](docs/decisions/0015-breakpoint-mobile-760.md)                                       | Breakpoint único de 760px via `@theme`                                                                |
-| [0016](docs/decisions/0016-badges-proprios-e-variante-fonte-no-chip.md)                    | Badges próprios / variante `fonte` em vez de mudar o default do `Chip`                                |
-| [0017](docs/decisions/0017-sessao-persistida-versionada.md)                                | Sessão persistida com `version` + `migrate`                                                           |
-| [0018](docs/decisions/0018-loading-com-spinner-unificado.md)                               | Loading unificado com spinner, não skeleton                                                           |
-| [0019](docs/decisions/0019-listas-longas-busca-no-cliente-paginacao-so-em-tipos-de-ato.md) | Listas longas: busca + rolagem no cliente; paginação no servidor só em Tipos de ato                   |
-| [0020](docs/decisions/0020-playwright-com-duas-categorias-de-spec.md)                      | Playwright com duas categorias de spec, sem fixture automática de cenário                             |
-| [0021](docs/decisions/0021-global-setup-garante-contas-de-login.md)                        | `globalSetup` garante as contas fixas de login                                                        |
-| [0022](docs/decisions/0022-deploy-manual-no-netlify-com-build-remoto.md)                   | Deploy manual no Netlify com build remoto                                                             |
-| [0023](docs/decisions/0023-aviso-de-prioridade-alta-com-polling-e-sessionstorage.md)       | Aviso de prioridade alta: polling de 30s + memória em `sessionStorage`                                |
+| ADR                                                                                        | Decisão                                                                                                          |
+| ------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------- |
+| [0001](docs/decisions/0001-adotar-feature-sliced-design.md)                                | FSD em vez da Clean Architecture de front do `financas-front`                                                    |
+| [0002](docs/decisions/0002-sessao-sem-decodificar-jwt.md)                                  | Front nunca decodifica JWT; `/auth/me` revalida; cliente HTTP por injeção                                        |
+| [0003](docs/decisions/0003-prototipo-aprovado-como-fonte-de-design.md)                     | Protótipo aprovado manda no design; tokens zinc nos nomes do shadcn                                              |
+| [0004](docs/decisions/0004-cva-e-primitivos-contra-parede-de-classes.md)                   | `cva` + primitivos na 3ª repetição contra parede de `className`                                                  |
+| [0005](docs/decisions/0005-lazy-loading-por-pagina.md)                                     | Lazy loading por página                                                                                          |
+| [0006](docs/decisions/0006-back-manda-fato-cru-front-resolve-nomes.md)                     | Back manda ids/enums crus; front resolve nomes e não inventa dado                                                |
+| [0007](docs/decisions/0007-filtros-de-protocolo-no-cliente.md)                             | Filtros 100% client-side via predicado (eixo Prazo substituído pelo 0008)                                        |
+| [0008](docs/decisions/0008-eixo-prazo-como-alternador-urgente.md)                          | Eixo Prazo = alternador "urgente"; painel de Filtros com Combo                                                   |
+| [0009](docs/decisions/0009-manter-atribuicao-manual-de-excecao.md)                         | Resolver exceção exige escolha manual, não auto-atribuir                                                         |
+| [0010](docs/decisions/0010-divergencias-deliberadas-do-prototipo.md)                       | Tabela das divergências deliberadas do protótipo — **confira antes de "corrigir" algo pro protótipo**            |
+| [0011](docs/decisions/0011-adotar-vitest.md)                                               | Vitest, config própria, testes colados (ambiente substituído pelo 0012)                                          |
+| [0012](docs/decisions/0012-cobertura-com-ratchet-e-rtl.md)                                 | Cobertura com ratchet + RTL em jsdom, sem meta fixa                                                              |
+| [0013](docs/decisions/0013-oxlint-por-categorias-e-pre-commit.md)                          | oxlint por categorias, 6 regras desligadas, pre-commit sem `--max-warnings 0`                                    |
+| [0014](docs/decisions/0014-prettier-com-plugin-tailwind.md)                                | Prettier (sem `;`, aspas simples, 120) + plugin Tailwind                                                         |
+| [0015](docs/decisions/0015-breakpoint-mobile-760.md)                                       | Breakpoint único de 760px via `@theme`                                                                           |
+| [0016](docs/decisions/0016-badges-proprios-e-variante-fonte-no-chip.md)                    | Badges próprios / variante `fonte` em vez de mudar o default do `Chip`                                           |
+| [0017](docs/decisions/0017-sessao-persistida-versionada.md)                                | Sessão persistida com `version` + `migrate`                                                                      |
+| [0018](docs/decisions/0018-loading-com-spinner-unificado.md)                               | Loading unificado com spinner, não skeleton                                                                      |
+| [0019](docs/decisions/0019-listas-longas-busca-no-cliente-paginacao-so-em-tipos-de-ato.md) | Listas longas: busca + rolagem no cliente; paginação no servidor só em Tipos de ato                              |
+| [0020](docs/decisions/0020-playwright-com-duas-categorias-de-spec.md)                      | Playwright com duas categorias de spec, sem fixture automática de cenário                                        |
+| [0021](docs/decisions/0021-global-setup-garante-contas-de-login.md)                        | `globalSetup` garante as contas fixas de login                                                                   |
+| [0022](docs/decisions/0022-deploy-manual-no-netlify-com-build-remoto.md)                   | Deploy manual no Netlify com build remoto                                                                        |
+| [0023](docs/decisions/0023-aviso-de-prioridade-alta-com-polling-e-sessionstorage.md)       | Aviso de prioridade alta: polling de 30s + memória em `sessionStorage`                                           |
+| [0024](docs/decisions/0024-perfil-administrador-no-front.md)                               | Perfil Administrador: `useEhAdministrador`, campo cortado é `null`, travas antecipadas, guarda da troca de senha |
 
 ## Skills do projeto (`.claude/skills/`)
 

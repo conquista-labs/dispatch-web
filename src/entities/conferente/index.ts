@@ -2,4 +2,4 @@ export type { AlcanceDoConferente, Conferente, CoberturaAlcada, Nivel, TipoDeAto
 export { CONFERENTES_QUERY_KEY, useConferentes } from './model/use-conferentes'
 export { ALCANCE_QUERY_KEY, useAlcance } from './model/use-alcance'
 export { COBERTURA_QUERY_KEY, useCobertura } from './model/use-cobertura'
-export { NIVEL_LABEL } from './lib/rotulos'
+export { NIVEL_LABEL, rotuloAnalista } from './lib/rotulos'

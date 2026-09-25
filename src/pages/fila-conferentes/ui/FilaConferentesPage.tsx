@@ -1,12 +1,10 @@
 import { ChevronDownIcon } from 'lucide-react'
 import { useState } from 'react'
 
-import { useAlcance, useConferentes, type Conferente, type Nivel } from '@/entities/conferente'
+import { rotuloAnalista, useAlcance, useConferentes, type Conferente } from '@/entities/conferente'
 import { cn } from '@/shared/lib/utils'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
 import { FilaDoConferenteBoard } from '@/widgets/fila-do-conferente-board'
-
-const NIVEL_LABEL: Record<Nivel, string> = { Junior: 'Júnior', Pleno: 'Pleno', Senior: 'Sênior' }
 
 // RF-19 — protótipo aprovado tem "Minha fila" no menu de quem é gestão também: pra Conferente
 // é a própria fila, pra Distribuidora é a fila de quem ela escolher. Sempre somente leitura —
@@ -34,7 +32,7 @@ export const FilaConferentesPage = () => {
           <h1 className="m-0 text-xl font-semibold tracking-[-0.015em]">Minha fila</h1>
           <p className="mt-1.5 text-[13.5px] text-muted-foreground">
             {selecionado
-              ? `${selecionado.nome} · Analista ${NIVEL_LABEL[selecionado.nivel]}${
+              ? `${[selecionado.nome, rotuloAnalista(selecionado.nivel)].filter(Boolean).join(' · ')}${
                   alcanceSelecionado
                     ? ` · pode conferir ${alcanceSelecionado.tiposPermitidosIds.length} tipos de ato`
                     : ''
@@ -120,8 +118,9 @@ const SeletorConferente = ({ conferentes, selecionadoId, onSelecionar }: Seletor
               <span className="min-w-0 flex-1">
                 <span className="block text-[13px] font-medium text-pretty">{conferente.nome}</span>
                 <span className="block text-[11px] text-muted-foreground">
-                  Analista {NIVEL_LABEL[conferente.nivel]}
-                  {!conferente.naEscala && ' · ausente'}
+                  {[rotuloAnalista(conferente.nivel), conferente.naEscala ? null : 'ausente']
+                    .filter(Boolean)
+                    .join(' · ') || 'na escala'}
                 </span>
               </span>
               <span className="mt-0.5 flex-none font-mono text-[11px] text-text-2">{conferente.cargaAtual}</span>

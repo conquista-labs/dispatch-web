@@ -6,13 +6,16 @@ import { expect, test } from '@playwright/test'
 // número interessante pra conferir visualmente.
 const EMAIL_DISTRIBUIDORA = process.env.E2E_DISTRIBUIDORA_EMAIL ?? 'distribuidora@cartorio.com'
 const SENHA_DISTRIBUIDORA = process.env.E2E_DISTRIBUIDORA_SENHA ?? 'Senha123!'
+const EMAIL_ADMIN = process.env.E2E_ADMIN_EMAIL ?? 'administrador@cartorio.com'
+const SENHA_ADMIN = process.env.E2E_ADMIN_SENHA ?? 'Senha123!'
 const EMAIL_CONFERENTE = process.env.E2E_CONFERENTE_EMAIL ?? 'conferente-visual@cartorio.com'
 const SENHA_CONFERENTE = process.env.E2E_CONFERENTE_SENHA ?? 'Senha123!'
 
+// Score e faixa são só do Administrador (RF-43a); a distribuidora tem o próprio teste abaixo.
 test('Dashboard — visão gestão renderiza KPIs, tabela de score e desempenho por tipo', async ({ page }) => {
   await page.goto('/login')
-  await page.getByLabel('E-mail').fill(EMAIL_DISTRIBUIDORA)
-  await page.getByLabel('Senha').fill(SENHA_DISTRIBUIDORA)
+  await page.getByLabel('E-mail').fill(EMAIL_ADMIN)
+  await page.getByLabel('Senha').fill(SENHA_ADMIN)
   await page.getByRole('button', { name: 'Entrar' }).click()
   // RF-03, ajustado a pedido do dono: os dois papéis caem no Dashboard depois de logar.
   await expect(page).toHaveURL(/\/dashboard/)
@@ -40,6 +43,23 @@ test('Dashboard — visão gestão renderiza KPIs, tabela de score e desempenho 
   await page.reload()
   await expect(page.getByText(/Desempenho e bonificação/)).toBeVisible()
   await page.screenshot({ path: 'e2e/.screenshots/dashboard-gestao-escuro.png', fullPage: true })
+})
+
+// RF-43a: pra distribuidora, "Produção por conferente" — sem score, faixa nem cargo.
+test('Dashboard — distribuidora vê a produção por conferente, sem score nem faixa', async ({ page }) => {
+  await page.goto('/login')
+  await page.getByLabel('E-mail').fill(EMAIL_DISTRIBUIDORA)
+  await page.getByLabel('Senha').fill(SENHA_DISTRIBUIDORA)
+  await page.getByRole('button', { name: 'Entrar' }).click()
+  await expect(page).toHaveURL(/\/dashboard/)
+
+  await expect(page.getByText(/Produção por conferente/)).toBeVisible()
+  await expect(page.getByText('em ordem alfabética')).toBeVisible()
+  await expect(page.getByRole('columnheader', { name: 'Volume' })).toBeVisible()
+  await expect(page.getByRole('columnheader', { name: 'Score' })).toHaveCount(0)
+  await expect(page.getByText(/Desempenho e bonificação/)).toHaveCount(0)
+  await expect(page.getByText(/Analista/)).toHaveCount(0)
+  await page.screenshot({ path: 'e2e/.screenshots/dashboard-distribuidora-claro.png', fullPage: true })
 })
 
 test('Dashboard — visão conferente mostra só os próprios números, sem faixa de bônus', async ({ page }) => {

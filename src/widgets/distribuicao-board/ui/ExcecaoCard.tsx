@@ -2,6 +2,7 @@ import { useState } from 'react'
 
 import { NIVEL_LABEL, type Conferente } from '@/entities/conferente'
 import { ETAPA_LABEL, type InfoProtocolo, type ProtocoloResumo } from '@/entities/protocolo'
+import { useEhAdministrador } from '@/entities/usuario'
 import { useAtribuirManualmente } from '@/features/protocolo/atribuir-manualmente'
 import { useDescartarExcecao } from '@/features/protocolo/descartar-excecao'
 import { Button } from '@/shared/ui/button'
@@ -28,6 +29,10 @@ type ExcecaoCardProps = {
 // um conferente (o motor já disse que não sabe decidir sozinho). "Resolver" abre um seletor
 // inline em vez de navegar pra outro lugar — a decisão é rápida, não precisa de tela própria.
 export const ExcecaoCard = ({ protocolo, conferentes, info, onAbrirDetalhe }: ExcecaoCardProps) => {
+  const ehAdministrador = useEhAdministrador()
+  // Protótipo aprovado (Dispatch v2): tipo novo pede alçada definida, e só a administração define
+  // alçada (RF-30a). Pra distribuidora a ação vira orientação — sem back-end, decisão do dono.
+  const pedeAdministracao = !ehAdministrador && tagDaExcecao(protocolo.motivoExcecao) === 'tipo novo'
   const [resolvendo, setResolvendo] = useState(false)
   const [conferenteId, setConferenteId] = useState('')
   const atribuir = useAtribuirManualmente()
@@ -45,7 +50,11 @@ export const ExcecaoCard = ({ protocolo, conferentes, info, onAbrirDetalhe }: Ex
   // RNF-11: mesmo seletor com busca já usado em todo canto que escolhe um conferente/tipo/
   // equipe (ex.: ProtocoloManualDialog) — o Select puro do shadcn (sem busca) destoava do
   // resto do app (achado pelo dono comparando os dois lado a lado).
-  const conferenteOpcoes = conferentes.map((c) => ({ valor: c.id, label: c.nome, sub: NIVEL_LABEL[c.nivel] }))
+  const conferenteOpcoes = conferentes.map((c) => ({
+    valor: c.id,
+    label: c.nome,
+    sub: c.nivel ? NIVEL_LABEL[c.nivel] : undefined,
+  }))
 
   return (
     <SurfaceCard className="mb-2 cursor-pointer" onClick={() => onAbrirDetalhe(protocolo.id)}>
@@ -69,6 +78,11 @@ export const ExcecaoCard = ({ protocolo, conferentes, info, onAbrirDetalhe }: Ex
           {erro && (
             <div className="mt-1.5 text-[12.5px] text-bad-fg">Não foi possível concluir a ação. Tente de novo.</div>
           )}
+          {pedeAdministracao && (
+            <div className="mt-1.5 text-[12px] text-muted-foreground">
+              Só a administração define alçada — avise o administrador.
+            </div>
+          )}
         </div>
 
         {!resolvendo && (
@@ -76,7 +90,11 @@ export const ExcecaoCard = ({ protocolo, conferentes, info, onAbrirDetalhe }: Ex
             <Button variant="outline" onClick={() => descartar.mutate(protocolo.id)} disabled={descartar.isPending}>
               Descartar
             </Button>
-            <Button onClick={() => setResolvendo(true)}>Resolver</Button>
+            {pedeAdministracao ? (
+              <Button disabled>Pedir à administração</Button>
+            ) : (
+              <Button onClick={() => setResolvendo(true)}>Resolver</Button>
+            )}
           </div>
         )}
       </div>

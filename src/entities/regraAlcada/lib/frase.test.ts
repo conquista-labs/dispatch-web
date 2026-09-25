@@ -25,6 +25,7 @@ const novaRegra = (sobrescreve: Partial<RegraAlcada> = {}): RegraAlcada => ({
   origem: 'Manual',
   ativa: true,
   usos: 0,
+  regraBase: false,
   ...sobrescreve,
 })
 

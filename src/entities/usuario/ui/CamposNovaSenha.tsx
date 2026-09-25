@@ -1,24 +1,34 @@
 import { avaliarRegrasSenha } from '../lib/regras-senha'
 
-type PassoSenhaProps = {
+type CamposNovaSenhaProps = {
+  // Prefixo dos ids dos inputs — a recuperação e a troca de senha inicial usam o mesmo bloco.
+  idPrefixo: string
   senha1: string
   onSenha1Change: (senha: string) => void
   senha2: string
   onSenha2Change: (senha: string) => void
 }
 
-// Etapa 3 de 3 (RF-01g/RF-01j) — extraído de RecuperarSenhaPage.tsx.
-export const PassoSenha = ({ senha1, onSenha1Change, senha2, onSenha2Change }: PassoSenhaProps) => {
+// Nova senha + repetição + checklist ao vivo das regras (RF-01j). Nasceu como a etapa 3 da
+// recuperação (RF-01g); subiu pra entidade quando a troca de senha inicial (RF-45) passou a
+// precisar do mesmo bloco — uma página não importa de outra.
+export const CamposNovaSenha = ({
+  idPrefixo,
+  senha1,
+  onSenha1Change,
+  senha2,
+  onSenha2Change,
+}: CamposNovaSenhaProps) => {
   const regras = avaliarRegrasSenha(senha1, senha2)
 
   return (
     <div className="mt-[18px] flex flex-col gap-3">
       <div>
-        <label htmlFor="rec-senha1" className="mb-1.5 block text-[12.5px] font-medium text-text-4">
+        <label htmlFor={`${idPrefixo}-senha1`} className="mb-1.5 block text-[12.5px] font-medium text-text-4">
           Nova senha
         </label>
         <input
-          id="rec-senha1"
+          id={`${idPrefixo}-senha1`}
           type="password"
           value={senha1}
           onChange={(event) => onSenha1Change(event.target.value)}
@@ -26,11 +36,11 @@ export const PassoSenha = ({ senha1, onSenha1Change, senha2, onSenha2Change }: P
         />
       </div>
       <div>
-        <label htmlFor="rec-senha2" className="mb-1.5 block text-[12.5px] font-medium text-text-4">
+        <label htmlFor={`${idPrefixo}-senha2`} className="mb-1.5 block text-[12.5px] font-medium text-text-4">
           Repita a nova senha
         </label>
         <input
-          id="rec-senha2"
+          id={`${idPrefixo}-senha2`}
           type="password"
           value={senha2}
           onChange={(event) => onSenha2Change(event.target.value)}

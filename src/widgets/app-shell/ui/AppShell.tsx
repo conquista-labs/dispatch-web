@@ -5,6 +5,7 @@ import {
   PanelLeftOpenIcon,
   ShieldCheckIcon,
   UploadIcon,
+  UserCogIcon,
   UsersIcon,
   WorkflowIcon,
   type LucideIcon,
@@ -13,7 +14,7 @@ import { NavLink, Outlet } from 'react-router-dom'
 
 import { useVisaoDistribuicao } from '@/entities/protocolo'
 import { useSugestoesPendentes } from '@/entities/sugestao'
-import { type Papel, useSessionStore } from '@/entities/usuario'
+import { type Papel, SeloAdmin, useEhAdministrador, useSessionStore } from '@/entities/usuario'
 import { LogoutButton } from '@/features/auth/logout'
 import { ROUTES } from '@/shared/config/routes'
 import { useSidebarStore } from '@/shared/lib/sidebar-store'
@@ -26,7 +27,11 @@ import { Logo } from '@/shared/ui/logo'
 // as telas de gestão nascem (Conferentes, Central de regras, Dashboard...). `icon` só é usado
 // no rail recolhido (RNF nenhum — pedido direto do dono, não vem do protótipo): sem ele não
 // dava pra identificar item nenhum só com a largura de um ícone.
-const NAV_POR_PAPEL: Record<Papel, { label: string; to: string; icon: LucideIcon }[]> = {
+type ItemNav = { label: string; to: string; icon: LucideIcon }
+
+// Administrador não tem lista própria: chega sempre com 'Distribuidora' nos papéis e herda a de
+// gestão, mais "Contas" no fim (mesma posição do protótipo aprovado, 6.8 do documento v2).
+const NAV_POR_PAPEL: Record<Exclude<Papel, 'Administrador'>, ItemNav[]> = {
   Distribuidora: [
     { label: 'Dashboard', to: ROUTES.dashboard, icon: LayoutDashboardIcon },
     { label: 'Distribuição', to: ROUTES.distribuicao, icon: WorkflowIcon },
@@ -50,10 +55,15 @@ const NAV_POR_PAPEL: Record<Papel, { label: string; to: string; icon: LucideIcon
 // da própria pessoa (`ROUTES.minhaFila`, que o papel Conferente já tem) — por isso a versão da
 // Distribuidora é renomeada pra "Fila de conferentes" só quando os dois papéis coexistem;
 // alguém só-Distribuidora continua vendo "Minha fila" exatamente como sempre foi.
-const itensNavPara = (papeis: Papel[]) => {
+const ITEM_CONTAS: ItemNav = { label: 'Contas', to: ROUTES.contas, icon: UserCogIcon }
+
+const itensNavPara = (papeis: Papel[]): ItemNav[] => {
   const ehDistribuidora = papeis.includes('Distribuidora')
   const ehConferente = papeis.includes('Conferente')
-  const base = ehDistribuidora ? NAV_POR_PAPEL.Distribuidora : NAV_POR_PAPEL.Conferente
+  const gestao = papeis.includes('Administrador')
+    ? [...NAV_POR_PAPEL.Distribuidora, ITEM_CONTAS]
+    : NAV_POR_PAPEL.Distribuidora
+  const base = ehDistribuidora ? gestao : NAV_POR_PAPEL.Conferente
 
   if (!ehDistribuidora || !ehConferente) return base
 
@@ -91,8 +101,10 @@ export const AppShell = () => {
   const toggleRecolhida = useSidebarStore((state) => state.toggleRecolhida)
 
   const ehDistribuidora = usuario?.papeis.includes('Distribuidora') ?? false
+  const ehAdministrador = useEhAdministrador()
   const { data: visao } = useVisaoDistribuicao({ enabled: ehDistribuidora })
-  const { data: sugestoesPendentes } = useSugestoesPendentes({ enabled: ehDistribuidora })
+  // Sugestões de aprendizado são só do admin (a distribuidora levaria 403 — RF-30a).
+  const { data: sugestoesPendentes } = useSugestoesPendentes({ enabled: ehAdministrador })
 
   const itensNav = usuario ? itensNavPara(usuario.papeis) : []
 
@@ -169,9 +181,14 @@ export const AppShell = () => {
 
   return (
     <div className="flex min-h-screen items-stretch">
+      {/* Preso na altura da tela: sem isso o menu esticava junto com páginas longas (Central de
+          regras, Conferentes) e a sessão/"Sair" iam parar lá no fim do conteúdo. `sticky` e não um
+          <main> com scroll próprio: a página continua rolando pela janela, e o que já depende disso
+          (faixa de prioridade alta presa no topo, "Ver" rolando até o card) segue igual.
+          `overflow-y-auto` cobre tela baixa demais pro menu inteiro. */}
       <aside
         className={cn(
-          'flex flex-none flex-col border-r border-border bg-card py-4 transition-[width] duration-150',
+          'sticky top-0 flex h-screen flex-none flex-col self-start overflow-y-auto border-r border-border bg-card py-4 transition-[width] duration-150',
           recolhida ? 'w-[68px]' : 'w-56',
         )}
       >
@@ -246,8 +263,10 @@ export const AppShell = () => {
               // RNF-10: nome do usuário logado não trunca. Só o nome — o papel (ou os dois,
               // pra quem é Distribuidora e também Conferente) deixou de caber bem aqui do lado
               // sem quebrar feio quando o nome já ocupa 2 linhas (pedido do dono).
-              <div className="rounded-md border border-border bg-card px-2.5 py-1.5 text-[13px] text-pretty">
-                {usuario.nome}
+              // RF-48: quem é Administrador leva o selo "ADMIN" ao lado do nome.
+              <div className="flex items-start gap-1.5 rounded-md border border-border bg-card px-2.5 py-1.5 text-[13px] text-pretty">
+                <span className="min-w-0 flex-1">{usuario.nome}</span>
+                {ehAdministrador && <SeloAdmin className="mt-[3px]" />}
               </div>
             ))}
 

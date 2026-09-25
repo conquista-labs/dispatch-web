@@ -13,6 +13,9 @@ import { expect, request, test } from '@playwright/test'
 const API_URL = process.env.VITE_API_URL ?? 'http://localhost:5245'
 const EMAIL_DISTRIBUIDORA = process.env.E2E_DISTRIBUIDORA_EMAIL ?? 'distribuidora@cartorio.com'
 const SENHA_DISTRIBUIDORA = process.env.E2E_DISTRIBUIDORA_SENHA ?? 'Senha123!'
+// Criar tipo de ato é só do Administrador (dispatch-api ADR-0039).
+const EMAIL_ADMIN = process.env.E2E_ADMIN_EMAIL ?? 'administrador@cartorio.com'
+const SENHA_ADMIN = process.env.E2E_ADMIN_SENHA ?? 'Senha123!'
 const EMAIL_CONFERENTE = process.env.E2E_CONFERENTE_EMAIL ?? 'conferente-visual@cartorio.com'
 const SENHA_CONFERENTE = process.env.E2E_CONFERENTE_SENHA ?? 'Senha123!'
 
@@ -22,6 +25,10 @@ test('Correção de resultado e pedido de reabertura — ciclo completo pela UI'
   const loginResp = await api.post('/auth/login', { data: { email: EMAIL_DISTRIBUIDORA, senha: SENHA_DISTRIBUIDORA } })
   const { token: tokenDistribuidora } = await loginResp.json()
   const authDistribuidora = { Authorization: `Bearer ${tokenDistribuidora}` }
+
+  const loginAdminResp = await api.post('/auth/login', { data: { email: EMAIL_ADMIN, senha: SENHA_ADMIN } })
+  const { token: tokenAdmin } = await loginAdminResp.json()
+  const authAdmin = { Authorization: `Bearer ${tokenAdmin}` }
 
   const loginConferenteResp = await api.post('/auth/login', {
     data: { email: EMAIL_CONFERENTE, senha: SENHA_CONFERENTE },
@@ -44,7 +51,7 @@ test('Correção de resultado e pedido de reabertura — ciclo completo pela UI'
 
   // Monta o cenário: tipo de ato de teste + protocolo distribuído + conferente concluindo.
   const nomeTipo = `Tipo Correcao ${Date.now()}`
-  const tipoResp = await api.post('/tipos-ato', { headers: authDistribuidora, data: { nome: nomeTipo } })
+  const tipoResp = await api.post('/tipos-ato', { headers: authAdmin, data: { nome: nomeTipo } })
   const { tipoAtoId } = await tipoResp.json()
 
   const numero = `COR-${Date.now()}`
