@@ -22,7 +22,7 @@ export const DistribuicaoPage = () => {
     : 0
 
   return (
-    <div className="px-7 pt-6 pb-7">
+    <div className="px-7 pt-6 pb-7 max-mobile:px-3.5 max-mobile:pt-4">
       {/* RNF-13 — "cabeçalhos quebram em linha" abaixo de 760px: sem flex-wrap aqui, os 3
           botões (Redistribuir pool/Novo protocolo/Importar relatório) nunca cabiam ao lado do
           título em tela estreita e estouravam a página inteira, arrastando até a barra de

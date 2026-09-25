@@ -26,7 +26,7 @@ export const FilaConferentesPage = () => {
   const alcanceSelecionado = alcance?.find((a) => a.conferenteId === selecionadoId)
 
   return (
-    <div className="px-7 pt-6 pb-7">
+    <div className="px-7 pt-6 pb-7 max-mobile:px-3.5 max-mobile:pt-4">
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="m-0 text-xl font-semibold tracking-[-0.015em]">Minha fila</h1>

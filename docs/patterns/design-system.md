@@ -41,6 +41,15 @@ quando existiam, **não** eram a fonte. `Combo.dc.html` é o componente de selet
     `--ok-*`/`--warn-*`/`--crit-*`/`--bad-*` com sufixos `-bg`, `-border`, `-fg`, `-bar`
     (`bg-ok-bg`, `text-warn-fg`, `bg-bad-bar`…). O "bar" é a cor mais saturada dos swatches/barras.
   - `--breakpoint-mobile: 760px` ([ADR-0015](../decisions/0015-breakpoint-mobile-760.md)).
+  - `--apoio` → `text-apoio`: o `--muted` do protótipo (#a1a1aa / #6f6f79), mais claro que `text-2`.
+    **Só** pra texto de apoio secundário (legenda, subtítulo de card, cabeçalho de lista, "sub" de
+    KPI). Nunca em conteúdo que precisa ser lido — no claro dá ~2,6:1 e reprova o WCAG AA.
+  - `--shadow-sm` sobrescrito com a sombra do card do protótipo (`0 1px 2px rgba(0,0,0,.04)`).
+- **Button** (`shared/ui/button-variants.ts`) segue o protótipo, não o padrão do shadcn: 13px, raio
+  6px, 32px de altura no desktop e **44px no celular** (`alvoToque` do protótipo) nos tamanhos
+  `default`/`lg`; `sm`/`xs` ficam compactos (ações dentro de card).
+- **Margem da página**: `px-7 pt-6 pb-7` no desktop e `max-mobile:px-3.5 max-mobile:pt-4` (14px/16px,
+  `padTela` do protótipo) — toda página nova segue o mesmo par.
 - Limiares de cor de percentual (ex.: "cumprimento de prazo" no Dashboard): `>=90%` ok, `>=70%`
   atenção, abaixo vencido — os mesmos do protótipo (`slaEquipes`), com os tokens acima.
 - Sintoma de classe errada: algo preto puro ou cinza genérico onde devia haver um tom específico.

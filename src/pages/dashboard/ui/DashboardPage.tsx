@@ -7,7 +7,7 @@ export const DashboardPage = () => {
   const ehAdministrador = useEhAdministrador()
 
   return (
-    <div className="px-7 pt-6 pb-7">
+    <div className="px-7 pt-6 pb-7 max-mobile:px-3.5 max-mobile:pt-4">
       <h1 className="m-0 text-xl font-semibold tracking-[-0.015em]">{souGestao ? 'Dashboard' : 'Meu dashboard'}</h1>
       <p className="mt-1.5 max-w-[66ch] text-[13.5px] text-pretty text-muted-foreground">
         {souGestao

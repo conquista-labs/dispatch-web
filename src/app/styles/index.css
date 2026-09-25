@@ -51,6 +51,13 @@ body {
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
+  /* Cinza de apoio do protótipo (`--muted` lá: #a1a1aa claro / #6f6f79 escuro), um tom mais claro
+     que `--text-2`. Só pra texto de apoio secundário (legenda, subtítulo de card, cabeçalho de lista,
+     "sub" de KPI) — nunca pra conteúdo que precisa ser lido: no claro fica em ~2,6:1 de contraste e
+     reprova o WCAG AA (por isso a linha do escrevente nos cards continua em `text-2`). */
+  --color-apoio: var(--apoio);
+  /* Sombra de card do protótipo (0 1px 2px, 4%); a padrão do Tailwind (0 1px 3px, 10%) pesava. */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
   --color-muted: var(--muted);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-secondary: var(--secondary);
@@ -125,6 +132,7 @@ body {
   --radius: 0.625rem;
 
   --text-2: #71717a;
+  --apoio: #a1a1aa;
   --text-3: #52525b;
   --text-4: #3f3f46;
   --text-5: #27272a;
@@ -176,6 +184,7 @@ body {
   --ring: #f2f2f4;
 
   --text-2: #93939d;
+  --apoio: #6f6f79;
   --text-3: #b6b6bf;
   --text-4: #cfcfd6;
   --text-5: #e2e2e7;
