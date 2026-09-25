@@ -854,3 +854,11 @@ alçada: estado vazio e `lib/abreviacao.ts` (iniciais quando o primeiro nome col
 
 Verificado: 208 testes; regressão do e2e verde; larguras medidas no navegador (detalhe 432px, lista 480px,
 filtros 360px, detalhe no celular 359px); login e Conferentes a 390px sem rolagem lateral.
+
+## 2026-09-25 — Base visual do protótipo v2 (Parte 1 do PLANO-dashboard-v2)
+
+Token `--apoio` (`text-apoio`, o `--muted` do protótipo, só pra texto de apoio — não passa no AA como
+conteúdo), `--shadow-sm` com a sombra leve do protótipo, `Button` em 13px/raio 6px com 44px no celular
+(`default`/`lg`), e margem de 14px/16px no celular em todas as páginas. Regras em `design-system.md`.
+Verificado: 208 testes, build, regressão do e2e, e screenshots de Distribuição/Conferentes/Contas no
+desktop e no celular (sem rolagem lateral; botão do diálogo 13px/raio 6px, 14px no celular).

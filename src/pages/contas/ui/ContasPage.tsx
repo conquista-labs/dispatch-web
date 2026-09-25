@@ -6,7 +6,7 @@ export const ContasPage = () => {
   const { data: contas } = useContas()
 
   return (
-    <div className="max-w-[880px] px-7 pt-6 pb-7 max-mobile:px-4">
+    <div className="max-w-[880px] px-7 pt-6 pb-7 max-mobile:px-3.5 max-mobile:pt-4">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="m-0 text-xl font-semibold tracking-[-0.015em]">Contas</h1>
