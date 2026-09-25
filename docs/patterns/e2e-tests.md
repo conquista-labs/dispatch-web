@@ -24,7 +24,8 @@ metadata:
 - Exige a API de pé em Development (`../dispatch-api`, ver skill `verify-visual`); o
   `playwright.config.ts` sobe/reaproveita o Vite em `:5173` sozinho.
 - `globalSetup` (`e2e/global-setup.ts`) chama `POST /dev/seed-e2e` uma vez e garante as contas
-  `distribuidora@cartorio.com` (**combo**: Distribuidora + Conferente), `conferente-rf27@cartorio.com`
+  `distribuidora@cartorio.com` (**combo**: Distribuidora + Conferente), `administrador@cartorio.com`,
+  `conferente-rf27@cartorio.com`
   e `conferente-visual@cartorio.com`. Falha cedo e claro se a API não responde.
 - `npm run e2e` (tudo) ou `npx playwright test e2e/<arquivo>.spec.ts`. Screenshots em
   `e2e/.screenshots/` (gitignored) — **leia o PNG**.
@@ -33,7 +34,7 @@ metadata:
 
 | Categoria                  | Specs                                                                                                                                                     | Expectativa                                                                                                 |
 | -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| Regressão permanente       | `auth`, `login`, `cursor`, `session-isolation`, `conferentes`, `fila-conferentes`, `correcao-reabertura`, `totp-recuperacao-senha`                        | Sempre passa. Criam e apagam o próprio dado via API                                                         |
+| Regressão permanente       | `auth`, `login`, `cursor`, `session-isolation`, `conferentes`, `contas`, `fila-conferentes`, `correcao-reabertura`, `totp-recuperacao-senha`              | Sempre passa. Criam e apagam o próprio dado via API                                                         |
 | Verificação visual pontual | `minha-fila`, `distribuicao`, `importar`, `central-de-regras`, `distribuicao-v2`, `dashboard` (visão conferente), `painel-detalhe-protocolo`, `alcada-v3` | Dependem de cenário criado à mão (documentado no topo de cada arquivo). Falhar sem re-semear **é esperado** |
 
 Quando algo falhar, confira o motivo exato de cada falha antes de chamar de regressão (houve
@@ -44,6 +45,12 @@ Spec **temporário** (criado pra verificar uma mudança e apagado depois) é nor
 cenário via API, verifica, limpa.
 
 ## Dado
+
+- **Qual conta usar**: `administrador@cartorio.com` pra tudo que é só do admin (cadastrar
+  conferente, editar regras e catálogo, score no Dashboard, Contas); `distribuidora@cartorio.com`
+  pro resto e pra afirmar o que a distribuidora **não** vê (dispatch-api ADR-0039). Conta ou
+  conferente criado no teste entra com troca de senha pendente: o primeiro login cai em
+  `/trocar-senha` (ver `contas.spec.ts`, `totp-recuperacao-senha.spec.ts`).
 
 - **Todo dado de teste é criado e apagado pelo próprio teste** ("um bom teste não depende de dado
   local, a não ser que o dado seja criado pelo teste e depois apagado").

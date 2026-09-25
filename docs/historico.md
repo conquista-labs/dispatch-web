@@ -802,3 +802,33 @@ repetir o toast, tema escuro, e no celular a faixa presa abaixo da barra — o p
 mostrou o texto espremido sob os botões e a faixa 3,5px sob a barra (corrigido: texto em linha inteira,
 `top-[116px]`). Cenário revertido depois (prioridades de volta a Normal, importados apagados). 170 testes;
 cobertura 23% de linhas.
+
+## 2026-09-25 — Perfil Administrador, Contas e troca de senha no primeiro acesso
+
+Feature 3 do `PLANO-melhorias.md`, lado do front (back: dispatch-api ADR-0039/0040). ADR-0024, gaps §41.
+
+- **Sessão e rotas**: `Papel` ganha `'Administrador'` (sempre junto de `'Distribuidora'`), `Usuario.trocarSenha`,
+  `useEhAdministrador`, `RequireSessaoLiberada` em volta do AppShell, página `/trocar-senha`
+  (`features/auth/trocar-senha`, atualiza sessão e cache do `/auth/me`), login e registro do autenticador
+  mandando pra lá com a troca pendente. `CamposNovaSenha` e `avaliarRegrasSenha` subiram de
+  `pages/recuperar-senha` pra `entities/usuario` (as duas páginas usam).
+- **Contas** (`entities/conta`, `features/conta/{criar,desativar}`, `widgets/contas-board`, `pages/contas`):
+  lista com "você", "· também confere", papel e situação; `NovaContaDialog` com "Gerar"
+  (`gerarSenhaInicial`, `crypto.getRandomValues`); `DesativarContaDialog` com as três travas e "Entendi"
+  (antecipadas pela lista, 409 como rede). Item "Contas" e selo "ADMIN" no AppShell.
+- **Distribuidora**: `Conferente.nivel` e `DesempenhoConferente.score` viram nullable, com `rotuloAnalista`;
+  Conferentes só presença; Dashboard "Produção por conferente"; Central só "Regras em vigor"
+  (`lib/alcada-em-vigor.ts` agrupa regra base e trios equipe+etapa); sugestões só pro admin; exceção
+  "tipo novo" com "Pedir à administração" desabilitado. Cadastro de conferente com senha inicial 8+ e
+  "Gerar".
+
+Verificado: testes de `travaDeDesativacao`, `gerarSenhaInicial`, `itensDeAlcadaEmVigor`,
+`NovaContaDialog`, `DesativarContaDialog`, `TrocarSenhaPage`, `RequireSessaoLiberada` e `ConferenteCard`
+(as duas visões); 205 testes, cobertura 31,9% de linhas (pisos subiram). Mocks de API nesses testes
+são trocados por um `vi.fn()` novo a cada teste: com `mockReset` no `beforeEach`, um erro rejeitado
+virava falha do teste no Vitest 5. E2E contra a API local da branch: `contas.spec.ts` novo (criar →
+primeiro acesso preso na troca → trocar → desativar; distribuidora sem Contas, Conferentes só presença,
+Central só leitura), `conferentes`/`totp-recuperacao-senha`/`central-de-regras`/`alcada-v3` logando
+como admin, `dashboard` com um teste pra cada visão. `correcao-reabertura` segue quebrado por motivo
+anterior (gaps §28). `verify-visual`: troca de senha, Contas, trava e telas da distribuidora nos dois
+temas e no celular, screenshots lidos (quebra de "· também confere" no celular corrigida).

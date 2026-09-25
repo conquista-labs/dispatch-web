@@ -30,7 +30,7 @@ depois", "fora de escopo", "simplificação consciente" e "divergência".
 | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 🔴 Aberto      | §1 .csv/.xlsx · §2 RF-24e · §3 RF-34c · §7 casos concretos · §16 tipo de ato livre no manual · §19 tema antes do login · §20 tema por usuário · §21 atribuir grupo · §22 busca em Conferentes · §27 rótulos de exceção · §28 cenários e2e manuais · §34 RNF-10 no `SeletorUnico` |
 | 🔍 Verificação | §24 scrollbar · §25 teto do Dashboard                                                                                                                                                                                                                                            |
-| ✅ Fechado     | §5 · §6 · §10 · §11 · §12 · §13 · §14 · §15 · §17 · §18 · §30 · §31 · §32 · §33 · §35 · §36 · §39 · §40                                                                                                                                                                          |
+| ✅ Fechado     | §5 · §6 · §10 · §11 · §12 · §13 · §14 · §15 · §17 · §18 · §30 · §31 · §32 · §33 · §35 · §36 · §39 · §40 · §41                                                                                                                                                                    |
 | ⚪ Sem mudança | §4 RF-01m/n · §8 KPIs mock · §9 SAÍDAS · §23 paginação no back · §26 ícone em botões · §29 alçada por item · §37 Subscritor · §38 CI                                                                                                                                             |
 
 **Não auditado**: este levantamento só cobre o que o histórico registrou. Requisitos que nunca
@@ -211,6 +211,9 @@ código — confira antes de assumir que estão prontos ou faltando.
 - **Como sabemos**: decisão de custo/benefício ([ADR-0020](decisions/0020-playwright-com-duas-categorias-de-spec.md));
   confirmado contra o clone de produção em 2026-09-15.
 - **Onde entraria**: cada spec criar e apagar o próprio cenário via API.
+- **Também quebrado (2026-09-25)**: `correcao-reabertura`, apesar de ser de regressão, chama
+  `POST /protocolos/distribuir`, endpoint removido do back numa auditoria antiga — falha no
+  `distribuirResp.json()`. Precisa montar o cenário por importação.
 
 ### §29 ⚪ RF-18c — "quantos têm alçada" por item da lista completa
 
@@ -286,3 +289,14 @@ código — confira antes de assumir que estão prontos ou faltando.
   troca a aba no celular, abre a lista completa, anel por ~4s).
 - **Diverge de**: RF-24j fala em 5 cards "por coluna" — aqui só o pool corta; memória em
   `sessionStorage` em vez de memória de tela (ADR-0010).
+
+### §41 ✅ Perfil Administrador, Contas e troca de senha (§3, RF-29a, RF-30a, RF-43a, RF-44 a 48)
+
+- **Fechado em 2026-09-25** ([ADR-0024](decisions/0024-perfil-administrador-no-front.md)): tela
+  Contas (lista, criar com "Gerar", desativar com as travas e o "Entendi"), selo "ADMIN" na sessão,
+  `/trocar-senha` obrigatória no primeiro acesso (também pra conferente novo). Pra distribuidora:
+  Conferentes só presença, Central só "Regras em vigor" (regra base agrupada, "só a administração
+  edita"), Dashboard "Produção por conferente" em ordem alfabética, sem selo de sugestões, exceção
+  "tipo novo" com "Pedir à administração" desabilitado.
+- **Diverge de**: RF-03 (o admin também cai no Dashboard — decisão do dono); correções de texto do
+  protótipo em ADR-0010. Fora: reativar conta e trocar papel.
