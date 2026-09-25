@@ -832,3 +832,13 @@ Central só leitura), `conferentes`/`totp-recuperacao-senha`/`central-de-regras`
 como admin, `dashboard` com um teste pra cada visão. `correcao-reabertura` segue quebrado por motivo
 anterior (gaps §28). `verify-visual`: troca de senha, Contas, trava e telas da distribuidora nos dois
 temas e no celular, screenshots lidos (quebra de "· também confere" no celular corrigida).
+
+## 2026-09-25 — `correcao-reabertura.spec.ts` volta a passar
+
+Spec de regressão quebrado havia tempo, por três motivos que o tempo acumulou: montava o cenário com
+`POST /protocolos/distribuir` (removido do back numa auditoria), procurava o texto "janela de correção
+encerrada" (a tela passou a mostrar "resultado já corrigido uma vez" + "Pedir reabertura à
+distribuidora") e esperava `Conferindo` depois da reabertura (o back devolve `Atribuido` desde o
+ADR-0031). Agora importa o protocolo (`POST /protocolos/importar/confirmar`), acha o id na visão de
+distribuição e atribui à mão à conferente de teste (sem alçada, ADR-0027). Verificado: duas rodadas
+seguidas passando e a categoria de regressão inteira verde (12 testes).

@@ -211,9 +211,6 @@ código — confira antes de assumir que estão prontos ou faltando.
 - **Como sabemos**: decisão de custo/benefício ([ADR-0020](decisions/0020-playwright-com-duas-categorias-de-spec.md));
   confirmado contra o clone de produção em 2026-09-15.
 - **Onde entraria**: cada spec criar e apagar o próprio cenário via API.
-- **Também quebrado (2026-09-25)**: `correcao-reabertura`, apesar de ser de regressão, chama
-  `POST /protocolos/distribuir`, endpoint removido do back numa auditoria antiga — falha no
-  `distribuirResp.json()`. Precisa montar o cenário por importação.
 
 ### §29 ⚪ RF-18c — "quantos têm alçada" por item da lista completa
 
