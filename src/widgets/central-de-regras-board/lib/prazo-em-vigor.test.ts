@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import type { Equipe } from '@/entities/equipe'
 import type { Escrevente } from '@/entities/escrevente'
 
-import { contagemDoPrazoEmVigor, itensDePrazoEmVigor } from './prazo-em-vigor'
+import { contagemDoPrazoEmVigor, itensDePrazoEmVigor, separarPorPrazoPadrao } from './prazo-em-vigor'
 
 const equipe = (id: string, pre: Equipe['prazoPreConferencia'] = 'D1', pos: Equipe['prazoPosConferencia'] = 'D1') =>
   ({
@@ -36,5 +36,17 @@ describe('itensDePrazoEmVigor', () => {
     const itens = itensDePrazoEmVigor([equipe('a', 'D0'), equipe('b', 'D1')], [])
     expect(itens).toHaveLength(2)
     expect(itens.every((i) => i.frase.startsWith('Escreventes de'))).toBe(true)
+  })
+})
+
+describe('separarPorPrazoPadrao', () => {
+  it('as do prazo mais comum de um lado, as com prazo próprio do outro', () => {
+    const { padrao, proprias } = separarPorPrazoPadrao([equipe('a'), equipe('b'), equipe('x', 'D0')])
+    expect(padrao.map((e) => e.id)).toEqual(['a', 'b'])
+    expect(proprias.map((e) => e.id)).toEqual(['x'])
+  })
+
+  it('sem prazo repetido, nenhuma é "padrão"', () => {
+    expect(separarPorPrazoPadrao([equipe('a', 'D0'), equipe('b')]).padrao).toEqual([])
   })
 })

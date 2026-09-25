@@ -966,3 +966,16 @@ CSV" ao lado do seletor de período, só na gestão (como no protótipo).
 
 Verificado: testes do gerador; download real no navegador como admin (com avaliação) e distribuidora (sem),
 conferente sem o botão.
+
+## 2026-09-25 — Central de regras: Camadas agrupadas, alerta de alcance zero e Prazos recolhidos (Parte 1)
+
+Protótipo v2. Alçada → Camadas: alerta no topo quando alguém na escala não alcança nenhum tipo ("3 conferentes
+não recebem nenhum ato — …"); "O que cada um alcança hoje" subiu pro topo, com a linha em vermelho no alcance
+zero; as regras de cada camada viram grupos recolhíveis por sujeito (níveis, depois pessoas) com o resumo
+("Analista Júnior — libera 12 tipos · 13 regras", `resumoDasRegras`) e, expandidos, as regras com
+Ativa/Remover e as aplicações; busca abre os grupos que batem. Prazos por equipe: as equipes no prazo mais
+comum ficam num card recolhido ("17 equipes no padrão: … · ver e ajustar"), abre sozinho com escrevente
+selecionado pra mover; as com prazo próprio ficam abertas (`separarPorPrazoPadrao`). `alcada-v3.spec` passa a
+usar a busca pra achar a regra dentro do grupo.
+
+Verificado: testes; screenshots de Camadas (alerta, alcance, grupos) e Prazos; busca abrindo o grupo.

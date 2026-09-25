@@ -8,7 +8,7 @@ const plural = (n: number, um: string, muitos: string) => `${n} ${n === 1 ? um :
 const NOMES_VISIVEIS = 4
 
 // O mesmo prazo = mesmo tipo nas duas etapas e o mesmo corte de horário (ADR-0037 do back).
-const chaveDoPrazo = (e: Equipe) =>
+export const chaveDoPrazo = (e: Equipe) =>
   [
     e.prazoPreConferencia,
     e.prazoPosConferencia,
@@ -18,7 +18,7 @@ const chaveDoPrazo = (e: Equipe) =>
     e.cortePosConferenciaHorarioVencimento,
   ].join('|')
 
-const fraseDoPrazo = (e: Equipe) =>
+export const fraseDoPrazo = (e: Equipe) =>
   `pré-conferência em ${TIPO_PRAZO_LABEL[e.prazoPreConferencia]}, pós-conferência em ${TIPO_PRAZO_LABEL[e.prazoPosConferencia]}`
 
 // Prazo nas "Regras em vigor" (protótipo v2): o prazo mais comum vira uma linha só ("10 equipes no
@@ -67,4 +67,15 @@ export const itensDePrazoEmVigor = (equipes: Equipe[], escreventes: Escrevente[]
 export const contagemDoPrazoEmVigor = (equipes: Equipe[], escreventes: Escrevente[]) => {
   const orfaos = escreventes.filter((e) => !e.equipeId).length
   return `${plural(equipes.length, 'equipe', 'equipes')}${orfaos ? ` · ${orfaos} sem equipe` : ''}`
+}
+
+// Separa as equipes no prazo mais comum (só se mais de uma compartilha) das que têm prazo próprio —
+// a aba Prazos por equipe recolhe as do padrão num card só (protótipo v2).
+export const separarPorPrazoPadrao = (equipes: Equipe[]): { padrao: Equipe[]; proprias: Equipe[] } => {
+  const porChave = new Map<string, Equipe[]>()
+  for (const equipe of equipes)
+    porChave.set(chaveDoPrazo(equipe), [...(porChave.get(chaveDoPrazo(equipe)) ?? []), equipe])
+  const maior = [...porChave.values()].sort((a, b) => b.length - a.length)[0] ?? []
+  if (maior.length < 2) return { padrao: [], proprias: equipes }
+  return { padrao: maior, proprias: equipes.filter((e) => !maior.includes(e)) }
 }
