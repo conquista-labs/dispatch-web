@@ -208,6 +208,8 @@ código — confira antes de assumir que estão prontos ou faltando.
 
 - **Falta**: `minha-fila`, `distribuicao`, `importar`, `central-de-regras`, `distribuicao-v2`,
   `dashboard` (visão conferente), `painel-detalhe-protocolo`, `alcada-v3` falham sem re-semear.
+  Além do cenário, o 2º teste de `distribuicao-v2` (filtro da Minha fila) está velho: procura o
+  botão "Equipe" da barra inline, que virou o painel de Filtros (ADR-0008) — reescrever junto.
 - **Como sabemos**: decisão de custo/benefício ([ADR-0020](decisions/0020-playwright-com-duas-categorias-de-spec.md));
   confirmado contra o clone de produção em 2026-09-15.
 - **Onde entraria**: cada spec criar e apagar o próprio cenário via API.

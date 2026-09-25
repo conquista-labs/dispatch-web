@@ -29,6 +29,9 @@ export type ProtocoloResumo = {
   id: string
   numero: string
   tipoAtoId: string | null
+  // Nome do tipo como veio no relatório — só quando o tipo é desconhecido (tipoAtoId null). Opcional
+  // até a API nova subir em produção.
+  tipoAtoNomeOriginal?: string | null
   escreventeId: string
   etapa: Etapa
   prioridade: Prioridade

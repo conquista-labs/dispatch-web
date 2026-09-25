@@ -21,7 +21,7 @@ test('board de Minha fila renderiza as 3 colunas + concluídos hoje', async ({ p
 
   // RF-03, ajustado a pedido do dono: login cai no Dashboard agora — navega explicitamente.
   await expect(page).toHaveURL(/\/dashboard/)
-  await page.getByRole('link', { name: 'Minha fila' }).click()
+  await page.getByRole('link', { name: 'Minha fila', exact: true }).click()
   await expect(page).toHaveURL(/\/minha-fila/)
   await expect(page.getByRole('heading', { name: 'Minha fila' })).toBeVisible()
   await expect(page.getByText('Pool disponível')).toBeVisible()

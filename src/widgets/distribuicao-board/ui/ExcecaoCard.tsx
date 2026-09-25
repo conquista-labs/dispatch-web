@@ -10,13 +10,7 @@ import { Chip } from '@/shared/ui/chip'
 import { SeletorUnico } from '@/shared/ui/seletor-unico'
 import { SurfaceCard } from '@/shared/ui/surface-card'
 
-// RF-17: motivo vem como texto livre (MotorDistribuicao.Motivo — "tipo desconhecido" ou "ninguém
-// com alçada", ver dispatch-api/docs/patterns/motor-e-prazos.md), sem uma tag separada como o
-// protótipo simula. "tipo
-// novo" dá pra derivar direto; o protótipo também distingue "escala vazia" de "barrado por
-// regra" dentro do segundo caso, mas o back não guarda essa diferença — "sem alçada" cobre os
-// dois sem inventar um dado que não existe.
-const tagDaExcecao = (motivo: string | null) => (motivo === 'tipo desconhecido' ? 'tipo novo' : 'sem alçada')
+import { apresentacaoDaExcecao } from '../lib/motivo-excecao'
 
 type ExcecaoCardProps = {
   protocolo: ProtocoloResumo
@@ -32,7 +26,8 @@ export const ExcecaoCard = ({ protocolo, conferentes, info, onAbrirDetalhe }: Ex
   const ehAdministrador = useEhAdministrador()
   // Protótipo aprovado (Dispatch v2): tipo novo pede alçada definida, e só a administração define
   // alçada (RF-30a). Pra distribuidora a ação vira orientação — sem back-end, decisão do dono.
-  const pedeAdministracao = !ehAdministrador && tagDaExcecao(protocolo.motivoExcecao) === 'tipo novo'
+  const apresentacao = apresentacaoDaExcecao(protocolo.motivoExcecao)
+  const pedeAdministracao = !ehAdministrador && apresentacao.tipoNovo
   const [resolvendo, setResolvendo] = useState(false)
   const [conferenteId, setConferenteId] = useState('')
   const atribuir = useAtribuirManualmente()
@@ -58,23 +53,29 @@ export const ExcecaoCard = ({ protocolo, conferentes, info, onAbrirDetalhe }: Ex
 
   return (
     <SurfaceCard className="mb-2 cursor-pointer" onClick={() => onAbrirDetalhe(protocolo.id)}>
-      <div className="flex items-start justify-between gap-3.5">
+      <div className="flex items-start justify-between gap-3.5 max-mobile:flex-col max-mobile:gap-3">
         <div className="min-w-0">
+          {/* Protótipo aprovado (Dispatch v2): número + tipo + tag na 1ª linha, a frase do motivo
+              embaixo. Tipo desconhecido não tem nome no catálogo — mostra o nome como veio no
+              relatório, que é justamente o que a distribuidora precisa ver. */}
           <div className="flex flex-wrap items-center gap-2">
             <span className="font-mono text-[12.5px] font-medium">{protocolo.numero}</span>
-            <span className="text-[13px] text-text-5">{ETAPA_LABEL[protocolo.etapa]}</span>
-            <Chip tom="atencao">{tagDaExcecao(protocolo.motivoExcecao)}</Chip>
+            <span className="text-[13px] text-pretty text-text-5">
+              {info.tipoAtoNome ??
+                (protocolo.tipoAtoNomeOriginal ? `“${protocolo.tipoAtoNomeOriginal}”` : 'tipo de ato não informado')}
+            </span>
+            <Chip tom="atencao">{apresentacao.tag}</Chip>
           </div>
-          {/* RF-14: tipo de ato + escrevente/equipe — mesmo dado dos outros cards de protocolo. */}
-          <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[12px] text-text-2">
-            <span className="text-pretty">{info.tipoAtoNome ?? '—'}</span>
-            <span className="text-muted-foreground">·</span>
+          <div className="mt-1.25 text-[12.5px] leading-snug text-pretty text-text-2">{apresentacao.frase}</div>
+          {/* RF-14: escrevente/equipe/etapa — o protótipo não mostra aqui, mas sem equipe o prazo é
+              o padrão, e é isso que costuma explicar a exceção; fica numa linha de apoio. */}
+          <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[11.5px] text-muted-foreground">
             <span className="text-pretty">{info.escreventeNome ?? '—'}</span>
-            <Chip tom={info.equipeNome ? 'neutro' : 'vencido'} fonte="padrao" className="font-medium">
-              {info.equipeNome ?? 'sem equipe'}
-            </Chip>
+            <span>·</span>
+            <span className={info.equipeNome ? undefined : 'text-bad-fg'}>{info.equipeNome ?? 'sem equipe'}</span>
+            <span>·</span>
+            <span>{ETAPA_LABEL[protocolo.etapa]}</span>
           </div>
-          <div className="mt-1 text-[12.5px] leading-snug text-text-2">{protocolo.motivoExcecao}</div>
           {erro && (
             <div className="mt-1.5 text-[12.5px] text-bad-fg">Não foi possível concluir a ação. Tente de novo.</div>
           )}
@@ -86,7 +87,10 @@ export const ExcecaoCard = ({ protocolo, conferentes, info, onAbrirDetalhe }: Ex
         </div>
 
         {!resolvendo && (
-          <div className="flex flex-none gap-1.5" onClick={(evento) => evento.stopPropagation()}>
+          <div
+            className="flex flex-none gap-1.5 max-mobile:w-full max-mobile:*:flex-1"
+            onClick={(evento) => evento.stopPropagation()}
+          >
             <Button variant="outline" onClick={() => descartar.mutate(protocolo.id)} disabled={descartar.isPending}>
               Descartar
             </Button>
@@ -100,7 +104,7 @@ export const ExcecaoCard = ({ protocolo, conferentes, info, onAbrirDetalhe }: Ex
       </div>
 
       {resolvendo && (
-        <div className="mt-3 flex items-center gap-1.5" onClick={(evento) => evento.stopPropagation()}>
+        <div className="mt-3 flex flex-wrap items-center gap-1.5" onClick={(evento) => evento.stopPropagation()}>
           <SeletorUnico
             valor={conferenteId}
             opcoes={conferenteOpcoes}

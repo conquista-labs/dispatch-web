@@ -96,7 +96,7 @@ export const DistribuicaoBoard = () => {
 
   return (
     <div>
-      <div className="inline-flex max-w-full gap-0.5 overflow-x-auto rounded-lg bg-secondary p-0.75">
+      <div className="flex max-w-full gap-0.5 overflow-x-auto rounded-lg bg-secondary p-0.75">
         {(
           [
             ['conferente', 'Por conferente'],
@@ -118,7 +118,7 @@ export const DistribuicaoBoard = () => {
       </div>
 
       <div className="mt-3.5 flex flex-wrap items-center gap-3.5">
-        <span className="font-mono text-[11.5px] text-muted-foreground">Prazo do ato</span>
+        <span className="text-[11.5px] font-medium text-apoio">Prazo do ato</span>
         {LEGENDA.map((item) => (
           <span key={item.label} className="flex items-center gap-1.5 text-[11.5px] text-text-3">
             <span className={`block size-2.5 flex-none rounded-[3px] border ${item.className}`} />

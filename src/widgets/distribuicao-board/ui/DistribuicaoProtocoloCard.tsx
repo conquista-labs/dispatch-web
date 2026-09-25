@@ -134,9 +134,14 @@ export const DistribuicaoProtocoloCard = ({
       {/* RNF-10: sem truncar — na variante "status" isso é o nome do dono do protocolo, dois
           donos com nome parecido não podem ficar indistinguíveis aqui. */}
       {meta && <div className="mt-1.5 text-[11.5px] text-pretty text-muted-foreground">{meta}</div>}
-      <div className="mt-0.5 font-mono text-[10.5px] text-muted-foreground">
-        entrada {formatDataHora(protocolo.andamentoEm)}
-      </div>
+      {/* Por status é a visão enxuta do protótipo (número, tempo, tipo, dono) — a data de entrada
+          fica em Por conferente e no detalhe. Mantemos escrevente·equipe aqui, que o protótipo
+          tira: é o que a distribuidora usa pra achar o ato na coluna. */}
+      {variant === 'conferente' && (
+        <div className="mt-0.5 font-mono text-[10.5px] text-muted-foreground">
+          entrada {formatDataHora(protocolo.andamentoEm)}
+        </div>
+      )}
 
       <ObservacaoField protocoloId={protocolo.id} observacao={protocolo.observacao} somenteLeitura />
     </SurfaceCard>
