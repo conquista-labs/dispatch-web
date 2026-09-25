@@ -20,7 +20,10 @@ test('Central de regras — Alçada v3, as 3 sub-abas', async ({ page }) => {
   await expect(page.getByText('Base por nível')).toBeVisible()
   await expect(page.getByText('Ajuste por equipe')).toBeVisible()
   await expect(page.getByText('Exceção por pessoa')).toBeVisible()
+  // As regras ficam em grupos recolhidos por sujeito (protótipo v2); a busca abre os grupos que batem.
+  await page.getByPlaceholder('buscar por nível, pessoa, tipo de ato, equipe…').fill('Marcio Santos')
   await expect(page.getByText(/Só Marcio Santos confere/)).toBeVisible()
+  await page.getByPlaceholder('buscar por nível, pessoa, tipo de ato, equipe…').fill('')
   await page.screenshot({ path: 'e2e/.screenshots/alcada-v3-camadas-claro.png', fullPage: true })
 
   // Matriz.

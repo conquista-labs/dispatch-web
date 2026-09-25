@@ -3,12 +3,14 @@ import { useState } from 'react'
 import { useEquipes } from '@/entities/equipe'
 import { useEscreventes } from '@/entities/escrevente'
 import { useMoverParaEquipe } from '@/features/escrevente/mover-para-equipe'
+import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/ui/button'
 import { Carregando } from '@/shared/ui/carregando'
 
 import { EquipeCard } from './EquipeCard'
 import { NovaEquipeDialog } from './NovaEquipeDialog'
 import { NovoEscreventeDialog } from './NovoEscreventeDialog'
+import { fraseDoPrazo, separarPorPrazoPadrao } from '../lib/prazo-em-vigor'
 import { SeletorMultiplo } from './SeletorMultiplo'
 
 // RF-35 a RF-38 — equipes, prazo por etapa e alocação de escreventes órfãos.
@@ -20,6 +22,7 @@ export const AbaPrazos = () => {
   // Lista, não mais um id só — pedido do dono: selecionar vários escreventes de uma vez (órfãos
   // ou já em outra equipe) e mover todos pra mesma equipe de destino num clique só.
   const [selecionadosIds, setSelecionadosIds] = useState<string[]>([])
+  const [padraoAberto, setPadraoAberto] = useState(false)
 
   if (!equipes || !escreventes) {
     return <Carregando />
@@ -42,6 +45,20 @@ export const AbaPrazos = () => {
   }
 
   const nomesSelecionados = escreventes.filter((e) => selecionadosIds.includes(e.id)).map((e) => e.nome)
+  const { padrao, proprias } = separarPorPrazoPadrao(equipes)
+  const padraoExpandido = padraoAberto || selecionadosIds.length > 0
+
+  const renderizarEquipe = (equipe: (typeof equipes)[number]) => (
+    <EquipeCard
+      key={equipe.id}
+      equipe={equipe}
+      escreventes={escreventes.filter((e) => e.equipeId === equipe.id)}
+      selecionadosIds={selecionadosIds}
+      onSelecionarEscrevente={toggleSelecao}
+      onMoverParaCa={() => handleMoverParaCa(equipe.id)}
+      movendo={mover.isPending}
+    />
+  )
 
   return (
     <div className="max-w-[960px]">
@@ -99,19 +116,53 @@ export const AbaPrazos = () => {
         </div>
       )}
 
-      <div className="mt-3.5 grid grid-cols-2 gap-2 max-mobile:grid-cols-1">
-        {equipes.map((equipe) => (
-          <EquipeCard
-            key={equipe.id}
-            equipe={equipe}
-            escreventes={escreventes.filter((e) => e.equipeId === equipe.id)}
-            selecionadosIds={selecionadosIds}
-            onSelecionarEscrevente={toggleSelecao}
-            onMoverParaCa={() => handleMoverParaCa(equipe.id)}
-            movendo={mover.isPending}
-          />
-        ))}
-      </div>
+      {/* Protótipo v2: as equipes no prazo mais comum ficam recolhidas num card só — com ~30 equipes,
+          a lista inteira escondia as poucas que fogem do padrão. Abre sozinho quando há escrevente
+          selecionado pra mover (a equipe de destino pode estar no padrão). */}
+      {padrao.length > 0 && (
+        <div className="mt-3.5 rounded-[10px] border border-border bg-card">
+          <button
+            type="button"
+            onClick={() => setPadraoAberto(!padraoAberto)}
+            aria-expanded={padraoExpandido}
+            className="flex w-full flex-wrap items-baseline justify-between gap-x-3 gap-y-1 p-3.5 text-left hover:bg-secondary/60"
+          >
+            <span className="min-w-0">
+              <span className="block text-[13.5px] font-semibold">
+                {padrao.length} equipes no padrão: {fraseDoPrazo(padrao[0])}
+              </span>
+              <span className="mt-0.5 block text-[12px] text-pretty text-apoio">
+                {padrao
+                  .slice(0, 6)
+                  .map((e) => e.nome)
+                  .join(', ')}
+                {padrao.length > 6 ? ` e mais ${padrao.length - 6}` : ''}
+              </span>
+            </span>
+            <span className="flex-none text-[12.5px] font-medium text-text-2">
+              {padraoExpandido ? 'recolher' : 'ver e ajustar'}
+            </span>
+          </button>
+          {padraoExpandido && (
+            <div className="grid grid-cols-2 gap-2 border-t border-secondary p-2 max-mobile:grid-cols-1">
+              {padrao.map(renderizarEquipe)}
+            </div>
+          )}
+        </div>
+      )}
+
+      {proprias.length > 0 && (
+        <>
+          {padrao.length > 0 && (
+            <div className="mt-5 mb-2 text-[13px] font-semibold">
+              {proprias.length === 1 ? '1 equipe com prazo próprio' : `${proprias.length} equipes com prazo próprio`}
+            </div>
+          )}
+          <div className={cn('grid grid-cols-2 gap-2 max-mobile:grid-cols-1', padrao.length === 0 && 'mt-3.5')}>
+            {proprias.map(renderizarEquipe)}
+          </div>
+        </>
+      )}
       <p className="mt-3.5 text-[12.5px] text-pretty text-muted-foreground">
         Mudar um prazo aqui recalcula o vencimento dos protocolos abertos daquela equipe — o semáforo se ajusta na hora.
       </p>
