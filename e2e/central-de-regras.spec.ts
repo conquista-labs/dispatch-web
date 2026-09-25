@@ -175,23 +175,23 @@ test('Tipos de ato — CRUD completo reflete na tela', async ({ page }) => {
   // causa do bug do "Venda" acima (achado congelado + refetch no meio reordena a lista).
   await page.waitForLoadState('networkidle')
 
-  // Peso: +1 pelo stepper.
+  // Peso: +0,05 pelo stepper (peso decimal, 0,50–2,50 — fatia 5 do Dashboard v2).
   let { linha: linhaRenomeada } = await esperarLinhaPeloNome(page, nomeRenomeado)
   const [respostaPeso] = await Promise.all([
     page.waitForResponse((r) => r.request().method() === 'PUT' && r.url().includes('/peso')),
-    linhaRenomeada.getByRole('button').nth(1).click(), // botão "+" do stepper de peso
+    linhaRenomeada.getByRole('button', { name: 'Aumentar peso' }).click(),
   ])
   expect(respostaPeso.status()).toBe(204)
   await page.waitForLoadState('networkidle')
   ;({ linha: linhaRenomeada } = await esperarLinhaPeloNome(page, nomeRenomeado))
   // Peso agora é um <input> digitável (2º input da linha, o 1º é o nome) — não dá pra achar
   // por getByText como antes de virar input (mesma armadilha do nome, documentada acima).
-  const inputPeso = linhaRenomeada.locator('input').nth(1)
-  await expect(inputPeso).toHaveValue('2')
+  const inputPeso = linhaRenomeada.getByLabel('Peso de complexidade')
+  await expect(inputPeso).toHaveValue('1,05')
 
   // Peso: digitar direto (RF-34f, pedido explícito do dono — "no peso do tipo de ato tem que
   // ser possível digitar").
-  await inputPeso.fill('4')
+  await inputPeso.fill('1,6')
   const [respostaPesoDigitado] = await Promise.all([
     page.waitForResponse((r) => r.request().method() === 'PUT' && r.url().includes('/peso')),
     page.getByRole('heading', { name: 'Tipos de ato' }).click(),
@@ -199,7 +199,7 @@ test('Tipos de ato — CRUD completo reflete na tela', async ({ page }) => {
   expect(respostaPesoDigitado.status()).toBe(204)
   await page.waitForLoadState('networkidle')
   ;({ linha: linhaRenomeada } = await esperarLinhaPeloNome(page, nomeRenomeado))
-  await expect(linhaRenomeada.locator('input').nth(1)).toHaveValue('4')
+  await expect(linhaRenomeada.getByLabel('Peso de complexidade')).toHaveValue('1,60')
 
   // Desativar.
   const [respostaDesativar] = await Promise.all([

@@ -151,6 +151,8 @@ export const PainelDetalheProtocolo = ({ protocoloId, onFechar }: PainelDetalheP
     : undefined
 
   const chip = detalhe ? prazoChip(detalhe.semaforo, detalhe.vencimentoEm, now) : null
+  // RF-18a: peso do tipo de ato, vindo do catálogo (GET /tipos-ato, decimal a partir da fatia 5).
+  const pesoDoTipo = tiposAto?.find((t) => t.id === detalhe?.tipoAtoId)?.pesoComplexidade
   // Rodadas anteriores (mesmo número, andamento antes deste) entram na linha do tempo, como no
   // protótipo; as posteriores (quem abre uma linha antiga) ficam no bloco recolhível de histórico.
   const conferenciasAnteriores = detalhe
@@ -179,6 +181,14 @@ export const PainelDetalheProtocolo = ({ protocoloId, onFechar }: PainelDetalheP
         { k: 'Vencimento', v: detalhe.vencimentoEm ? formatDataHora(detalhe.vencimentoEm) : '—' },
         { k: 'Prioridade', v: PRIORIDADE_LABEL[detalhe.prioridade] },
         { k: 'Conferente', v: detalhe.donoId ? (nomePorConferenteId.get(detalhe.donoId) ?? '—') : 'sem dono' },
+        ...(pesoDoTipo === undefined
+          ? []
+          : [
+              {
+                k: 'Peso de complexidade',
+                v: `${pesoDoTipo.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}×`,
+              },
+            ]),
         // Só existe depois de concluído (Duracao no Domain exige IniciadoEm+ConcluidoEm) —
         // mesma regra de nulidade que já vale pros outros campos condicionais desta lista.
         ...(detalhe.duracao ? [{ k: 'Duração', v: formatDuracaoConcluida(detalhe.duracao) }] : []),

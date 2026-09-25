@@ -4,6 +4,20 @@ export type TipoAto = {
   nome: string
   ativo: boolean
   grupo: GrupoTipoAto | null
+  // Peso de complexidade decimal (0,50–2,50) — RF-18a, mostrado no painel de detalhe. Opcional: a
+  // API anterior à fatia 5 do Dashboard v2 não manda no GET /tipos-ato.
+  pesoComplexidade?: number
+}
+
+// Tempo de referência efetivo de um tipo (RF-46c): o informado pelo admin, senão a mediana do
+// histórico (12 meses, ≥30 conferências), senão a estimativa "tempo médio por ato × peso".
+export type OrigemTempoReferencia = 'Informado' | 'Historico' | 'Estimado'
+export type TempoReferencia = {
+  minutos: number
+  origem: OrigemTempoReferencia
+  informadoMinutos: number | null
+  medianaMinutos: number | null
+  conferenciasNoHistorico: number
 }
 
 // Categoria vista na Matriz da aba Alçada e no construtor de regra (alvo "grupo") — sem
@@ -18,6 +32,8 @@ export type TipoAtoComUso = {
   ativo: boolean
   pesoComplexidade: number
   grupo: GrupoTipoAto | null
+  // Opcional: a API anterior à fatia 5 não manda.
+  tempoReferencia?: TempoReferencia
   volume: number
   conferentesComAlcada: number
 }
