@@ -1,25 +1,21 @@
 import { useEhAdministrador, useSessionStore } from '@/entities/usuario'
 import { DashboardBoard } from '@/widgets/dashboard-board'
 
-// RF-42-46.
+// RF-42-46. Textos do protótipo aprovado (Dispatch v2, `subIndicadores`); largura limitada a 1040px
+// como lá — em tela larga a tabela e os cards não esticam sem fim.
 export const DashboardPage = () => {
   const souGestao = useSessionStore((s) => s.usuario?.papeis.includes('Distribuidora') ?? false)
   const ehAdministrador = useEhAdministrador()
 
-  return (
-    <div className="px-7 pt-6 pb-7 max-mobile:px-3.5 max-mobile:pt-4">
-      <h1 className="m-0 text-xl font-semibold tracking-[-0.015em]">{souGestao ? 'Dashboard' : 'Meu dashboard'}</h1>
-      <p className="mt-1.5 max-w-[66ch] text-[13.5px] text-pretty text-muted-foreground">
-        {souGestao
-          ? ehAdministrador
-            ? 'Volume, prazo, qualidade e complexidade de toda a operação, com o score que decide a bonificação.'
-            : 'Volume, prazo, qualidade e complexidade de toda a operação.'
-          : 'Seus números do período: volume, prazo e qualidade do que você conferiu.'}
-      </p>
+  const subtitulo = souGestao
+    ? ehAdministrador
+      ? 'Produtividade, prazo e qualidade — a base do cálculo de bonificação.'
+      : 'Produtividade, prazo e qualidade da equipe no período.'
+    : 'Seus números do período: volume, prazo e qualidade do que você conferiu.'
 
-      <div className="mt-4">
-        <DashboardBoard souGestao={souGestao} />
-      </div>
+  return (
+    <div className="max-w-[1040px] px-7 pt-6 pb-7 max-mobile:px-3.5 max-mobile:pt-4">
+      <DashboardBoard titulo={souGestao ? 'Dashboard' : 'Meu dashboard'} subtitulo={subtitulo} souGestao={souGestao} />
     </div>
   )
 }

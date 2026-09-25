@@ -862,3 +862,18 @@ conteúdo), `--shadow-sm` com a sombra leve do protótipo, `Button` em 13px/raio
 (`default`/`lg`), e margem de 14px/16px no celular em todas as páginas. Regras em `design-system.md`.
 Verificado: 208 testes, build, regressão do e2e, e screenshots de Distribuição/Conferentes/Contas no
 desktop e no celular (sem rolagem lateral; botão do diálogo 13px/raio 6px, 14px no celular).
+
+## 2026-09-25 — Layout do Dashboard fiel ao protótipo v2 (Parte 1)
+
+Só front, com o dado que o back já manda. Cabeçalho com o seletor de período à direita (ordem Este mês ·
+Esta semana · Trimestre) e subtítulos do protótipo; seções "Resultado · período" / "Seu resultado";
+`KpiCard` com valor em 24px e "sub" em `text-apoio`; tabela de desempenho em grade de largura fixa (papéis
+ARIA de tabela), números à direita, No prazo/Aprovação coloridos por limiar (90/80 e 85/78), complexidade
+"1,32×", barra de score fina, faixa em pílula com "Fora do bônus" neutro; conferente com 4 KPIs e score +
+média lado a lado, parcelas com barra, "Você" colorido contra a média. `lib/apresentacao.ts` (dias úteis
+da janela, limiares, plural, média diária) com testes. Fora (dependem do back, PLANO-dashboard-v2 Parte 2):
+Hoje agora, variação e meta, série, ritmo, exportar; destaque da própria linha (sessão não tem o id de
+conferente).
+
+Verificado: testes, `dashboard.spec.ts` (3), screenshots das três visões no desktop (claro/escuro) e no
+celular comparados com os do protótipo.
