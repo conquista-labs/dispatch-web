@@ -2,8 +2,12 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import type { Etapa } from '@/entities/protocolo'
-import { useConfirmarLote, usePreVisualizarLote, type ResumoImportacao } from '@/features/protocolo/importar-lote'
-import { dataHoraParaIso, parseCsv } from '@/shared/lib/parse-csv'
+import {
+  useConfirmarLote,
+  usePreVisualizarLote,
+  type LinhaImportacao,
+  type ResumoImportacao,
+} from '@/features/protocolo/importar-lote'
 import { ROUTES } from '@/shared/config/routes'
 import { Button } from '@/shared/ui/button'
 import { cn } from '@/shared/lib/utils'
@@ -13,16 +17,6 @@ import { PassoLinhas } from './PassoLinhas'
 import { PassoPrevia } from './PassoPrevia'
 
 type Passo = 'dados' | 'revisao' | 'distribuicao' | 'concluido'
-
-// handleContinuar e handleConfirmar montavam o mesmo payload de linhas, cada um com sua
-// própria cópia do `.map(...)` — achado numa auditoria de qualidade.
-const paraRequestLinhas = (linhas: ReturnType<typeof parseCsv>) =>
-  linhas.map((linha) => ({
-    protocolo: linha.protocolo ?? '',
-    tipoAto: linha.tipoAto ?? '',
-    escrevente: linha.escrevente ?? '',
-    dataHoraAndamento: dataHoraParaIso(linha.dataHoraAndamento ?? ''),
-  }))
 
 const PASSOS: { valor: Passo; label: string }[] = [
   { valor: 'dados', label: 'Dados' },
@@ -70,26 +64,33 @@ export const ImportarLoteWizard = () => {
   const [pedido, setPedido] = useState<{
     etapa: Etapa
     linhaDeCorte: string
-    linhas: ReturnType<typeof parseCsv>
+    linhas: LinhaImportacao[]
   } | null>(null)
   const [resumo, setResumo] = useState<ResumoImportacao | null>(null)
   // RF-10a: linhas como vieram do relatório, pra "Desfazer" as exclusões do passo 2.
-  const [linhasOriginais, setLinhasOriginais] = useState<ReturnType<typeof parseCsv>>([])
+  const [linhasOriginais, setLinhasOriginais] = useState<LinhaImportacao[]>([])
   const navigate = useNavigate()
 
   const preVisualizar = usePreVisualizarLote()
   const confirmar = useConfirmarLote()
 
-  const handleContinuar = ({ etapa, linhaDeCorte, texto }: { etapa: Etapa; linhaDeCorte: string; texto: string }) => {
-    const linhasCsv = parseCsv(texto)
-    const linhas = paraRequestLinhas(linhasCsv)
-
+  // As linhas chegam já no formato da importação — coladas (CSV) ou convertidas do .xls do cartório
+  // pelo conector do back; daqui pra frente o fluxo é o mesmo.
+  const handleContinuar = ({
+    etapa,
+    linhaDeCorte,
+    linhas,
+  }: {
+    etapa: Etapa
+    linhaDeCorte: string
+    linhas: LinhaImportacao[]
+  }) => {
     preVisualizar.mutate(
       { etapa, linhaDeCorte, linhas },
       {
         onSuccess: (dados) => {
-          setPedido({ etapa, linhaDeCorte, linhas: linhasCsv })
-          setLinhasOriginais(linhasCsv)
+          setPedido({ etapa, linhaDeCorte, linhas })
+          setLinhasOriginais(linhas)
           setResumo(dados)
           setPasso('revisao')
         },
@@ -102,10 +103,10 @@ export const ImportarLoteWizard = () => {
   // gravado — RF-11). A prévia devolve uma linha por linha enviada, na mesma ordem, então o índice
   // da linha na tela é o índice em `pedido.linhas`. Vale só pra este lote: se o protocolo vier num
   // relatório futuro, entra normalmente.
-  const reprocessar = (linhas: ReturnType<typeof parseCsv>) => {
+  const reprocessar = (linhas: LinhaImportacao[]) => {
     if (!pedido) return
     preVisualizar.mutate(
-      { etapa: pedido.etapa, linhaDeCorte: pedido.linhaDeCorte, linhas: paraRequestLinhas(linhas) },
+      { etapa: pedido.etapa, linhaDeCorte: pedido.linhaDeCorte, linhas },
       {
         onSuccess: (dados) => {
           setPedido({ ...pedido, linhas })
@@ -122,10 +123,9 @@ export const ImportarLoteWizard = () => {
 
   const handleConfirmar = () => {
     if (!pedido) return
-    const linhas = paraRequestLinhas(pedido.linhas)
 
     confirmar.mutate(
-      { etapa: pedido.etapa, linhaDeCorte: pedido.linhaDeCorte, linhas },
+      { etapa: pedido.etapa, linhaDeCorte: pedido.linhaDeCorte, linhas: pedido.linhas },
       { onSuccess: () => setPasso('concluido') },
     )
   }

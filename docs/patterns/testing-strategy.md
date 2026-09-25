@@ -89,6 +89,10 @@ dentro do `persist` pra ser testável sem Zustand/localStorage).
   do `include: ["src"]`, então a augmentação `declare module 'vitest'` não entrava no programa de
   tipos. Resolvido com `src/vitest-env.d.ts` (`import '@testing-library/jest-dom/vitest'`). Os
   `*.test.tsx` **são** type-checados pelo `tsc -b`.
+- **Mock de API que rejeita: um `vi.fn()` novo por teste**, não `mockReset()` no `beforeEach`. Com o
+  mock `const` resetado, o `mockRejectedValue` de um teste vazava como erro não tratado e derrubava o
+  teste (aconteceu no 409 da troca de senha e no erro do conector de relatório). Padrão: `let api =
+  vi.fn()`, o `vi.mock` delega (`(...a) => api(...a)`) e o `beforeEach` reatribui `api = vi.fn()`.
 - **`tsc` passa e a tela continua errada** — o `Progress` invisível tipava certinho.
 - **Um teste pode verificar o código e não a experiência**: se ele precisa desfazer uma ação do
   usuário pra observar um estado, pergunte se o usuário real veria esse estado.
