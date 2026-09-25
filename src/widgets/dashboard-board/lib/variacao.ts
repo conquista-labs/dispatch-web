@@ -60,3 +60,16 @@ export const TITULO_DA_SERIE: Record<PeriodoDashboard, { titulo: string; sub: st
   Mes: { titulo: 'Conferidos por dia', sub: 'dias úteis do mês' },
   Trimestre: { titulo: 'Conferidos por semana', sub: 'as semanas do trimestre' },
 }
+
+// Barra de meta do KPI (RF-42b): "meta 95% · atingida" / "meta 95% · faltam 5 pts".
+export const textoDaMeta = (valor: number, meta: number): string => {
+  const metaPct = Math.round(meta * 100)
+  const faltam = Math.round((meta - valor) * 100)
+  return faltam <= 0 ? `meta ${metaPct}% · atingida` : `meta ${metaPct}% · faltam ${faltam} pts`
+}
+
+// Pesos padrão do score — usados só quando a API ainda não manda os configurados.
+export const PESOS_PADRAO = { volume: 40, prazo: 30, qualidade: 20, complexidade: 10 }
+
+export const legendaDoScore = (p: typeof PESOS_PADRAO) =>
+  `score = ${p.volume}% volume · ${p.prazo}% prazo · ${p.qualidade}% qualidade · ${p.complexidade}% complexidade`

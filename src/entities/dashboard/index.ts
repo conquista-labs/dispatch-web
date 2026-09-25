@@ -6,6 +6,7 @@ export type {
   FaixaBonificacao,
   KpisDashboard,
   PainelDeHoje,
+  PesosDoScore,
   PontoDaSerie,
   SerieDashboard,
   ParcelasScore,

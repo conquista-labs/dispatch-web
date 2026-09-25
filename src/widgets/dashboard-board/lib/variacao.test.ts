@@ -1,6 +1,15 @@
 import { describe, expect, it } from 'vitest'
 
-import { aprovadoNaPrimeira, rotulosDaSerie, variacaoDeTempo, variacaoDeVolume, variacaoEmPontos } from './variacao'
+import {
+  aprovadoNaPrimeira,
+  legendaDoScore,
+  PESOS_PADRAO,
+  rotulosDaSerie,
+  textoDaMeta,
+  variacaoDeTempo,
+  variacaoDeVolume,
+  variacaoEmPontos,
+} from './variacao'
 
 describe('variação contra o período anterior', () => {
   it('volume em %, sem base quando o anterior é zero', () => {
@@ -38,5 +47,17 @@ describe('rotulosDaSerie', () => {
     expect(
       rotulosDaSerie({ granularidade: 'Semana', pontos: [ponto('2026-07-06'), ponto('2026-07-13')] }, 'Trimestre'),
     ).toEqual(['S1', 'S2'])
+  })
+})
+
+describe('meta e pesos', () => {
+  it('texto da meta', () => {
+    expect(textoDaMeta(0.9, 0.95)).toBe('meta 95% · faltam 5 pts')
+    expect(textoDaMeta(0.97, 0.95)).toBe('meta 95% · atingida')
+  })
+
+  it('legenda do score com os pesos configurados', () => {
+    expect(legendaDoScore(PESOS_PADRAO)).toBe('score = 40% volume · 30% prazo · 20% qualidade · 10% complexidade')
+    expect(legendaDoScore({ volume: 50, prazo: 25, qualidade: 15, complexidade: 10 })).toContain('50% volume')
   })
 })
