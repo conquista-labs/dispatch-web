@@ -13,11 +13,17 @@ type ObservacaoFieldProps = {
    * escreve a nota); a Distribuição só lê. Sem isso, nada renderiza quando `observacao` é nulo.
    */
   somenteLeitura?: boolean
+  /**
+   * Painel de detalhe (protótipo v2): o campo fica sempre aberto, com texto de apoio, e "Salvar"/
+   * "Descartar" só aparecem quando o texto muda. Nos cards da fila continua o "+ Observação" (lá o
+   * espaço é curto). O pai passa `key` com a observação salva pra o campo recomeçar quando ela muda.
+   */
+  sempreAberto?: boolean
 }
 
 // RF-15/RF-23: observação livre, editável em qualquer estado do protocolo. Três estados:
 // mostrando o valor salvo, editando (textarea), ou vazio (só o botão "+ Observação").
-export const ObservacaoField = ({ protocoloId, observacao, somenteLeitura }: ObservacaoFieldProps) => {
+export const ObservacaoField = ({ protocoloId, observacao, somenteLeitura, sempreAberto }: ObservacaoFieldProps) => {
   const [editando, setEditando] = useState(false)
   const [valor, setValor] = useState(observacao ?? '')
   const { mutate, isPending } = useDefinirObservacao()
@@ -34,6 +40,31 @@ export const ObservacaoField = ({ protocoloId, observacao, somenteLeitura }: Obs
 
   const salvar = () => {
     mutate({ protocoloId, observacao: valor.trim() || null }, { onSuccess: () => setEditando(false) })
+  }
+
+  if (sempreAberto && !somenteLeitura) {
+    const alterado = valor.trim() !== (observacao ?? '').trim()
+    return (
+      <div>
+        <textarea
+          value={valor}
+          onChange={(event) => setValor(event.target.value)}
+          placeholder="Sem observação. Escreva aqui e o conferente vê na fila dele."
+          aria-label="Observação"
+          className="min-h-[64px] w-full resize-y rounded-lg border border-border bg-card px-2.5 py-2 text-[12.5px] leading-snug text-foreground outline-none placeholder:text-apoio focus:border-foreground"
+        />
+        {alterado && (
+          <div className="mt-1.5 flex justify-end gap-1.5">
+            <Button variant="ghost" size="sm" onClick={() => setValor(observacao ?? '')} disabled={isPending}>
+              Descartar
+            </Button>
+            <Button size="sm" onClick={salvar} disabled={isPending}>
+              {isPending ? 'Salvando…' : 'Salvar observação'}
+            </Button>
+          </div>
+        )}
+      </div>
+    )
   }
 
   return (
