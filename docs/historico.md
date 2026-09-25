@@ -1048,3 +1048,13 @@ texto do nome.
 
 Verificado: testes de `TipoAtoRow` e `AbaConfiguracao`; CRUD de Tipos no e2e passando; screenshots a 1440,
 1000 (escuro) e 390px.
+
+## 2026-09-25 — Importar: excluir linha do lote (RF-10a)
+
+Passo 2 ganha um "×" por linha (protótipo v2). A exclusão refaz a pré-visualização no back com as linhas que
+sobraram — o resumo e a prévia de destinos do passo 3 vêm de lá, e nada é gravado (RF-11); a prévia devolve uma
+linha por linha enviada, na mesma ordem, então o índice na tela é o índice no lote (com busca ativa, a linha
+guarda o índice original). "N linhas excluídas deste lote · Desfazer" devolve o lote como veio. O lote não pode
+ficar vazio. Gaps §42.
+
+Verificado: `ImportarLoteWizard.test.tsx`; passo 2 e 3 no navegador contra a API local (só pré-visualização).

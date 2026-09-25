@@ -30,7 +30,7 @@ depois", "fora de escopo", "simplificação consciente" e "divergência".
 | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 🔴 Aberto      | §1 .csv/.xlsx · §2 RF-24e · §3 RF-34c · §7 casos concretos · §16 tipo de ato livre no manual · §19 tema antes do login · §20 tema por usuário · §21 atribuir grupo · §22 busca em Conferentes · §27 rótulos de exceção · §28 cenários e2e manuais · §34 RNF-10 no `SeletorUnico` |
 | 🔍 Verificação | §24 scrollbar · §25 teto do Dashboard                                                                                                                                                                                                                                            |
-| ✅ Fechado     | §5 · §6 · §10 · §11 · §12 · §13 · §14 · §15 · §17 · §18 · §30 · §31 · §32 · §33 · §35 · §36 · §39 · §40 · §41                                                                                                                                                                    |
+| ✅ Fechado     | §5 · §6 · §10 · §11 · §12 · §13 · §14 · §15 · §17 · §18 · §30 · §31 · §32 · §33 · §35 · §36 · §39 · §40 · §41 · §42                                                                                                                                                              |
 | ⚪ Sem mudança | §4 RF-01m/n · §8 KPIs mock · §9 SAÍDAS · §23 paginação no back · §26 ícone em botões · §29 alçada por item · §37 Subscritor · §38 CI                                                                                                                                             |
 
 **Não auditado**: este levantamento só cobre o que o histórico registrou. Requisitos que nunca
@@ -299,3 +299,11 @@ código — confira antes de assumir que estão prontos ou faltando.
   "tipo novo" com "Pedir à administração" desabilitado.
 - **Diverge de**: RF-03 (o admin também cai no Dashboard — decisão do dono); correções de texto do
   protótipo em ADR-0010. Fora: reativar conta e trocar papel.
+
+### §42 ✅ RF-10a — excluir linha do lote na revisão da importação
+
+- **Fechado em 2026-09-25**: "×" em cada linha do passo 2; a linha sai do lote, do resumo e da prévia de
+  destinos (a pré-visualização é refeita no back com as linhas que sobraram — nada é gravado, RF-11), com
+  "N linhas excluídas deste lote · Desfazer". Vale só pra aquele lote. O lote não pode ficar vazio.
+- **Como sabemos**: `ImportarLoteWizard.test.tsx` (exclusão, desfazer, exclusão com busca ativa) e
+  conferência no navegador contra a API local (passo 2 e passo 3).
