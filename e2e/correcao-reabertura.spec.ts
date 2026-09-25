@@ -52,22 +52,49 @@ test('Correção de resultado e pedido de reabertura — ciclo completo pela UI'
   // Monta o cenário: tipo de ato de teste + protocolo distribuído + conferente concluindo.
   const nomeTipo = `Tipo Correcao ${Date.now()}`
   const tipoResp = await api.post('/tipos-ato', { headers: authAdmin, data: { nome: nomeTipo } })
-  const { tipoAtoId } = await tipoResp.json()
+  expect(tipoResp.ok()).toBe(true)
 
+  // O protocolo entra por importação (o endpoint de distribuição avulsa saiu do back numa
+  // auditoria) e é atribuído à mão à conferente de teste — atribuição manual não passa pela
+  // alçada (dispatch-api ADR-0027), então as regras do banco local não mudam o destino.
   const numero = `COR-${Date.now()}`
-  const distribuirResp = await api.post('/protocolos/distribuir', {
+  const importarResp = await api.post('/protocolos/importar/confirmar', {
     headers: authDistribuidora,
     data: {
-      numero,
-      tipoAtoId,
       etapa: 'PosConferencia',
-      prioridade: 'Normal',
-      escreventeNome: 'Escrevente Correção E2E',
+      linhaDeCorte: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+      linhas: [
+        {
+          protocolo: numero,
+          tipoAto: nomeTipo,
+          escrevente: 'Escrevente Correção E2E',
+          dataHoraAndamento: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
+        },
+      ],
     },
   })
-  const { protocoloId } = await distribuirResp.json()
+  expect(importarResp.ok()).toBe(true)
 
-  await api.post(`/minha-fila/${protocoloId}/pegar`, { headers: authConferente })
+  // Pool, exceção ou já com alguém — procura o número em qualquer lugar da visão.
+  const visao = await (await api.get('/protocolos/distribuicao', { headers: authDistribuidora })).json()
+  const acharPorNumero = (no: unknown): { id: string } | undefined => {
+    if (Array.isArray(no)) return no.map(acharPorNumero).find(Boolean)
+    if (no && typeof no === 'object') {
+      const registro = no as Record<string, unknown>
+      if (registro.numero === numero && typeof registro.id === 'string') return { id: registro.id }
+      return Object.values(registro).map(acharPorNumero).find(Boolean)
+    }
+    return undefined
+  }
+  const protocoloId = acharPorNumero(visao)?.id
+  expect(protocoloId, `protocolo ${numero} não apareceu na visão de distribuição`).toBeTruthy()
+
+  const atribuirResp = await api.post(`/protocolos/${protocoloId}/atribuir`, {
+    headers: authDistribuidora,
+    data: { conferenteId },
+  })
+  expect(atribuirResp.status()).toBe(204)
+
   await api.post(`/minha-fila/${protocoloId}/iniciar`, { headers: authConferente })
   const concluirResp = await api.post(`/minha-fila/${protocoloId}/concluir`, {
     headers: authConferente,
@@ -107,7 +134,9 @@ test('Correção de resultado e pedido de reabertura — ciclo completo pela UI'
   await page.reload()
 
   const linhaForaDaJanela = page.getByTestId(`concluido-${protocoloId}`)
-  await expect(linhaForaDaJanela.getByText('janela de correção encerrada')).toBeVisible()
+  // Fora da janela (e já corrigido uma vez): a correção some e sobra o pedido de reabertura.
+  await expect(linhaForaDaJanela.getByText('resultado já corrigido uma vez')).toBeVisible()
+  await expect(linhaForaDaJanela.getByRole('button', { name: 'Pedir reabertura à distribuidora' })).toBeVisible()
 
   const [respostaPedir] = await Promise.all([
     page.waitForResponse((r) => r.request().method() === 'POST' && r.url().includes('/pedir-reabertura')),
@@ -151,10 +180,11 @@ test('Correção de resultado e pedido de reabertura — ciclo completo pela UI'
   expect(respostaReabrir.status()).toBe(204)
   await expect(cardPedido).not.toBeVisible()
 
-  // Confirma via API que o protocolo voltou pro mesmo dono, em conferência.
+  // Confirma via API que o protocolo voltou pro mesmo dono, atribuído e com o cronômetro parado —
+  // reabrir não liga o tempo sozinho (dispatch-api ADR-0031); ele liga quando a pessoa iniciar.
   const detalheResp = await api.get(`/protocolos/${protocoloId}/detalhe`, { headers: authDistribuidora })
   const detalhe = await detalheResp.json()
-  expect(detalhe.status).toBe('Conferindo')
+  expect(detalhe.status).toBe('Atribuido')
 
   await contextoDistribuidora.close()
   await api.dispose()
