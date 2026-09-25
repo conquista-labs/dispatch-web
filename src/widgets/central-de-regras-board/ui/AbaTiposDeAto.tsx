@@ -22,7 +22,8 @@ const TAMANHO_PAGINA = 20
 // Protocolo/RegraAlcada de um Id pro outro, operação maior que só bloquear a exclusão.
 //
 // Paginado de verdade no back (pedido do dono, catálogo real passou de duas dezenas de itens)
-// — primeira paginação do sistema; o resto do app usa busca + rolagem contida (ver CLAUDE.md).
+// — primeira paginação do sistema; o resto do app usa busca + rolagem contida (ver
+// docs/decisions/0019-listas-longas-busca-no-cliente-paginacao-so-em-tipos-de-ato.md).
 export const AbaTiposDeAto = () => {
   const [busca, setBusca] = useState('')
   const [pagina, setPagina] = useState(1)

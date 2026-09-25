@@ -5,9 +5,13 @@ description: Verifica no navegador (Playwright) uma tela do Dispatch — layout 
 
 # verify-visual
 
-Confirma que uma tela está fiel ao protótipo aprovado (`../dispatch-prototype/Dispatch.dc.html`)
-antes de dar como pronta. É checagem visual/comportamental — complementa (não substitui)
-`npm run build` e `tsc --noEmit`.
+Confirma que uma tela está fiel ao protótipo aprovado (`../dispatch-prototype/Dispatch v2.dc.html`;
+o histórico o chama de `Dispatch.dc.html`) antes de dar como pronta. É checagem
+visual/comportamental — complementa (não substitui) `npm run build` e `tsc --noEmit`.
+
+Método de comparação com o protótipo (abrir o `.dc.html` via `file://`, export possivelmente
+velho, medir em vez de estimar): `docs/patterns/verificacao-com-prototipo.md`. Lições de locator,
+relógio e screenshot: `docs/patterns/e2e-tests.md`.
 
 ## Por que Playwright aqui, especificamente
 
@@ -46,11 +50,13 @@ await page.getByLabel('Senha').fill(SENHA)
 await page.getByRole('button', { name: 'Entrar' }).click()
 ```
 
-Credenciais de teste (usuário Distribuidora já seedado no Postgres local, usado a sessão
-inteira que construiu este projeto): `distribuidora@cartorio.com` / `Senha123!`. Se algum dia
-não existir mais (banco resetado), cadastre um via `POST /conferentes` com um usuário
-Distribuidora primeiro rodando a skill equivalente do `dispatch-api`, ou pergunte ao dono —
-não invente credencial nem hardcode senha nova sem confirmar.
+Credenciais de teste: `distribuidora@cartorio.com` / `Senha123!` (conta **combo** —
+Distribuidora + Conferente). O `globalSetup` do Playwright (`e2e/global-setup.ts`, chamando
+`POST /dev/seed-e2e`) garante essa conta e as de conferente (`conferente-rf27@cartorio.com`,
+`conferente-visual@cartorio.com`) antes da suíte — ver
+`docs/decisions/0021-global-setup-garante-contas-de-login.md`. Fora do Playwright (banco
+resetado), rode a suíte uma vez ou pergunte ao dono — não invente credencial nem hardcode senha
+nova sem confirmar.
 
 Pra checar só **layout/tema** sem precisar de API (não depende de dado real), navegue direto
 pras páginas públicas (`/login`) ou use `page.addInitScript` pra pré-popular o `localStorage`
@@ -62,7 +68,8 @@ await page.addInitScript(() => {
 })
 ```
 
-Chave da sessão é `dispatch-session` (`entities/usuario/model/session-store.ts`) — só use isso
+Chave da sessão é `dispatch-session` (`entities/usuario/model/session-store.ts`, hoje em
+`version: 1` com `usuario.papeis: Papel[]` — ADR-0017) — só use isso
 pra montar cenário de UI que não precisa bater na API de verdade; qualquer coisa que dependa de
 dado (lista de protocolos, conferentes...) precisa do login real, senão a API rejeita o token
 inventado.
@@ -85,8 +92,9 @@ inventado.
 - **Guarda de papel** (RNF-04 no front): logue como Distribuidora e confirme que só os itens de
   nav dela aparecem; tentar acessar uma rota de outro papel redireciona pra home do seu papel,
   não mostra a tela.
-- **Responsivo**: não é requisito formal ainda (RNF-08 marca "pendente no protótipo" só pra
-  Minha fila) — não é bloqueante hoje, mas anote se algo quebra feio em tela estreita.
+- **Responsivo** (RNF-13, abaixo de 760px — requisito, implementado desde 2026-09-04): confira em
+  390px e 1280px, `document.documentElement.scrollWidth <= clientWidth` em cada tela tocada; padrões
+  em `docs/patterns/responsive.md`.
 
 ## Reporte
 

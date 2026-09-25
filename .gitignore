@@ -33,3 +33,12 @@ dist-ssr
 
 # Cobertura do vitest (@vitest/coverage-v8) — artefato local, ver CLAUDE.md
 coverage
+
+# Quarentena do `shadcn add` — saída crua do registro, nunca importada nem commitada.
+# Ver .claude/skills/add-shadcn-component e tooling/shadcn-quarantine.test.ts
+/src/shared/ui/generated/
+
+# Claude Code — estado local (o versionado é .claude/settings.json, skills, hooks e agents)
+.claude/settings.local.json
+.claude/skill-usage.jsonl
+.claude/worktrees/

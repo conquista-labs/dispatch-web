@@ -2,7 +2,8 @@ import { useState } from 'react'
 
 import { NIVEL_LABEL, type Conferente, type Nivel } from '@/entities/conferente'
 // Motor v4 — "equipe não faz etapa" precisa valer pra TODO MUNDO, não só um nível: o domínio
-// não tem sujeito "todos os níveis" (decisão consciente, ver CLAUDE.md do back — mudança maior
+// não tem sujeito "todos os níveis" (decisão consciente, ver
+// dispatch-api/docs/decisions/0024-motor-de-alcada-v4-equipe-nao-faz-etapa.md — mudança maior
 // que tocaria ValePara/CamadaDe/discriminador de persistência do sujeito), então "ninguém pode"
 // é simulado criando uma regra Nega por nível, pros 3 de uma vez. Achado pelo dono usando a
 // tela em produção: criar só pra um nível deixava os outros dois ainda com acesso — o request
@@ -90,8 +91,9 @@ export const useAlcadaBuilder = ({
     setAberto(true)
   }
 
-  // Motor v4 — o alvo equipe+etapa só existe como Nega (ver CLAUDE.md do back, "Motor de
-  // alçada v4": permitir isso entraria na lista fechada por dimensão, um efeito colateral
+  // Motor v4 — o alvo equipe+etapa só existe como Nega (ver
+  // dispatch-api/docs/decisions/0024-motor-de-alcada-v4-equipe-nao-faz-etapa.md: permitir isso
+  // entraria na lista fechada por dimensão, um efeito colateral
   // desproporcional pra uma exceção pontual). Travar a permissão aqui evita o usuário bater
   // no 400 do back sem entender por quê. Sujeito também trava em "por nível" — o desenho
   // original da feature é sempre "ninguém desse nível faz X da equipe Y" (a "equipe" aqui é a

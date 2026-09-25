@@ -22,7 +22,8 @@ export const ConferentesBoard = () => {
   }
 
   // RF-25: "Remover" é soft delete no back (Usuario.Desativar — mantém histórico, ver
-  // CLAUDE.md do dispatch-api), mas GET /conferentes já filtra ativo=false na fonte — o front
+  // dispatch-api/docs/decisions/0004-remover-conferente-e-soft-delete.md), mas GET /conferentes
+  // já filtra ativo=false na fonte — o front
   // não precisa (nem deve) repetir esse filtro aqui.
   const ativos = conferentes.filter((c) => c.naEscala)
   const capacidadeDoDia = ativos.reduce((soma, c) => soma + c.capacidadeEstimada, 0)

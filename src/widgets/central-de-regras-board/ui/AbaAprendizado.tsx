@@ -28,7 +28,8 @@ import { SurfaceCard } from '@/shared/ui/surface-card'
 // carrega `Evidencia` (texto agregado) e `Ocorrencias` (contagem), nunca uma lista de exemplos
 // específicos; mostrar isso exigiria guardar referências que o back não persiste hoje. O índice
 // de confiança (barra + "N% de confiança", mesma posição do protótipo) já é real — ver
-// CLAUDE.md do dispatch-api, seção "Índice de confiança real da sugestão". Os 4 KPIs do topo
+// dispatch-api/docs/patterns/indicadores-e-aprendizado.md ("Índice de confiança") e o histórico
+// "Índice de confiança real da sugestão" em dispatch-api/docs/historico.md. Os 4 KPIs do topo
 // também trocaram de número (o protótipo usa "5.724 linhas lidas"/"96% classificadas sem você",
 // que não vem de lugar nenhum real) por métricas derivadas de dado que existe de verdade.
 export const AbaAprendizado = () => {

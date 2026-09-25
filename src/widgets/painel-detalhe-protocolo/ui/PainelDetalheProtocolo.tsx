@@ -430,7 +430,8 @@ const BlocoHistorico = ({
 }
 
 // Continuidade de conferência (pedido do dono, não é RF numerado nem está no protótipo
-// aprovado — ver dispatch-api/CLAUDE.md): outras linhas com o mesmo Número, mais recente
+// aprovado — ver dispatch-api/docs/decisions/0022-continuidade-de-conferencia.md): outras linhas
+// com o mesmo Número, mais recente
 // primeiro. Só renderizada pelo pai quando existe pelo menos uma (protocolo sem histórico não
 // mostra a seção, igual `motivoExcecao` só aparece quando existe). Mesmo padrão visual de
 // `ListaAlcada` — nome à esquerda, status + data à direita — reaproveitando STATUS_LABEL/
@@ -461,7 +462,8 @@ const HistoricoConferencias = ({
 )
 
 // Visibilidade da pausa (pedido do dono, "como garantir que ninguém abusa da pausa pra melhorar
-// o próprio tempo?" — ver dispatch-api/CLAUDE.md, "Pausar conferência"): não bloqueia nada, só
+// o próprio tempo?" — ver dispatch-api/docs/decisions/0033-pausar-conferencia.md): não bloqueia
+// nada, só
 // deixa auditável quantas vezes e por quanto tempo o ato ficou pausado. Mesmo padrão visual de
 // `HistoricoConferencias` (lista de cards), com um resumo na primeira linha.
 const HistoricoDePausas = ({ pausas }: { pausas: PausaConferencia[] }) => {

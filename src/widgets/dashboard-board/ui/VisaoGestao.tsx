@@ -32,7 +32,7 @@ type VisaoGestaoProps = {
 
 // RF-43: KPIs agregados + tabela de desempenho/bonificação com nome de todo mundo + desempenho
 // por tipo de ato + cumprimento de prazo por equipe. O KPI de "custo por ato" (RF-43 também
-// pede) fica de fora — ver CLAUDE.md do dispatch-api.
+// pede) fica de fora — ver dispatch-api/docs/gaps-requisitos.md, §31.
 export const VisaoGestao = ({ dashboard, periodoLabel }: VisaoGestaoProps) => {
   const { kpis, desempenho, porTipoAto, cumprimentoPrazoEquipe } = dashboard
 

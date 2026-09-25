@@ -12,7 +12,8 @@ import { Switch } from '@/shared/ui/switch'
 import { PillToggle } from '@/shared/ui/pill-toggle'
 
 // CorteDeHorario nunca é um TipoPrazo base escolhível pela distribuidora — ele só existe como
-// resultado transitório de Equipe.PrazoPara (ver dispatch-api/CLAUDE.md), então some da lista
+// resultado transitório de Equipe.PrazoPara (ver
+// dispatch-api/docs/decisions/0037-corte-de-horario-por-equipe-e-etapa.md), então some da lista
 // de pills de prazo normal.
 const TIPOS_PRAZO = (Object.keys(TIPO_PRAZO_LABEL) as TipoPrazo[]).filter((tipo) => tipo !== 'CorteDeHorario')
 

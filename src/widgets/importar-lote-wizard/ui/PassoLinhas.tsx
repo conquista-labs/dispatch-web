@@ -18,8 +18,9 @@ type PassoLinhasProps = {
 }
 
 // RF-08: pra cada linha, a regra que gerou o prazo ("5º andar · pós-conferência") — o back
-// manda o fato cru (equipe + prazo), quem monta o texto é o front (ver CLAUDE.md do
-// dispatch-api, seção "RF-08"). RF-07: linha antes da linha de corte ("já existe") não teve
+// manda o fato cru (equipe + prazo), quem monta o texto é o front (ver
+// dispatch-api/docs/patterns/endpoints.md, "Back manda o fato cru"). RF-07: linha antes da linha
+// de corte ("já existe") não teve
 // nada resolvido de verdade, então some o chip de prazo e a linha de regra, só mostra a leitura.
 export const PassoLinhas = ({ resumo, etapa, linhaDeCorte, onVoltar, onContinuar }: PassoLinhasProps) => {
   const now = useNow()
@@ -27,7 +28,8 @@ export const PassoLinhas = ({ resumo, etapa, linhaDeCorte, onVoltar, onContinuar
   const linhas = resumo.linhas ?? []
   const semEquipe = linhas.filter((l) => !l.jaExiste && !l.equipe).length
 
-  // Achado real (dono): um lote pode ter centenas de linhas (CLAUDE.md do back) — o "+N linhas"
+  // Achado real (dono): um lote pode ter centenas de linhas (dispatch-api/docs/historico.md,
+  // "Importação de lote (RF-05 a RF-12)") — o "+N linhas"
   // de antes era só texto estático, sem jeito nenhum de rever o resto antes de confirmar a
   // importação. Busca + rolagem própria mostram todas as linhas (filtradas ou não), em vez de
   // truncar num beco sem saída.
