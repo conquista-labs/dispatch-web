@@ -4,8 +4,8 @@ import { describe, expect, it } from 'vitest'
 import { Progress } from './progress'
 
 // Teste de REGRESSÃO, não cobertura de enfeite. O componente gerado pelo `shadcn add` tinha um
-// bug real (documentado no CLAUDE.md): desestruturava `value` só pra calcular o transform do
-// indicador e nunca repassava pro ProgressPrimitive.Root — a Root ficava sempre
+// bug real (docs/patterns/shadcn-gotchas.md, nº 9): desestruturava `value` só pra calcular o
+// transform do indicador e nunca repassava pro ProgressPrimitive.Root — a Root ficava sempre
 // `data-state="indeterminate"`, a barra renderizava com largura 0 e a pessoa via um espaço
 // vazio, sem erro nenhum no console. Só apareceu inspecionando o DOM via Playwright; screenshot
 // não denunciava. É exatamente a classe de bug que teste de componente pega e o tsc não.

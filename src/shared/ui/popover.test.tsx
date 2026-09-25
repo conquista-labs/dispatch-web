@@ -3,9 +3,10 @@ import { afterEach, describe, expect, it } from 'vitest'
 
 import { Popover, PopoverContent, PopoverTrigger } from './popover'
 
-// Regressão do bug real (ver popover.tsx e dispatch-web/CLAUDE.md, "Dois bugs reportados no
-// modal 'Novo protocolo'"): Dialog/Sheet/AlertDialog (Radix) travam o scroll da página
-// (`data-scroll-locked` no <body>) enquanto abertos, e isso intercepta o wheel de qualquer
+// Regressão do bug real (ver popover.tsx e docs/patterns/shadcn-gotchas.md, nº 11; histórico em
+// docs/historico.md, "Modal 'Novo protocolo': hora de entrada + scroll do Popover"):
+// Dialog/Sheet/AlertDialog (Radix) travam o scroll da página (`data-scroll-locked` no <body>)
+// enquanto abertos, e isso intercepta o wheel de qualquer
 // Popover aninhado — mesmo um com overflow-y-auto correto — porque o conteúdo do Popover é
 // portalizado pra fora da árvore DOM do Dialog.
 const tornarRolavel = (el: HTMLElement, scrollHeight: number, clientHeight: number) => {

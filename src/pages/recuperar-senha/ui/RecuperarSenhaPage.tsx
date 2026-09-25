@@ -68,7 +68,7 @@ const mensagemDeErro = (passo: Passo, validarCodigo: MutationComErro, redefinir:
 }
 
 // RF-01g-l. Mesma semântica de 4 etapas do protótipo (ident → código → senha → ok), sem o
-// "Não tenho o app" (RF-01m — fora de escopo desta rodada, ver CLAUDE.md/plano: não existe
+// "Não tenho o app" (RF-01m — fora de escopo, ver docs/gaps-requisitos.md §4: não existe
 // exceção pra quem não registrou o autenticador ainda). Cada etapa é seu próprio arquivo
 // (Passo*.tsx) — extraído de um componente único de ~270 linhas numa auditoria de qualidade,
 // mesmo padrão já usado em widgets/importar-lote-wizard.

@@ -66,8 +66,9 @@ export const AbaAlcadaCamadas = ({
   const remover = useRemoverRegraAlcada()
   const alcancePorConferenteId = new Map(alcance.map((a) => [a.conferenteId, a]))
 
-  // Achado com o dono: com uma regra por alvo selecionado no construtor (ver CLAUDE.md — o
-  // back só aceita um alvo por regra), "Base por nível" facilmente passa de 80 linhas — sem
+  // Achado com o dono: com uma regra por alvo selecionado no construtor (ver
+  // docs/decisions/0010-divergencias-deliberadas-do-prototipo.md — o back só aceita um alvo
+  // por regra), "Base por nível" facilmente passa de 80 linhas — sem
   // filtro/rolagem própria a tela inteira virava uma página só de scroll. `nomesDaFrase` reusa
   // o mesmo texto já montado pra exibir, não recalcula nada novo pra filtrar.
   const [busca, setBusca] = useState('')

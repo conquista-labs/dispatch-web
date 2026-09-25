@@ -13,8 +13,9 @@ type ListaCompletaColunaSheetProps = {
 }
 
 // RF-18c: "+N protocolos" abre a lista integral da coluna (não só os ocultos), ordenada por
-// vencimento. Sem "quantos têm alçada" por item (simplificação consciente, ver CLAUDE.md) — a
-// mesma informação já está um clique adiante, no painel de detalhe de cada protocolo.
+// vencimento. Sem "quantos têm alçada" por item (simplificação consciente, ver
+// docs/gaps-requisitos.md §29) — a mesma informação já está um clique adiante, no painel de
+// detalhe de cada protocolo.
 //
 // Pedido do dono: clicar num protocolo aqui não deveria "perder o lugar" na lista — fechar o
 // painel de detalhe devolvia pro quadro principal, obrigando a clicar em "+N protocolos" de

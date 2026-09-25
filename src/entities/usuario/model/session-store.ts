@@ -33,7 +33,8 @@ export const migrarSessao = (persisted: unknown, versaoPersistida: number): Esta
 // Persistido no localStorage pra sobreviver a um F5 — mas o token guardado aqui é só um
 // ponto de partida otimista pro boot da aplicação. Quem confirma que ele ainda é válido de
 // verdade é o GET /auth/me (ver entities/usuario/model/use-current-user.ts), nunca o valor
-// decodificado do token — essa foi a decisão tomada com a API (ver CLAUDE.md do dispatch-api).
+// decodificado do token — essa foi a decisão tomada com a API (ver
+// dispatch-api/docs/decisions/0010-login-devolve-usuario-e-auth-me.md).
 export const useSessionStore = create<SessionState>()(
   persist(
     (set) => ({

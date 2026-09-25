@@ -1,7 +1,7 @@
 export type RegraSenha = { label: string; ok: boolean }
 
 // Mesmas 3 regras do back (Dispatch.Domain.RegrasDeSenha) — replicadas aqui só pra feedback ao
-// vivo, o back segue sendo a fonte da verdade (ver dispatch-api/CLAUDE.md). Extraída pra função
+// vivo, o back segue sendo a fonte da verdade (ver dispatch-api/docs/patterns/autorizacao.md). Extraída pra função
 // pura (não fica só dentro de PassoSenha.tsx) porque o shell da página também precisa saber se
 // bateu tudo, pra habilitar o botão "Salvar nova senha", sem duplicar a regra em dois lugares.
 export const avaliarRegrasSenha = (senha1: string, senha2: string): RegraSenha[] => [

@@ -7,7 +7,8 @@ export type DefinirPrioridadeRequest = {
 }
 
 // POST /protocolos/{id}/definir-prioridade — único jeito real de marcar um protocolo como
-// urgente hoje (a importação de lote nunca define prioridade alta, ver CLAUDE.md do back).
+// urgente hoje (a importação de lote nunca define prioridade alta, ver dispatch-api/docs/historico.md,
+// "Distribuição/Minha fila v2").
 export const definirPrioridade = async ({ protocoloId, prioridade }: DefinirPrioridadeRequest): Promise<void> => {
   await httpClient.post(`/protocolos/${protocoloId}/definir-prioridade`, { prioridade })
 }

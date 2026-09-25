@@ -10,7 +10,8 @@ import { SeletorUnico } from '@/shared/ui/seletor-unico'
 import { SurfaceCard } from '@/shared/ui/surface-card'
 
 // RF-17: motivo vem como texto livre (MotorDistribuicao.Motivo — "tipo desconhecido" ou "ninguém
-// com alçada", ver dispatch-api/CLAUDE.md), sem uma tag separada como o protótipo simula. "tipo
+// com alçada", ver dispatch-api/docs/patterns/motor-e-prazos.md), sem uma tag separada como o
+// protótipo simula. "tipo
 // novo" dá pra derivar direto; o protótipo também distingue "escala vazia" de "barrado por
 // regra" dentro do segundo caso, mas o back não guarda essa diferença — "sem alçada" cobre os
 // dois sem inventar um dado que não existe.

@@ -5,7 +5,8 @@ export type Papel = 'Distribuidora' | 'Conferente'
 
 // Pedido do dono: uma distribuidora que também confere pessoalmente (mesma conta, os dois
 // papéis) — por isso `papeis` é uma lista, não um valor único. Back calcula isso a partir de
-// Usuario.Papel + "existe um Conferente vinculado" (PapeisEfetivos, ver dispatch-api/CLAUDE.md).
+// Usuario.Papel + "existe um Conferente vinculado" (PapeisEfetivos, ver
+// dispatch-api/docs/decisions/0028-uma-conta-com-dois-papeis.md).
 export type Usuario = {
   id: string
   nome: string

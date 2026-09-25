@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest'
 
 import { migrarSessao } from './session-store'
 
-// Regressão do bug real de produção (ver session-store.ts e dispatch-web/CLAUDE.md, "Uma conta
-// com os dois papéis"): sessão persistida antes de `papeis` virar lista guardava `papel`
-// singular — sem migrar, `usuario.papeis.includes(...)` (AppShell/Dashboard/RequireRole) quebra
+// Regressão do bug real de produção (ver session-store.ts e
+// docs/decisions/0017-sessao-persistida-versionada.md): sessão persistida antes de `papeis`
+// virar lista guardava `papel` singular — sem migrar, `usuario.papeis.includes(...)` (AppShell/Dashboard/RequireRole) quebra
 // com TypeError assim que a página carrega.
 describe('migrarSessao', () => {
   it('sessão v0 com papel singular vira papeis: [papel]', () => {

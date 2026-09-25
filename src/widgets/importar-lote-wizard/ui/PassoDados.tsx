@@ -86,7 +86,8 @@ type PassoDadosProps = {
 
 // RF-05/RF-06: arquivo de verdade (.csv/.xlsx) fica pra depois — colar linhas já cobre o RF,
 // e é como o dono testou a importação a sessão inteira. RF-07: a "linha de corte" evita
-// reimportar o que já foi processado (ver CLAUDE.md do dispatch-api) — pré-preenchida em
+// reimportar o que já foi processado (ver
+// dispatch-api/docs/decisions/0006-linha-de-corte-no-lugar-de-dedup-por-numero.md) — pré-preenchida em
 // "hoje 00:00" (mesmo default do protótipo aprovado). Sem o botão "Usar relatório
 // de exemplo" do protótipo — lá ele gera dado fake local (ferramenta de design); aqui não tem
 // sentido, o CSV vem de verdade do cartório. O resto do rodapé segue o protótipo: contador

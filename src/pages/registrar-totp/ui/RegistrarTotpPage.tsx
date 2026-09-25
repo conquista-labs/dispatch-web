@@ -14,7 +14,8 @@ import { Logo } from '@/shared/ui/logo'
 // (mock sem back de verdade). Aqui o back exige uma sessão real pra saber a QUEM o segredo TOTP
 // pertence (`POST /auth/totp/registrar` é autenticado, de propósito — senão qualquer um
 // registraria um autenticador pra um e-mail alheio) — então a página pede login primeiro
-// (reaproveita o próprio <LoginForm/>) e só then mostra o QR. Ver CLAUDE.md.
+// (reaproveita o próprio <LoginForm/>) e só then mostra o QR. Ver
+// docs/decisions/0010-divergencias-deliberadas-do-prototipo.md.
 export const RegistrarTotpPage = () => {
   const usuario = useSessionStore((state) => state.usuario)
 

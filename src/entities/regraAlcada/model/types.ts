@@ -3,8 +3,8 @@ import type { Etapa, Prioridade } from '@/entities/protocolo'
 import type { GrupoTipoAto } from '@/entities/tipoAto'
 
 // Motor v3: Reserva é um 3º tipo de permissão — reserva um alvo pra um sujeito só, todo mundo
-// mais fica bloqueado nele mesmo que tivesse Permite por outra regra (ver CLAUDE.md do back,
-// "Motor de alçada v3").
+// mais fica bloqueado nele mesmo que tivesse Permite por outra regra (ver
+// dispatch-api/docs/decisions/0018-motor-de-alcada-v3-cascata-de-camadas.md).
 export type PermissaoRegra = 'Permite' | 'Nega' | 'Reserva'
 export type OrigemRegra = 'Manual' | 'Aprendida'
 
@@ -16,7 +16,8 @@ export type OrigemRegra = 'Manual' | 'Aprendida'
 // diferenciar "regra de equipe = sem equipe" de "não é regra de equipe" só olhando pra
 // `alvoEquipeId`. `alvoEhEquipeEEtapa` (Motor v4) reaproveita `alvoEquipeId`/`alvoEtapa` pra um
 // 6º alvo combinado (equipe inteira não passa por uma etapa inteira) — só aceito com
-// `permissao: 'Nega'` (ver CLAUDE.md do back, "Motor de alçada v4", pro motivo da restrição).
+// `permissao: 'Nega'` (ver dispatch-api/docs/decisions/0024-motor-de-alcada-v4-equipe-nao-faz-etapa.md,
+// pro motivo da restrição).
 export type RegraAlcada = {
   id: string
   sujeitoNivel: Nivel | null
@@ -77,7 +78,8 @@ export type TestarAlcadaRequest = {
 
 // Destino real do motor de distribuição (RF-34) — antes desta correção, o front inferia isso
 // só pela contagem de elegíveis, o que dava errado sempre que a urgência importasse (ver
-// dispatch-api/CLAUDE.md e dispatch-web/CLAUDE.md, "Backlog de qualidade de código").
+// dispatch-api/docs/historico.md, "Fix: simulador "Testar" da aba Alçada agora roda o motor de verdade",
+// e docs/historico.md, "Backlog de qualidade de código").
 export type TestarAlcadaResponse = {
   avaliacoes: AvaliacaoAlcada[]
   destino: 'Atribuido' | 'EnviadoParaPool' | 'Excecao'

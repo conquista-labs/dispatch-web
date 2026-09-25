@@ -21,7 +21,7 @@ export type AtribuicaoPorConferente = {
 }
 
 // RF-08: só na prévia — a confirmação devolve `linhas: null` (o back não carrega isso na
-// resposta de gravar, ver CLAUDE.md do dispatch-api).
+// resposta de gravar, ver dispatch-api/docs/historico.md, "Importação de lote (RF-05 a RF-12)").
 export type LinhaPreviaImportacao = {
   protocolo: string
   tipoAto: string
