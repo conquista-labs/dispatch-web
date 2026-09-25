@@ -28,6 +28,7 @@ const protocolo = (patch: Partial<ProtocoloResumo> & Pick<ProtocoloResumo, 'id'>
   concluidoEm: null,
   duracao: null,
   andamentoEm: '2026-03-10T09:00:00Z',
+  numeroDaConferencia: 1,
   ...patch,
 })
 

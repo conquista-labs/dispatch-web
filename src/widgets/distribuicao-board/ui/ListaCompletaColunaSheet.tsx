@@ -1,4 +1,12 @@
-import { ETAPA_LABEL, prazoChip, PrazoTooltip, type InfoProtocolo, type ProtocoloResumo } from '@/entities/protocolo'
+import {
+  ETAPA_LABEL,
+  NumeroConferenciaTag,
+  prazoChip,
+  PrazoTooltip,
+  PrioridadeAltaTag,
+  type InfoProtocolo,
+  type ProtocoloResumo,
+} from '@/entities/protocolo'
 import { Chip } from '@/shared/ui/chip'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/shared/ui/sheet'
 
@@ -71,11 +79,8 @@ export const ListaCompletaColunaSheet = ({
                 {/* RF-18a: "Alta" (não "urgente") — mesmo rótulo/posição do card do quadro
                     (DistribuicaoProtocoloCard.tsx), junto da meta de escrevente/equipe/etapa. */}
                 <div className="mt-0.5 flex items-center gap-1.5">
-                  {protocolo.prioridade === 'Alta' && (
-                    <span className="flex-none rounded-full border border-bad-border bg-bad-bg px-1.5 text-[10.5px] font-semibold text-bad-fg">
-                      Alta
-                    </span>
-                  )}
+                  {protocolo.prioridade === 'Alta' && <PrioridadeAltaTag />}
+                  <NumeroConferenciaTag numero={protocolo.numeroDaConferencia} variante="media" />
                   <div
                     className="min-w-0 flex-1 overflow-hidden text-[11.5px] text-ellipsis whitespace-nowrap text-muted-foreground"
                     title={`${info.escreventeNome ?? '—'} · ${info.equipeNome ?? 'sem equipe'} · ${ETAPA_LABEL[protocolo.etapa]}`}

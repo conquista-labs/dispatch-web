@@ -25,6 +25,7 @@ const protocoloBase: ProtocoloResumo = {
   concluidoEm: null,
   duracao: null,
   andamentoEm: '2026-01-01T00:00:00Z',
+  numeroDaConferencia: 1,
 }
 
 const equipes: Equipe[] = [

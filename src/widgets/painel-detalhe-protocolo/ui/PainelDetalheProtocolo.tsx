@@ -8,6 +8,7 @@ import { useEscreventes } from '@/entities/escrevente'
 import {
   criarResolverInfoProtocolo,
   ETAPA_LABEL,
+  NumeroConferenciaTag,
   PRIORIDADE_LABEL,
   prazoChip,
   PrazoTooltip,
@@ -227,6 +228,7 @@ export const PainelDetalheProtocolo = ({ protocoloId, onFechar }: PainelDetalheP
                   <PrazoTooltip>
                     <Chip tom={chip.tom}>{chip.label}</Chip>
                   </PrazoTooltip>
+                  <NumeroConferenciaTag numero={detalhe.numeroDaConferencia} />
                 </div>
 
                 {detalhe.motivoExcecao && (
@@ -447,12 +449,20 @@ const HistoricoConferencias = ({
     {historico.map((h) => (
       <div
         key={h.protocoloId}
-        className="flex items-center justify-between gap-2.5 rounded-lg border border-border bg-card px-2.5 py-1.5"
+        className="flex items-start justify-between gap-2.5 rounded-lg border border-border bg-card px-2.5 py-1.5"
       >
-        <span className="text-[12.5px] text-text-5">
-          {h.donoId ? (nomePorConferenteId.get(h.donoId) ?? '—') : 'sem dono'}
-        </span>
-        <span className="flex items-center gap-1.5">
+        <div className="min-w-0">
+          <div className="text-[12.5px] text-text-5">
+            {h.donoId ? (nomePorConferenteId.get(h.donoId) ?? '—') : 'sem dono'}
+          </div>
+          {/* RF-24k: a rodada daquela linha e, se ela foi reprovada, o motivo — a observação da
+              própria linha (decisão do dono: o "Não aprovar" não pede motivo à parte). */}
+          <div className="mt-px text-[11.5px] text-pretty text-muted-foreground">
+            {h.numeroDaConferencia}ª conferência
+            {h.status === 'Reprovado' && h.observacao ? ` — ${h.observacao}` : ''}
+          </div>
+        </div>
+        <span className="mt-0.5 flex flex-none items-center gap-1.5">
           <Chip tom={STATUS_TOM[h.status]}>{STATUS_LABEL[h.status]}</Chip>
           <span className="text-[11px] text-muted-foreground">{formatDataHora(h.andamentoEm)}</span>
         </span>
