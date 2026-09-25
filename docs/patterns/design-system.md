@@ -110,6 +110,18 @@ meta — nunca na linha do número:
   aparece em Por status) e `media` ("↻ 2ª conf.", lista completa da coluna); o texto completo vai
   sempre no `title`.
 
+## Faixa de aviso e destaque de card
+
+- **Faixa de prioridade alta** (`AvisoPrioridadeAlta`, RF-24h): `bg-foreground text-background`
+  (o "ink" invertido do protótipo — segue o tema) com a pílula `PrioridadeAltaTag`, `role="status"` +
+  `aria-live="polite"`, `sticky top-2.5` no desktop e `max-mobile:top-[116px]` (abaixo do header +
+  tira de navegação sticky do `AppShell`, medido a 390px — mudou a altura da barra mobile, confira).
+  No celular o texto ocupa a linha e os botões descem, com `min-h-11` (44px).
+- **Destaque de card** (RF-24j): `ring-2 ring-foreground motion-safe:animate-anel-destaque` (keyframes
+  `anel-destaque` em `app/styles/index.css`), aplicado por ~4,2s via prop `destacado` em
+  `ProtocoloCard`/`EmConferenciaCard`; com movimento reduzido fica só o anel. O card expõe
+  `data-protocolo-id` pra ser achado e rolado (`scrollIntoView`).
+
 ## Rótulos de domínio
 
 `PRIORIDADE_LABEL = { Alta: 'Alta (urgente)', Normal: 'Média', Baixa: 'Baixa' }` — o valor gravado

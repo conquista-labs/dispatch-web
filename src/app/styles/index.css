@@ -27,6 +27,23 @@ body {
      lugares têm que concordar, cada um comenta apontando pro outro. */
   --breakpoint-mobile: 760px;
 
+  /* RF-24j — o "Ver" da faixa de prioridade alta destaca o card com um anel que pulsa (~4s, o
+     board tira a classe depois). Só com motion-safe; com movimento reduzido fica o anel parado. */
+  --animate-anel-destaque: anel-destaque 1s ease-in-out infinite;
+  @keyframes anel-destaque {
+    0%,
+    100% {
+      box-shadow:
+        0 0 0 2px var(--foreground),
+        0 0 0 9px color-mix(in oklab, var(--foreground) 16%, transparent);
+    }
+    50% {
+      box-shadow:
+        0 0 0 2px var(--foreground),
+        0 0 0 3px transparent;
+    }
+  }
+
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);

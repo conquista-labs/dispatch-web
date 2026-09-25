@@ -3,7 +3,9 @@ import { type ReactNode, useState } from 'react'
 import { useIsMobile } from '@/shared/lib/use-is-mobile'
 import { cn } from '@/shared/lib/utils'
 
-type Aba = 'pool' | 'minhas' | 'conferencia'
+import type { AbaDaFila } from '../lib/prioridade-alta'
+
+type Aba = AbaDaFila
 
 type FilaColunasProps = {
   pool: ReactNode
@@ -12,6 +14,10 @@ type FilaColunasProps = {
   minhasTotal: number
   conferencia: ReactNode
   conferenciaTotal: number
+  /** Aba controlada de fora (opcional): o board troca a aba quando o "Ver" da faixa de prioridade
+   * alta aponta pra um card de outra aba (RF-24j). Sem isso, a aba é estado interno. */
+  abaAtiva?: Aba
+  onAbaAtivaChange?: (aba: Aba) => void
 }
 
 // RF-24g — no desktop as 3 colunas ficam sempre lado a lado (comportamento de sempre); abaixo
@@ -26,9 +32,16 @@ export const FilaColunas = ({
   minhasTotal,
   conferencia,
   conferenciaTotal,
+  abaAtiva: abaControlada,
+  onAbaAtivaChange,
 }: FilaColunasProps) => {
   const mobile = useIsMobile()
-  const [abaAtiva, setAbaAtiva] = useState<Aba>('pool')
+  const [abaInterna, setAbaInterna] = useState<Aba>('pool')
+  const abaAtiva = abaControlada ?? abaInterna
+  const setAbaAtiva = (aba: Aba) => {
+    setAbaInterna(aba)
+    onAbaAtivaChange?.(aba)
+  }
 
   if (!mobile) {
     return (

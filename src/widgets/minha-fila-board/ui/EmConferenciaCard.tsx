@@ -9,6 +9,7 @@ import {
 } from '@/entities/protocolo'
 import { ObservacaoField } from '@/features/protocolo/definir-observacao'
 import { formatCronometro } from '@/shared/lib/format'
+import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/ui/button'
 import { Chip } from '@/shared/ui/chip'
 import { SurfaceCard } from '@/shared/ui/surface-card'
@@ -30,6 +31,8 @@ type EmConferenciaCardProps = {
   desabilitado?: boolean
   /** Distribuidora vendo a fila de um conferente (RF-19) — sem ação, sem editar observação. */
   somenteLeitura?: boolean
+  /** RF-24j — o "Ver" da faixa de prioridade alta destaca o card por alguns segundos. */
+  destacado?: boolean
 }
 
 // Card "Em conferência" (RF-21/RF-22) — único com borda destacada (é o que está em andamento
@@ -43,13 +46,18 @@ export const EmConferenciaCard = ({
   onRetomar,
   desabilitado,
   somenteLeitura,
+  destacado,
 }: EmConferenciaCardProps) => {
   const chip = prazoChip(protocolo.semaforo, protocolo.vencimentoEm, now)
   const pausado = !!protocolo.pausadoEm
   const decorridoMs = protocolo.iniciadoEm ? now - new Date(protocolo.iniciadoEm).getTime() : 0
 
   return (
-    <SurfaceCard destaque>
+    <SurfaceCard
+      destaque
+      data-protocolo-id={protocolo.id}
+      className={cn(destacado && 'ring-2 ring-foreground motion-safe:animate-anel-destaque')}
+    >
       <div className="flex items-center justify-between gap-1.5">
         <span className="font-mono text-[12.5px] font-medium">{protocolo.numero}</span>
         <div className="flex items-center gap-1">
