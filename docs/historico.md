@@ -877,3 +877,15 @@ conferente).
 
 Verificado: testes, `dashboard.spec.ts` (3), screenshots das três visões no desktop (claro/escuro) e no
 celular comparados com os do protótipo.
+
+## 2026-09-25 — Painel de detalhe fiel ao protótipo v2 (Parte 1)
+
+Rodadas anteriores do mesmo número entram na linha do tempo ("Conferido · 1ª conferência · não aprovado —
+<observação>", com quem/quando e a tag da rodada); a etapa atual leva a tag "Nª"; o bloco recolhível de
+histórico fica só com conferências posteriores, pausas e ajustes. Alçada: barrados neutros, só habilitados
+em verde. `ObservacaoField` ganha `sempreAberto` (painel: campo visível, Salvar/Descartar só quando muda).
+Rótulos "Prazo acordado"/"Conferente", etapa com inicial maiúscula. A linha "Peso de complexidade"
+(RF-18a) ficou para a fatia 5 do PLANO-dashboard-v2: o `GET /tipos-ato` não traz o peso.
+
+Verificado: testes; screenshots nos dois temas com a resposta do detalhe interceptada (rodada anterior
+reprovada) e contra a API local.
