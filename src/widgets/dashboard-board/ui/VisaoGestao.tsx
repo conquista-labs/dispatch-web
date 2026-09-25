@@ -27,6 +27,7 @@ import {
   variacaoDeVolume,
   variacaoEmPontos,
 } from '../lib/variacao'
+import { classeDoRitmo, formatarRitmo } from '../lib/ritmo'
 import { KpiCard } from './KpiCard'
 import { SerieCard } from './SerieCard'
 
@@ -58,7 +59,15 @@ const COLUNAS = {
   faixa: 'w-[112px] flex-none text-right',
 }
 
-const LinhaDesempenho = ({ d, ehAdministrador }: { d: DesempenhoConferente; ehAdministrador: boolean }) => (
+const LinhaDesempenho = ({
+  d,
+  ehAdministrador,
+  comRitmo,
+}: {
+  d: DesempenhoConferente
+  ehAdministrador: boolean
+  comRitmo: boolean
+}) => (
   <div role="row" className="flex min-h-[52px] items-center border-b border-secondary px-3.5 py-2.75 last:border-b-0">
     <span role="cell" className={COLUNAS.nome}>
       {/* RNF-10: nome completo, quebrando linha se precisar — não trunca. */}
@@ -68,10 +77,25 @@ const LinhaDesempenho = ({ d, ehAdministrador }: { d: DesempenhoConferente; ehAd
     <span role="cell" className={cn(COLUNAS.volume, 'font-mono text-[13px] font-medium')}>
       {d.volume}
     </span>
-    {/* "T. médio" no lugar do "Ritmo" do protótipo enquanto o back não calcula ritmo (ADR-0010). */}
-    <span role="cell" className={cn(COLUNAS.tempo, 'font-mono text-[12.5px] font-medium text-text-3')}>
-      {d.tempoMedio ? formatDuracaoConcluida(d.tempoMedio) : '—'}
-    </span>
+    {/* Ritmo com o tempo bruto embaixo, só como consulta (protótipo v2, RF-46a). Com a API anterior à
+        fatia 6 a coluna mostra o tempo médio bruto. */}
+    {comRitmo ? (
+      <span role="cell" className={cn(COLUNAS.tempo, 'flex flex-col items-end')}>
+        <span
+          className={cn(
+            'font-mono text-[12.5px] font-medium',
+            d.ritmo !== null && d.ritmo !== undefined ? classeDoRitmo(d.ritmo) : 'text-apoio',
+          )}
+        >
+          {d.ritmo !== null && d.ritmo !== undefined ? formatarRitmo(d.ritmo) : '—'}
+        </span>
+        <span className="text-[10.5px] text-apoio">{d.tempoMedio ? formatDuracaoConcluida(d.tempoMedio) : ''}</span>
+      </span>
+    ) : (
+      <span role="cell" className={cn(COLUNAS.tempo, 'font-mono text-[12.5px] font-medium text-text-3')}>
+        {d.tempoMedio ? formatDuracaoConcluida(d.tempoMedio) : '—'}
+      </span>
+    )}
     <span
       role="cell"
       className={cn(
@@ -132,6 +156,7 @@ const LinhaDesempenho = ({ d, ehAdministrador }: { d: DesempenhoConferente; ehAd
 export const VisaoGestao = ({ dashboard, periodo, periodoLabel }: VisaoGestaoProps) => {
   const { kpis, kpisAnterior, serie, metas, pesos, desempenho, porTipoAto, cumprimentoPrazoEquipe } = dashboard
   const aprovadosNa1a = aprovadoNaPrimeira(kpis)
+  const comRitmo = desempenho.some((d) => d.ritmo !== undefined)
   const ehAdministrador = useEhAdministrador()
   const diasUteis =
     dashboard.periodoInicio && dashboard.periodoFim
@@ -222,9 +247,19 @@ export const VisaoGestao = ({ dashboard, periodo, periodoLabel }: VisaoGestaoPro
             <span role="columnheader" className={COLUNAS.volume}>
               Volume
             </span>
-            <span role="columnheader" className={COLUNAS.tempo}>
-              T. médio
-            </span>
+            {comRitmo ? (
+              <span
+                role="columnheader"
+                className={COLUNAS.tempo}
+                title="tempo real ÷ tempo de referência dos tipos de ato que a pessoa conferiu"
+              >
+                Ritmo
+              </span>
+            ) : (
+              <span role="columnheader" className={COLUNAS.tempo}>
+                T. médio
+              </span>
+            )}
             <span role="columnheader" className={COLUNAS.prazo}>
               No prazo
             </span>
@@ -246,7 +281,7 @@ export const VisaoGestao = ({ dashboard, periodo, periodoLabel }: VisaoGestaoPro
             )}
           </div>
           {desempenho.map((d) => (
-            <LinhaDesempenho key={d.conferenteId} d={d} ehAdministrador={ehAdministrador} />
+            <LinhaDesempenho key={d.conferenteId} d={d} ehAdministrador={ehAdministrador} comRitmo={comRitmo} />
           ))}
           {desempenho.length === 0 && (
             <p className="p-3.5 text-[13px] text-muted-foreground">Ninguém concluiu nenhum ato neste período.</p>
@@ -254,9 +289,11 @@ export const VisaoGestao = ({ dashboard, periodo, periodoLabel }: VisaoGestaoPro
         </div>
       </SurfaceCard>
       <p className="mt-2.5 max-w-[80ch] text-[12.5px] text-pretty text-apoio">
-        {ehAdministrador
-          ? 'Complexidade é o peso médio dos atos conferidos — quem pega inventário e sobrepartilha não compete em volume com quem faz venda e compra, então o score corrige isso.'
-          : 'Complexidade é o peso médio dos atos conferidos — quem pega inventário e sobrepartilha faz menos volume que quem faz venda e compra.'}
+        {comRitmo
+          ? 'Ritmo é o tempo real dividido pelo tempo de referência dos tipos de ato que a pessoa conferiu — 1,00× é a referência, abaixo é mais rápido. O tempo bruto aparece embaixo só como consulta: sozinho, ele penaliza quem pega inventário e testamento.'
+          : ehAdministrador
+            ? 'Complexidade é o peso médio dos atos conferidos — quem pega inventário e sobrepartilha não compete em volume com quem faz venda e compra, então o score corrige isso.'
+            : 'Complexidade é o peso médio dos atos conferidos — quem pega inventário e sobrepartilha faz menos volume que quem faz venda e compra.'}
       </p>
 
       <div className="mt-6.5 grid grid-cols-1 gap-2 mobile:grid-cols-2">

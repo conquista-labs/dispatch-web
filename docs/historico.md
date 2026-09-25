@@ -929,6 +929,20 @@ somar 100"); com a API anterior a seção não aparece.
 Verificado: testes; contra a API local da branch da API: barra de meta pro admin e pra distribuidora, nada pro
 conferente, distribuidora sem legenda de score, seção na Configuração com a soma e o erro de 105.
 
+## 2026-09-25 — Tempo de referência e ritmo (fatias 5 e 6 do Dashboard v2)
+
+Consome dispatch-api #9 (ADR-0043/0044 do back). Dashboard: coluna "Ritmo" (cor por faixa ≤0,95/≤1,10, tempo
+bruto embaixo) no lugar de "T. médio" e rodapé do protótipo; conferente com KPI "Ritmo" ("N% mais rápido/lento
+que a referência", variação absoluta), `TempoPorTipoCard` ("Seu tempo por tipo de ato": barra você × marcador
+da referência, diferença, frase explicativa) e ritmo em "Você e a média". `lib/ritmo.ts` com testes. Tipos de
+ato: peso decimal (0,50–2,50, passo 0,05, "1,60") e bloco "Referência" (stepper, origem, "Usar histórico") com a
+feature `definir-tempo-referencia` (invalida Tipos de ato e Dashboard). Painel de detalhe: "Peso de
+complexidade" (RF-18a). Campos novos opcionais: com a API anterior tudo volta ao T. médio. Fica de fora o
+indicador "Tempo sem histórico" (a lista é paginada no servidor; o back precisa mandar a contagem).
+
+Verificado: testes; contra a API local da branch da API: coluna Ritmo, KPI e tempo por tipo do conferente,
+Tipos de ato com peso decimal e referência estimada, peso no painel.
+
 ## 2026-09-25 — Central de regras: navegação lateral e Regras em vigor agrupadas (Parte 1)
 
 Protótipo v2. `CentralDeRegrasBoard`: a partir de 1180px, coluna fixa de 188px com o título e os grupos
