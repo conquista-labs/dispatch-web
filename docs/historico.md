@@ -956,3 +956,13 @@ no celular.
 
 Verificado: testes de `alcada-em-vigor` e `prazo-em-vigor`; `central-de-regras.spec.ts`; screenshots a 1280px
 (navegação lateral), 1000px (pílulas), celular sem rolagem lateral e distribuidora.
+
+## 2026-09-25 — Exportar CSV do Dashboard (RF-44, fatia 7 do Dashboard v2)
+
+Decisão do dono: só a tabela de produção/desempenho do período, gerada no navegador a partir do `/dashboard`
+(sem endpoint). `lib/exportar-csv.ts`: separador ";", vírgula decimal e BOM de UTF-8 (Excel em português abre
+direto), aspas só quando precisa; nível/score/faixa só quando quem exporta é Administrador. Botão "Exportar
+CSV" ao lado do seletor de período, só na gestão (como no protótipo).
+
+Verificado: testes do gerador; download real no navegador como admin (com avaliação) e distribuidora (sem),
+conferente sem o botão.
