@@ -4,7 +4,6 @@ import { useConferentes } from '@/entities/conferente'
 import { useConfiguracao } from '@/entities/configuracao'
 import { useEquipes } from '@/entities/equipe'
 import { useEscreventes } from '@/entities/escrevente'
-import { TIPO_PRAZO_LABEL } from '@/entities/protocolo'
 import { useRegrasAlcada } from '@/entities/regraAlcada'
 import { useTiposAto } from '@/entities/tipoAto'
 import { useEhAdministrador } from '@/entities/usuario'
@@ -14,7 +13,8 @@ import { Carregando } from '@/shared/ui/carregando'
 import { Input } from '@/shared/ui/input'
 import { SurfaceCard } from '@/shared/ui/surface-card'
 
-import { itensDeAlcadaEmVigor, type ItemVigor } from '../lib/alcada-em-vigor'
+import { contagemDaAlcadaEmVigor, itensDeAlcadaEmVigor, type ItemVigor } from '../lib/alcada-em-vigor'
+import { contagemDoPrazoEmVigor, itensDePrazoEmVigor } from '../lib/prazo-em-vigor'
 import { criarNomesDaCentralDeRegras } from '../lib/nomes'
 
 type GrupoVigor = {
@@ -26,6 +26,8 @@ type GrupoVigor = {
    * dado à aba "Camadas" (achado real do dono). Os outros 3 grupos são bounded pelo domínio
    * (nº de equipes/tipos/parâmetros fixos), não precisam disso. */
   totalSemFiltro?: number
+  // Contagem do cabeçalho no formato do protótipo ("4 pessoas e níveis · 6 regras"); sem ela, o nº de linhas.
+  contagem?: string
 }
 
 // Sem os `onIrPara*` (quem não é admin só lê — RF-30a), cada família mostra "só a administração
@@ -89,29 +91,7 @@ export const AbaRegrasEmVigor = ({
     ? alcadaItensTodos.filter((item) => item.frase.toLowerCase().includes(qAlcada))
     : alcadaItensTodos
 
-  const orfaos = escreventes.filter((e) => !e.equipeId)
-  const prazoItens: ItemVigor[] = equipes
-    .map((equipe) => {
-      const doTime = escreventes.filter((e) => e.equipeId === equipe.id)
-      return {
-        frase: `Escreventes de ${equipe.nome}: pré-conferência em ${TIPO_PRAZO_LABEL[equipe.prazoPreConferencia]}, pós-conferência em ${TIPO_PRAZO_LABEL[equipe.prazoPosConferencia]}`,
-        // RNF-10: nome completo — dois escreventes com o mesmo primeiro nome na mesma equipe
-        // ficariam indistinguíveis nessa lista.
-        detalhe: doTime.length
-          ? `${plural(doTime.length, 'escrevente', 'escreventes')} · ${doTime.map((e) => e.nome).join(', ')}`
-          : 'nenhum escrevente nesta equipe',
-      }
-    })
-    .concat(
-      orfaos.length > 0
-        ? [
-            {
-              frase: 'Escrevente sem equipe: prazo padrão D+1',
-              detalhe: `${plural(orfaos.length, 'escrevente', 'escreventes')} hoje sem equipe`,
-            },
-          ]
-        : [],
-    )
+  const prazoItens = itensDePrazoEmVigor(equipes, escreventes)
 
   const desativados = tiposAto.filter((t) => !t.ativo)
   const catalogoItens: ItemVigor[] = [
@@ -159,10 +139,12 @@ export const AbaRegrasEmVigor = ({
       editarLabel: 'Editar alçada',
       onEditar: onIrParaAlcada,
       totalSemFiltro: alcadaItensTodos.length,
+      contagem: ehAdministrador ? contagemDaAlcadaEmVigor(regras) : undefined,
     },
     {
       nome: 'Prazo — de onde vem o vencimento',
       itens: prazoItens,
+      contagem: contagemDoPrazoEmVigor(equipes, escreventes),
       editarLabel: 'Editar prazos',
       onEditar: onIrParaPrazos,
     },
@@ -181,13 +163,13 @@ export const AbaRegrasEmVigor = ({
       <div className="mt-4.5 flex flex-col gap-3.5">
         {grupos.map((grupo) => (
           <div key={grupo.nome}>
-            <div className="mb-1.5 flex items-baseline justify-between gap-3">
-              <div className="flex min-w-0 items-baseline gap-2">
+            <div className="mb-1.5 flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
+              <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5">
                 <strong className="text-[13.5px] font-semibold">{grupo.nome}</strong>
                 <span className="flex-none font-mono text-[11px] text-muted-foreground">
                   {grupo.totalSemFiltro !== undefined && grupo.totalSemFiltro !== grupo.itens.length
                     ? `${grupo.itens.length} de ${grupo.totalSemFiltro}`
-                    : grupo.itens.length}
+                    : (grupo.contagem ?? grupo.itens.length)}
                 </span>
               </div>
               {grupo.onEditar ? (
