@@ -94,7 +94,7 @@ describe('useAlcadaBuilder', () => {
   it('quemTexto mostra o nível quando sujeito é nível, e o nome resolvido quando é pessoa', () => {
     const { result } = montar()
 
-    expect(result.current.quemTexto).toBe('Nível Júnior')
+    expect(result.current.quemTexto).toBe('Analista Júnior')
 
     act(() => result.current.setBuilder((b) => ({ ...b, sujeitoTipo: 'pessoa', sujeitoConferenteId: 'c1' })))
     expect(result.current.quemTexto).toBe('Ana')
@@ -155,6 +155,23 @@ describe('useAlcadaBuilder', () => {
     )
 
     expect(result.current.podeCriar).toBe(false)
+  })
+
+  it('falta diz o que ainda impede criar — quem, o quê, a etapa — e some quando está pronto', () => {
+    const { result } = montar()
+    act(() => result.current.setAlvoTipo('tipo'))
+    expect(result.current.falta).toBe('Falta escolher o quê.')
+
+    act(() => result.current.setBuilder((b) => ({ ...b, sujeitoTipo: 'pessoa', sujeitoConferenteId: '' })))
+    expect(result.current.falta).toBe('Falta escolher quem.')
+
+    act(() => result.current.setBuilder((b) => ({ ...b, sujeitoConferenteId: 'c1', alvoSelecionados: ['t1'] })))
+    expect(result.current.falta).toBeNull()
+
+    act(() => result.current.setAlvoTipo('equipeEtapa'))
+    expect(result.current.falta).toBe('Falta escolher a equipe.')
+    act(() => result.current.setBuilder((b) => ({ ...b, alvoSelecionados: ['e1'] })))
+    expect(result.current.falta).toBe('Falta escolher a etapa.')
   })
 
   it('handleCriarRegra("todos") cria uma regra com alvoTodosOsAtos e fecha o construtor', async () => {

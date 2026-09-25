@@ -30,9 +30,9 @@ const novaRegra = (sobrescreve: Partial<RegraAlcada> = {}): RegraAlcada => ({
 })
 
 describe('fraseDaRegra — sujeito', () => {
-  it('nível vira "Nível X"', () => {
+  it('nível vira "Analista X"', () => {
     const frase = fraseDaRegra(novaRegra({ sujeitoNivel: 'Junior', alvoTodosOsAtos: true }), lookups)
-    expect(frase).toBe('Nível Júnior pode conferir todos os atos')
+    expect(frase).toBe('Analista Júnior pode conferir todos os atos')
   })
 
   it('pessoa resolve o nome via lookup', () => {
@@ -47,32 +47,32 @@ describe('fraseDaRegra — alvo (Permite/Nega)', () => {
       novaRegra({ sujeitoNivel: 'Pleno', permissao: 'Nega', alvoEtapa: 'PreConferencia' }),
       lookups,
     )
-    expect(frase).toBe('Nível Pleno não pode fazer pré-conferência')
+    expect(frase).toBe('Analista Pleno não pode fazer pré-conferência')
   })
 
   it('tipo de ato', () => {
     const frase = fraseDaRegra(novaRegra({ sujeitoNivel: 'Senior', alvoTipoAtoId: 't1' }), lookups)
-    expect(frase).toBe('Nível Sênior pode conferir Tipo t1')
+    expect(frase).toBe('Analista Sênior pode conferir Tipo t1')
   })
 
   it('equipe com id', () => {
     const frase = fraseDaRegra(novaRegra({ sujeitoNivel: 'Pleno', alvoEhEquipe: true, alvoEquipeId: 'e1' }), lookups)
-    expect(frase).toBe('Nível Pleno pode conferir atos da equipe Equipe e1')
+    expect(frase).toBe('Analista Pleno pode conferir atos da equipe Equipe e1')
   })
 
   it('equipe nula — "sem equipe" é alvo válido (RF-29a)', () => {
     const frase = fraseDaRegra(novaRegra({ sujeitoNivel: 'Pleno', alvoEhEquipe: true, alvoEquipeId: null }), lookups)
-    expect(frase).toBe('Nível Pleno pode conferir atos de escreventes sem equipe')
+    expect(frase).toBe('Analista Pleno pode conferir atos de escreventes sem equipe')
   })
 
   it('grupo de tipo de ato', () => {
     const frase = fraseDaRegra(novaRegra({ sujeitoNivel: 'Junior', alvoGrupo: 'Notariais' }), lookups)
-    expect(frase).toBe('Nível Júnior pode conferir atos de Notariais')
+    expect(frase).toBe('Analista Júnior pode conferir atos de Notariais')
   })
 
   it('todos os atos (alçada plena)', () => {
     const frase = fraseDaRegra(novaRegra({ sujeitoNivel: 'Senior', alvoTodosOsAtos: true }), lookups)
-    expect(frase).toBe('Nível Sênior pode conferir todos os atos')
+    expect(frase).toBe('Analista Sênior pode conferir todos os atos')
   })
 
   it('equipe + etapa (Motor v4) com equipe', () => {
@@ -86,7 +86,7 @@ describe('fraseDaRegra — alvo (Permite/Nega)', () => {
       }),
       lookups,
     )
-    expect(frase).toBe('Nível Júnior não pode fazer pré-conferência da equipe Equipe e1')
+    expect(frase).toBe('Analista Júnior não pode fazer pré-conferência da equipe Equipe e1')
   })
 
   it('equipe + etapa (Motor v4) sem equipe', () => {
@@ -100,7 +100,7 @@ describe('fraseDaRegra — alvo (Permite/Nega)', () => {
       }),
       lookups,
     )
-    expect(frase).toBe('Nível Júnior não pode fazer pós-conferência de escreventes sem equipe')
+    expect(frase).toBe('Analista Júnior não pode fazer pós-conferência de escreventes sem equipe')
   })
 })
 
@@ -118,6 +118,6 @@ describe('fraseDaRegra — Reserva', () => {
       novaRegra({ sujeitoNivel: 'Pleno', permissao: 'Reserva', alvoEhEquipe: true, alvoEquipeId: null }),
       lookups,
     )
-    expect(frase).toBe('Só Nível Pleno confere atos de escreventes sem equipe')
+    expect(frase).toBe('Só Analista Pleno confere atos de escreventes sem equipe')
   })
 })

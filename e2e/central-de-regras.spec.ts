@@ -78,7 +78,7 @@ test('Central de regras — as 3 abas renderizam com dados reais', async ({ page
   await page.screenshot({ path: 'e2e/.screenshots/central-de-regras-alcada-claro.png', fullPage: true })
 
   // Construtor guiado (RF-32).
-  await page.getByRole('button', { name: 'Nova regra' }).click()
+  await page.getByRole('button', { name: 'Nova regra', exact: true }).click()
   await expect(page.getByRole('button', { name: 'Por pessoa' })).toBeVisible()
   await page.screenshot({ path: 'e2e/.screenshots/central-de-regras-builder-claro.png', fullPage: true })
   await page.getByRole('button', { name: 'Cancelar' }).click()
