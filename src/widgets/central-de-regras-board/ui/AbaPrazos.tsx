@@ -93,6 +93,7 @@ export const AbaPrazos = () => {
               opcoes={semEquipe.map((esc) => ({ valor: esc.id, label: esc.nome }))}
               onAlternar={toggleSelecao}
               placeholder="buscar escrevente…"
+              vazioLabel="Escolher escreventes…"
             />
           </div>
         </div>
@@ -130,8 +131,12 @@ export const AbaPrazos = () => {
             className="flex w-full flex-wrap items-baseline justify-between gap-x-3 gap-y-1 p-3.5 text-left hover:bg-secondary/60"
           >
             <span className="min-w-0">
-              <span className="block text-[13.5px] font-semibold">
-                {padrao.length} equipes no padrão: {fraseDoPrazo(padrao[0])}
+              {/* Protótipo v2: o prazo vira uma pílula ao lado da contagem, em vez de título corrido. */}
+              <span className="flex flex-wrap items-center gap-2">
+                <span className="text-[13.5px] font-semibold">{padrao.length} equipes no padrão</span>
+                <span className="rounded-full border border-border bg-secondary px-2 py-px font-mono text-[11px] font-medium text-text-3">
+                  {fraseDoPrazo(padrao[0])}
+                </span>
               </span>
               <span className="mt-0.5 block text-[12px] text-pretty text-apoio">
                 {padrao
@@ -141,7 +146,7 @@ export const AbaPrazos = () => {
                 {padrao.length > 6 ? ` e mais ${padrao.length - 6}` : ''}
               </span>
             </span>
-            <span className="flex-none text-[12.5px] font-medium text-text-2">
+            <span className="flex h-7 flex-none items-center rounded-md border border-border bg-card px-2.5 text-[12px] font-medium text-text-2">
               {padraoExpandido ? 'recolher' : 'ver e ajustar'}
             </span>
           </button>
@@ -156,8 +161,13 @@ export const AbaPrazos = () => {
       {proprias.length > 0 && (
         <>
           {padrao.length > 0 && (
-            <div className="mt-5 mb-2 text-[13px] font-semibold">
-              {proprias.length === 1 ? '1 equipe com prazo próprio' : `${proprias.length} equipes com prazo próprio`}
+            <div className="mt-5 mb-2 flex flex-wrap items-baseline gap-x-2.5 gap-y-0.5">
+              <span className="text-[13px] font-semibold">
+                {proprias.length === 1 ? '1 equipe com prazo próprio' : `${proprias.length} equipes com prazo próprio`}
+              </span>
+              <span className="text-[11.5px] text-muted-foreground">
+                as que fogem do padrão — são estas que merecem atenção
+              </span>
             </div>
           )}
           <div className={cn('grid grid-cols-2 gap-2 max-mobile:grid-cols-1', padrao.length === 0 && 'mt-3.5')}>

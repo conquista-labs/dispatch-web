@@ -12,6 +12,8 @@ type SeletorMultiploProps<T> = {
   opcoes: OpcaoMultipla<T>[]
   onAlternar: (valor: T) => void
   placeholder?: string
+  /** Texto do botão sem nada escolhido — "Escolher o que…" é genérico demais fora do construtor. */
+  vazioLabel?: string
 }
 
 // Dropdown de seleção múltipla com busca — mesmo padrão de FiltroEixo (widgets/filtro-
@@ -23,6 +25,7 @@ export const SeletorMultiplo = <T,>({
   opcoes,
   onAlternar,
   placeholder = 'buscar…',
+  vazioLabel = 'Escolher o que…',
 }: SeletorMultiploProps<T>) => {
   const [busca, setBusca] = useState('')
   const visiveis = busca.trim()
@@ -31,7 +34,7 @@ export const SeletorMultiplo = <T,>({
 
   const textoTrigger =
     selecionados.length === 0
-      ? 'Escolher o que…'
+      ? vazioLabel
       : selecionados.length === 1
         ? (opcoes.find((o) => o.valor === selecionados[0])?.label ?? '1 selecionado')
         : `${selecionados.length} selecionados`
