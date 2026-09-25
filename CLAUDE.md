@@ -111,8 +111,9 @@ Prefira a skill a re-derivar o fluxo.
   depois de qualquer mudança de tela.**
 - **`web-testing-strategy`** — decidir que teste uma mudança pede e onde ele vive.
 - **`web-gate`** — cadeia de verificação completa no fim da tarefa (check → build → e2e).
-- **`web-commit`** — da árvore verificada pra commits no `main` (um por assunto, na voz do repo);
-  push só quando pedido.
+- **`web-commit`** — da árvore verificada até um PR aberto: branch, um commit por assunto na voz do
+  repo, `gh pr create`. **Nada vai direto no `main`** (o hook `guard-git.py` bloqueia); merge e deploy
+  só quando o dono pedir.
 - **`web-adr`** — registrar uma decisão entre alternativas reais em `docs/decisions/`.
 - **`shadcn`** — skill oficial do shadcn/ui (vendorizada em `.agents/skills/shadcn`), só consulta
   (docs, registro, MCP em `.mcp.json`); o passo de escrever arquivo é sempre o `add-shadcn-component`.

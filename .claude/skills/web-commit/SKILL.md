@@ -1,17 +1,19 @@
 ---
 name: web-commit
-description: Leva uma mudança terminada do dispatch-web da árvore de trabalho pra commits no main — confere que o gate rodou nesta árvore, separa um commit por assunto, escreve a mensagem na voz do repositório e só faz push quando o usuário pedir. Use quando o usuário pedir "commita", "fecha o commit", "sobe isso", ou ao terminar uma tarefa que ele pediu pra commitar.
+description: Leva uma mudança terminada do dispatch-web da árvore de trabalho até um pull request aberto — branch, gate rodado nesta árvore, um commit por assunto na voz do repositório, push e `gh pr create`; o merge e o deploy só quando o usuário pedir. Use quando o usuário pedir "commita", "abre o PR", "sobe isso", ou ao terminar uma tarefa que ele pediu pra entregar.
 ---
 
 # web-commit
 
-Adaptado da metade "commits" da skill `/mr` do swap-benefits-web. Aqui não há branch nem PR: o
-dispatch-web commita direto no `main` (GitHub `conquista-labs/dispatch-web`). O deploy do front é
-manual (`netlify deploy --prod --build`), então **push não publica**, mas também não se faz sem o
-usuário pedir.
+Adaptado da skill `/mr` do swap-benefits-web. **Toda mudança sai por branch + pull request** no
+GitHub (`conquista-labs/dispatch-web`) — decisão do dono de 25/09/2026. Commit e push no `main` são
+bloqueados pelo hook `guard-git.py`. O deploy do front é manual (`netlify deploy --prod --build`),
+então nem o merge publica.
 
 ## Pré-condições — confira, não suponha
 
+0. **Está numa branch, não no `main`.** Senão: `git switch -c <tipo>/<assunto-em-kebab-case>`
+   (`feat/`, `fix/`, `chore/`, `docs/`, `test/`), em português (`feat/aviso-prioridade-alta`).
 1. **O `web-gate` rodou nesta árvore exata** (tier 1 no mínimo: `npm run check`). Se algo mudou
    depois, rode de novo. Nunca escreva no commit uma verificação que não rodou.
 2. `git status --short` mostra só o que você quis mudar. Pode haver outra sessão no mesmo checkout:
@@ -48,11 +50,25 @@ isso no corpo (staging interativo não funciona aqui).
   commit **novo** — nunca `--no-verify` (o hook `guard-git.py` bloqueia) e nunca `--amend` num
   commit que já foi pro remoto.
 
-## Push
+## Push e PR
 
-Só quando o usuário pedir. `git push origin main`. Force push é bloqueado pelo `guard-git.py` — se
-o remoto divergiu, `git pull --rebase` e rode o gate de novo.
+Depois dos commits, sem perguntar de novo (o usuário já pediu a entrega):
+
+1. `git push -u origin <branch>`.
+2. `gh pr create --base main --head <branch> --title "<tipo(escopo): resumo>" --body-file <arquivo>`
+   (o `gh` está autenticado como `juniorconquista`). Corpo com as seções: **O que entra**,
+   **Decisões que valem leitura**, **Armadilhas**, **Verificação** (números exatos; nunca afirme
+   verificação que não rodou) e **Fora de escopo**; termina com a linha de atribuição de PR que a
+   sessão fornece.
+3. Mudança que depende de PR do `dispatch-api`: diga no corpo ("Depende de conquista-labs/dispatch-api#N")
+   e a ordem de merge (API primeiro).
+
+**Merge e deploy só quando o usuário pedir** ("pode mergear", "vamos subir"): `gh pr merge <n> --merge`,
+depois `git switch main && git pull --ff-only` e `git branch -d <branch>`; o deploy é
+`netlify deploy --prod --build` a partir do `main` limpo, **depois** que a API da mesma entrega
+estiver no ar (ver skill `prod-ops` do api). Force push é bloqueado — se o remoto divergiu,
+`git pull --rebase` na branch e rode o gate de novo.
 
 ## Relatório
 
-Uma linha por commit (`hash assunto`), o que ficou de fora da árvore e por quê, e se houve push.
+Uma linha por commit (`hash assunto`), o link do PR, o que ficou de fora da árvore e por quê.
