@@ -916,3 +916,15 @@ não aparecem e "Aprovados na 1ª" cai no percentual antigo.
 Verificado: testes (`variacao`, `apresentacao`, `SerieCard`), `dashboard.spec.ts`; contra a API local da
 branch da API: mês com a série por dia útil, trimestre por semana (S1…S14), conferente no escuro, celular
 sem rolagem lateral; variação preenchida com a resposta interceptada (o banco local não tem agosto).
+
+## 2026-09-25 — Barra de meta e pesos do score configuráveis (fatia 2 do Dashboard v2)
+
+Consome os campos novos de `GET /config` e `GET /dashboard` (dispatch-api #8, ADR-0042 do back). `KpiCard`
+ganha a barra de meta ("meta 95% · faltam 5 pts" / "· atingida", verde/amarela, marcador na posição da meta)
+em "Dentro do prazo" e "Aprovados na 1ª" — só a gestão recebe `metas` (decisão do dono). Legenda do score e
+máximo das parcelas do conferente vêm de `pesos` (padrão 40/30/20/10 enquanto a API não manda).
+`AbaConfiguracao` ganha a seção "Metas e score" (metas 50–100%, pesos com soma ao vivo e validação "precisam
+somar 100"); com a API anterior a seção não aparece.
+
+Verificado: testes; contra a API local da branch da API: barra de meta pro admin e pra distribuidora, nada pro
+conferente, distribuidora sem legenda de score, seção na Configuração com a soma e o erro de 105.

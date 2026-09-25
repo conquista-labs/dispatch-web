@@ -18,7 +18,15 @@ import {
   tomDaAprovacao,
   tomDoPrazo,
 } from '../lib/apresentacao'
-import { aprovadoNaPrimeira, COMPARADO_COM, variacaoDeTempo, variacaoDeVolume, variacaoEmPontos } from '../lib/variacao'
+import {
+  aprovadoNaPrimeira,
+  COMPARADO_COM,
+  legendaDoScore,
+  PESOS_PADRAO,
+  variacaoDeTempo,
+  variacaoDeVolume,
+  variacaoEmPontos,
+} from '../lib/variacao'
 import { KpiCard } from './KpiCard'
 import { SerieCard } from './SerieCard'
 
@@ -122,7 +130,7 @@ const LinhaDesempenho = ({ d, ehAdministrador }: { d: DesempenhoConferente; ehAd
 // RF-43a: pra distribuidora a tabela vira "Produção por conferente", sem cargo, score nem faixa
 // (o back já manda sem, e em ordem alfabética pra a ordem não entregar o ranking).
 export const VisaoGestao = ({ dashboard, periodo, periodoLabel }: VisaoGestaoProps) => {
-  const { kpis, kpisAnterior, serie, desempenho, porTipoAto, cumprimentoPrazoEquipe } = dashboard
+  const { kpis, kpisAnterior, serie, metas, pesos, desempenho, porTipoAto, cumprimentoPrazoEquipe } = dashboard
   const aprovadosNa1a = aprovadoNaPrimeira(kpis)
   const ehAdministrador = useEhAdministrador()
   const diasUteis =
@@ -153,6 +161,7 @@ export const VisaoGestao = ({ dashboard, periodo, periodoLabel }: VisaoGestaoPro
               ? variacaoEmPontos(kpis.percentualNoPrazo, kpisAnterior.percentualNoPrazo)
               : null
           }
+          meta={metas ? { valor: kpis.percentualNoPrazo, meta: metas.noPrazo } : null}
           sub={contagem(
             Math.round((1 - kpis.percentualNoPrazo) * kpis.atosConferidos),
             'nenhum estourou',
@@ -164,6 +173,7 @@ export const VisaoGestao = ({ dashboard, periodo, periodoLabel }: VisaoGestaoPro
           label="Aprovados na 1ª"
           valor={aprovadosNa1a === null ? '—' : pct(aprovadosNa1a)}
           variacao={kpisAnterior ? variacaoEmPontos(aprovadosNa1a, aprovadoNaPrimeira(kpisAnterior)) : null}
+          meta={metas && aprovadosNa1a !== null ? { valor: aprovadosNa1a, meta: metas.aprovadoNaPrimeira } : null}
           sub={contagem(
             Math.round((1 - kpis.percentualAprovado) * kpis.atosConferidos),
             'nenhum voltou com apontamento',
@@ -188,9 +198,7 @@ export const VisaoGestao = ({ dashboard, periodo, periodoLabel }: VisaoGestaoPro
               Desempenho e bonificação · {periodoLabel}
               <SeloSoAdministracao />
             </h2>
-            <span className="text-[12px] text-apoio">
-              score = 40% volume · 30% prazo · 20% qualidade · 10% complexidade
-            </span>
+            <span className="text-[12px] text-apoio">{legendaDoScore(pesos ?? PESOS_PADRAO)}</span>
           </>
         ) : (
           <>

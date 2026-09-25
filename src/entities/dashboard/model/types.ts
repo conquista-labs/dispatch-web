@@ -45,6 +45,8 @@ export type DesempenhoTipoAto = {
   percentualReprovacao: number
 }
 
+export type PesosDoScore = { volume: number; prazo: number; qualidade: number; complexidade: number }
+
 export type KpisDashboard = {
   atosConferidos: number
   percentualNoPrazo: number
@@ -88,6 +90,9 @@ export type Dashboard = {
   periodoFim?: string
   kpisAnterior?: KpisDashboard | null
   serie?: SerieDashboard | null
+  // Fatia 2: metas só na visão de gestão; pesos pra quem vê score (admin e o próprio conferente).
+  metas?: { noPrazo: number; aprovadoNaPrimeira: number } | null
+  pesos?: PesosDoScore | null
   kpis: KpisDashboard
   desempenho: DesempenhoConferente[]
   mediaDaCasa: DesempenhoConferente | null

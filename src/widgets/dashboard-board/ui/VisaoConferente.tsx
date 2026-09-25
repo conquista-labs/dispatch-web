@@ -4,7 +4,7 @@ import { cn } from '@/shared/lib/utils'
 import { SurfaceCard } from '@/shared/ui/surface-card'
 
 import { contagem, formatarComplexidade } from '../lib/apresentacao'
-import { aprovadoNaPrimeira, variacaoDeTempo, variacaoDeVolume, variacaoEmPontos } from '../lib/variacao'
+import { aprovadoNaPrimeira, PESOS_PADRAO, variacaoDeTempo, variacaoDeVolume, variacaoEmPontos } from '../lib/variacao'
 import { KpiCard } from './KpiCard'
 
 const pct = (fracao: number) => `${Math.round(fracao * 100)}%`
@@ -22,6 +22,7 @@ type LinhaComparacao = { label: string; voce: string; media: string; melhorOuIgu
 // protótipo é "Ritmo"; aqui é o tempo médio bruto até o back calcular ritmo (ADR-0010).
 export const VisaoConferente = ({ dashboard, periodoLabel, comparadoCom }: VisaoConferenteProps) => {
   const { kpis, kpisAnterior, desempenho, mediaDaCasa } = dashboard
+  const pesos = dashboard.pesos ?? PESOS_PADRAO
   const meu = desempenho[0]
 
   if (!meu) {
@@ -34,10 +35,10 @@ export const VisaoConferente = ({ dashboard, periodoLabel, comparadoCom }: Visao
 
   const parcelas = meu.parcelas
     ? [
-        { label: 'Volume', pontos: meu.parcelas.volume, max: 40 },
-        { label: 'Prazo', pontos: meu.parcelas.prazo, max: 30 },
-        { label: 'Qualidade', pontos: meu.parcelas.qualidade, max: 20 },
-        { label: 'Complexidade', pontos: meu.parcelas.complexidade, max: 10 },
+        { label: 'Volume', pontos: meu.parcelas.volume, max: pesos.volume },
+        { label: 'Prazo', pontos: meu.parcelas.prazo, max: pesos.prazo },
+        { label: 'Qualidade', pontos: meu.parcelas.qualidade, max: pesos.qualidade },
+        { label: 'Complexidade', pontos: meu.parcelas.complexidade, max: pesos.complexidade },
       ]
     : []
 
@@ -137,7 +138,7 @@ export const VisaoConferente = ({ dashboard, periodoLabel, comparadoCom }: Visao
                 <span className="block h-1.5 flex-1 overflow-hidden rounded-full bg-secondary">
                   <span
                     className="block h-1.5 rounded-full bg-apoio"
-                    style={{ width: `${(p.pontos / p.max) * 100}%` }}
+                    style={{ width: `${p.max > 0 ? (p.pontos / p.max) * 100 : 0}%` }}
                   />
                 </span>
                 <span className="w-[72px] flex-none text-right font-mono text-[12px] font-medium whitespace-nowrap text-text-3">

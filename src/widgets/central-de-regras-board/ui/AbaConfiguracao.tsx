@@ -141,7 +141,67 @@ const SECOES: { nome: string; sub: string; campos: CampoConfig[] }[] = [
       },
     ],
   },
+  {
+    nome: 'Metas e score',
+    sub: 'As metas aparecem como uma barra nos indicadores da gestão; os pesos decidem o score de cada conferente e, com ele, a faixa de bonificação.',
+    campos: [
+      {
+        chave: 'metaNoPrazo',
+        rotulo: 'Meta de atos dentro do prazo',
+        ajuda: 'Linha de chegada do indicador "Dentro do prazo" no Dashboard da gestão.',
+        tipo: 'pct',
+        min: 50,
+      },
+      {
+        chave: 'metaAprovadoNaPrimeira',
+        rotulo: 'Meta de aprovados na 1ª conferência',
+        ajuda: 'Linha de chegada do indicador "Aprovados na 1ª".',
+        tipo: 'pct',
+        min: 50,
+      },
+      {
+        chave: 'pesoVolume',
+        rotulo: 'Peso do volume no score',
+        ajuda: 'Quanto conta quantos atos a pessoa conferiu, comparado a quem mais conferiu.',
+        tipo: 'num',
+        unidade: 'pontos',
+        passo: 5,
+        min: 0,
+      },
+      {
+        chave: 'pesoPrazo',
+        rotulo: 'Peso do prazo no score',
+        ajuda: 'Quanto conta a fração de atos concluídos dentro do prazo.',
+        tipo: 'num',
+        unidade: 'pontos',
+        passo: 5,
+        min: 0,
+      },
+      {
+        chave: 'pesoQualidade',
+        rotulo: 'Peso da qualidade no score',
+        ajuda: 'Quanto conta a fração de atos aprovados.',
+        tipo: 'num',
+        unidade: 'pontos',
+        passo: 5,
+        min: 0,
+      },
+      {
+        chave: 'pesoComplexidade',
+        rotulo: 'Peso da complexidade no score',
+        ajuda:
+          'Quanto conta o peso médio dos atos conferidos — para quem pega inventário não competir em volume com venda e compra.',
+        tipo: 'num',
+        unidade: 'pontos',
+        passo: 5,
+        min: 0,
+      },
+    ],
+  },
 ]
+
+const CHAVES_DOS_PESOS = ['pesoVolume', 'pesoPrazo', 'pesoQualidade', 'pesoComplexidade'] as const
+const somaDosPesos = (v: Configuracao) => CHAVES_DOS_PESOS.reduce((soma, chave) => soma + (v[chave] ?? 0), 0)
 
 const TODAS_AS_CHAVES = SECOES.flatMap((secao) => secao.campos.map((campo) => campo.chave))
 
@@ -166,6 +226,12 @@ const validar = (v: Configuracao): Partial<Record<keyof Configuracao, string>> =
   ;(['limiarPrazoIrrealEstouro', 'limiarRiscoQualidadeReprovacao'] as const).forEach((chave) => {
     if (!(v[chave] >= 0 && v[chave] <= 1)) e[chave] = 'O percentual precisa ficar entre 0 e 100.'
   })
+  ;(['metaNoPrazo', 'metaAprovadoNaPrimeira'] as const).forEach((chave) => {
+    const meta = v[chave]
+    if (meta !== undefined && !(meta >= 0.5 && meta <= 1)) e[chave] = 'A meta precisa ficar entre 50% e 100%.'
+  })
+  if (v.pesoVolume !== undefined && somaDosPesos(v) !== 100)
+    e.pesoComplexidade = `Os quatro pesos precisam somar 100 — hoje somam ${somaDosPesos(v)}.`
   return e
 }
 
@@ -241,6 +307,7 @@ type CampoProps = {
 }
 
 const Campo = ({ campo, valor, erro, onAlterar }: CampoProps) => {
+  const minimoDoPercentual = campo.tipo === 'pct' ? (campo.min ?? 0) : 0
   const linha = (controle: ReactNode, direita?: ReactNode) => (
     <div className="border-t border-secondary py-3 first:border-t-0">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -287,7 +354,7 @@ const Campo = ({ campo, valor, erro, onAlterar }: CampoProps) => {
     return linha(
       <input
         type="range"
-        min={0}
+        min={minimoDoPercentual}
         max={100}
         value={percentual}
         onChange={(event) => onAlterar(Number(event.target.value) / 100)}
@@ -389,7 +456,8 @@ export const AbaConfiguracao = () => {
       )}
 
       <div className="mt-4.5 flex flex-col gap-3.5">
-        {SECOES.map((secao) => (
+        {/* Seção cujo campo a API não manda (API anterior à fatia 2) não aparece. */}
+        {SECOES.filter((secao) => secao.campos.every((campo) => rascunho[campo.chave] !== undefined)).map((secao) => (
           <div key={secao.nome}>
             <div className="mb-1.5">
               <strong className="text-[13.5px] font-semibold">{secao.nome}</strong>
@@ -400,12 +468,22 @@ export const AbaConfiguracao = () => {
                 <Campo
                   key={campo.chave}
                   campo={campo}
-                  valor={rascunho[campo.chave]}
+                  valor={rascunho[campo.chave] ?? 0}
                   erro={erros[campo.chave]}
                   onAlterar={(valor) => alterar(campo.chave, valor)}
                 />
               ))}
             </SurfaceCard>
+            {secao.campos.some((campo) => campo.chave === 'pesoVolume') && (
+              <div
+                className={cn(
+                  'mt-1.5 text-right font-mono text-[11.5px]',
+                  somaDosPesos(rascunho) === 100 ? 'text-text-2' : 'text-bad-fg',
+                )}
+              >
+                soma dos pesos: {somaDosPesos(rascunho)} de 100
+              </div>
+            )}
           </div>
         ))}
       </div>

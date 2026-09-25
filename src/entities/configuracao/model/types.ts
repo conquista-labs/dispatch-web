@@ -12,9 +12,17 @@ export type Configuracao = {
   limiarEscreventeOrfao: number
   limiarRiscoQualidadeCasos: number
   limiarRiscoQualidadeReprovacao: number
+  // Fatia 2 do Dashboard v2 — metas da gestão (frações 0–1) e pesos do score (inteiros que somam
+  // 100). Opcionais porque a API anterior não manda: sem eles a seção "Metas e score" não aparece.
+  metaNoPrazo?: number
+  metaAprovadoNaPrimeira?: number
+  pesoVolume?: number
+  pesoPrazo?: number
+  pesoQualidade?: number
+  pesoComplexidade?: number
 }
 
-// Mesmo shape de Configuracao — os 12 campos juntos, sem edição parcial (mesmo padrão de PUT
+// Mesmo shape de Configuracao — os campos juntos, sem edição parcial (mesmo padrão de PUT
 // já usado em Equipe/TipoAto). Tipo próprio (não um alias de Configuracao) só pra deixar
 // explícito, no ponto de uso, que é o payload de escrita.
 export type AtualizarConfiguracaoRequest = Configuracao
