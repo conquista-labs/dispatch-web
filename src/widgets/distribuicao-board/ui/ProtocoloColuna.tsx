@@ -27,6 +27,10 @@ type ProtocoloColunaProps = {
    * só pra decidir se a lista completa DESTA coluna deve reaparecer sozinha quando o detalhe
    * fechar — ver comentário em ListaCompletaColunaSheet.tsx. */
   detalheAberto?: boolean
+  /** Cabeçalho da lista completa ("+N · ver todos"). Padrão: "{nome} · N protocolos". */
+  tituloLista?: string
+  /** Subtítulo da lista completa — diz o que a lista contém e em que ordem. */
+  subtituloLista?: string
 }
 
 // Coluna reaproveitada pelas abas "Por conferente" e "Por status" (RF-13) — mesma estrutura
@@ -43,6 +47,8 @@ export const ProtocoloColuna = ({
   variant = 'conferente',
   onAbrirDetalhe,
   detalheAberto = false,
+  tituloLista,
+  subtituloLista = 'ordenados por vencimento. Clique para ver o detalhe.',
 }: ProtocoloColunaProps) => {
   const maxVisiveis = variant === 'conferente' ? 5 : 4
   const visiveis = protocolos.slice(0, maxVisiveis)
@@ -96,9 +102,9 @@ export const ProtocoloColuna = ({
           <button
             type="button"
             onClick={() => setListaCompletaAberta(true)}
-            className="rounded-[10px] border border-dashed border-border p-2 text-center text-xs text-muted-foreground hover:border-muted-foreground/40 hover:text-text-2"
+            className="rounded-[10px] border border-dashed border-border p-2 text-center text-xs font-medium text-text-2 hover:border-text-2 hover:bg-card hover:text-foreground max-mobile:min-h-11"
           >
-            + {restantes} protocolos
+            + {restantes} protocolos · ver todos
           </button>
         )}
         {protocolos.length === 0 && (
@@ -112,7 +118,8 @@ export const ProtocoloColuna = ({
         <ListaCompletaColunaSheet
           aberto={listaCompletaAberta && !detalheAberto}
           onFechar={() => setListaCompletaAberta(false)}
-          nome={nome}
+          titulo={tituloLista ?? `${nome} · ${protocolos.length} protocolos`}
+          subtitulo={subtituloLista}
           protocolos={protocolos}
           resolverInfo={resolverInfo}
           now={now}

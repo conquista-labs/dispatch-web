@@ -13,7 +13,10 @@ test('painel de detalhe abre a partir do card, mostra alçada e fecha por Esc/cl
   await page.getByRole('button', { name: 'Entrar' }).click()
   // RF-03, ajustado a pedido do dono: login cai no Dashboard agora — navega explicitamente.
   await expect(page).toHaveURL(/\/dashboard/)
-  await page.getByRole('link', { name: 'Distribuição' }).click()
+  await page
+    .getByRole('link', { name: /^Distribuição/ })
+    .first()
+    .click()
   await expect(page).toHaveURL(/\/distribuicao/)
 
   await page.getByRole('button', { name: /Exceções/ }).click()

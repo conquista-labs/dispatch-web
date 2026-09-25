@@ -980,6 +980,25 @@ usar a busca pra achar a regra dentro do grupo.
 
 Verificado: testes; screenshots de Camadas (alerta, alcance, grupos) e Prazos; busca abrindo o grupo.
 
+## 2026-09-25 — Distribuição fiel ao protótipo v2 (Parte 1)
+
+Lista "ver todos" (`ListaCompletaColunaSheet`): painel de 560px, uma linha compacta por protocolo (número |
+tipo + escrevente · equipe · etapa | Alta/rodada | prazo), título "Pool aberto · N protocolos" / "Nome · N na
+mão", subtítulo que diz a ordem e "Fechar" em texto; no celular o prazo quebra pra linha de baixo. Botão da
+coluna vira "+ N protocolos · ver todos". Card de Por status sem a linha "entrada". Abas em largura total,
+legenda "Prazo do ato" em sans (também em Minha fila e Fila do conferente). Exceções: número + tipo + tag na
+1ª linha e uma frase por motivo do motor (`lib/motivo-excecao.ts` — antes "tipo desativado" e "continuidade"
+caíam em "sem alçada"), nome original do tipo quando desconhecido (campo novo `tipoAtoNomeOriginal`, API PR
+#10) e botões embaixo do texto no celular. Painel de Filtros com rodapé colado embaixo e × no cabeçalho. Véu
+dos painéis laterais mais escuro e sem desfoque (`sheet.tsx`). Divergências mantidas no ADR-0010.
+
+Specs: seletores de link "Minha fila"/"Distribuição" ficaram ambíguos com os links do Dashboard v2 ("Abrir
+minha fila →") — corrigidos; `distribuicao-v2` atualizado pra "Alta" e "ver todos".
+
+Verificado: testes de `ListaCompletaColunaSheet`, `ExcecaoCard` e `motivo-excecao`; screenshots a 1280 e 390px
+nos dois temas (exceções injetadas via `page.route`, o banco local não tinha nenhuma); suíte e2e — falhas
+restantes são as de cenário do gaps §28.
+
 ## 2026-09-25 — Central de regras: auditoria v2, primeira leva (Parte 1)
 
 Auditoria completa da Central contra o protótipo v2 (admin e distribuidora, 1440/1280/390, dois temas). Primeira

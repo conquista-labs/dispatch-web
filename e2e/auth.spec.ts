@@ -16,7 +16,7 @@ test('login como Distribuidora leva pro Dashboard (RF-03) e mostra a sidebar', a
   // entities/usuario/model/role-home-route.ts).
   await expect(page).toHaveURL(/\/dashboard/)
   await expect(page.getByRole('heading', { name: 'Dashboard', exact: true })).toBeVisible()
-  await expect(page.getByRole('link', { name: 'Distribuição' })).toBeVisible()
+  await expect(page.getByRole('link', { name: /^Distribuição/ }).first()).toBeVisible()
 
   await page.screenshot({ path: 'e2e/.screenshots/dashboard-logado.png', fullPage: true })
 })

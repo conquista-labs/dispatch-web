@@ -38,6 +38,7 @@ export const AbaPorStatus = ({
         protocolos={visao.pool}
         now={now}
         mensagemVazia="nada no pool"
+        subtituloLista="sem dono — ordenados por vencimento. Clique para ver o detalhe."
         resolverDonoNome={resolverDono}
         resolverInfo={resolverInfo}
         variant="status"

@@ -18,7 +18,10 @@ test('Distribuição v2 — prioridade, RF-14, RF-16, RF-18c, RF-18e', async ({ 
   await page.getByLabel('Senha').fill(SENHA)
   await page.getByRole('button', { name: 'Entrar' }).click()
   await expect(page).toHaveURL(/\/dashboard/)
-  await page.getByRole('link', { name: 'Distribuição' }).click()
+  await page
+    .getByRole('link', { name: /^Distribuição/ })
+    .first()
+    .click()
   await expect(page).toHaveURL(/\/distribuicao/)
   await expect(page.getByRole('heading', { name: 'Distribuição' })).toBeVisible()
 
@@ -26,16 +29,17 @@ test('Distribuição v2 — prioridade, RF-14, RF-16, RF-18c, RF-18e', async ({ 
   // o escrevente não tem equipe. Pool tem os dois casos misturados.
   await expect(page.getByText('sem equipe').first()).toBeVisible()
 
-  // Badge "urgente" — protocolo marcado manualmente como prioridade Alta.
-  await expect(page.getByText('urgente').first()).toBeVisible()
+  // Tag "Alta" (RF-18a; antes "urgente") — protocolo marcado manualmente como prioridade Alta.
+  await expect(page.getByText('Alta', { exact: true }).first()).toBeVisible()
 
   await page.screenshot({ path: 'e2e/.screenshots/distribuicao-v2-conferente-claro.png', fullPage: true })
 
-  // RF-18c: "+N protocolos" abre a lista integral da coluna, ordenada por vencimento.
-  const maisProtocolos = page.getByRole('button', { name: /\+\s*\d+\s*protocolos/ }).first()
+  // RF-18c: "+N protocolos · ver todos" abre a lista integral da coluna, ordenada por vencimento.
+  const maisProtocolos = page.getByRole('button', { name: /\+\s*\d+\s*protocolos · ver todos/ }).first()
   await expect(maisProtocolos).toBeVisible()
   await maisProtocolos.click()
-  await expect(page.getByRole('heading', { name: /·\s*\d+$/ })).toBeVisible()
+  await expect(page.getByRole('heading', { name: /·\s*\d+ (protocolos|na mão)$/ })).toBeVisible()
+  await expect(page.getByText(/ordenados por vencimento/)).toBeVisible()
   await page.screenshot({ path: 'e2e/.screenshots/distribuicao-v2-lista-completa-claro.png', fullPage: true })
 
   // Clicar num item da lista abre o painel de detalhe e fecha o sheet.
@@ -101,7 +105,7 @@ test('Minha fila (Conferente) — barra de filtros RF-24f realmente filtra', asy
   await page.getByLabel('E-mail').fill(CONFERENTE_EMAIL)
   await page.getByLabel('Senha').fill(CONFERENTE_SENHA)
   await page.getByRole('button', { name: 'Entrar' }).click()
-  await page.getByRole('link', { name: 'Minha fila' }).click()
+  await page.getByRole('link', { name: 'Minha fila', exact: true }).click()
   await expect(page.getByText('Pool disponível')).toBeVisible()
 
   // Conta o pool antes de filtrar — o eixo Equipe precisa depender de GET /equipes e
