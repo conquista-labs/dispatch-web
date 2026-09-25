@@ -3,8 +3,9 @@ import { expect, test } from '@playwright/test'
 // Verificação visual pontual do Motor de alçada v3 (Camadas/Matriz/Testar) — precisa de dado
 // seedado à mão: regras nas 3 camadas (nível, equipe, pessoa), uma reserva, uma regra de grupo,
 // e ao menos um tipo de ato com grupo definido (ver skill verify-visual).
-const EMAIL = process.env.E2E_DISTRIBUIDORA_EMAIL ?? 'distribuidora@cartorio.com'
-const SENHA = process.env.E2E_DISTRIBUIDORA_SENHA ?? 'Senha123!'
+// Cadastro de pessoas e edição de regras são só do Administrador (dispatch-api ADR-0039).
+const EMAIL = process.env.E2E_ADMIN_EMAIL ?? 'administrador@cartorio.com'
+const SENHA = process.env.E2E_ADMIN_SENHA ?? 'Senha123!'
 
 test('Central de regras — Alçada v3, as 3 sub-abas', async ({ page }) => {
   await page.goto('/login')

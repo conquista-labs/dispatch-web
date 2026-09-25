@@ -4,8 +4,9 @@ import { expect, test } from '@playwright/test'
 // Cria um conferente de teste, edita nome/e-mail e remove no final (RF-25: remover é soft
 // delete — GET /conferentes já filtra ativo=false na origem, então "sumir da lista" é o
 // comportamento esperado logo depois de remover, não precisa esperar nada).
-const EMAIL = process.env.E2E_DISTRIBUIDORA_EMAIL ?? 'distribuidora@cartorio.com'
-const SENHA = process.env.E2E_DISTRIBUIDORA_SENHA ?? 'Senha123!'
+// Cadastro de pessoas e edição de regras são só do Administrador (dispatch-api ADR-0039).
+const EMAIL = process.env.E2E_ADMIN_EMAIL ?? 'administrador@cartorio.com'
+const SENHA = process.env.E2E_ADMIN_SENHA ?? 'Senha123!'
 
 test('Conferentes — carrega, cadastra, edita perfil e remove um conferente de teste', async ({ page }) => {
   await page.goto('/login')
@@ -27,7 +28,7 @@ test('Conferentes — carrega, cadastra, edita perfil e remove um conferente de 
   const dialog = page.getByRole('dialog')
   await dialog.getByLabel('Nome', { exact: true }).fill('Conferente E2E')
   await dialog.getByLabel('E-mail', { exact: true }).fill(email)
-  await dialog.getByLabel('Senha', { exact: true }).fill('Senha123!')
+  await dialog.getByLabel('Senha inicial', { exact: true }).fill('Senha123!')
 
   // Pega o Id de verdade da resposta do cadastro — bem mais confiável que tentar achar "o card
   // certo" via texto (nome pode se repetir, e um <div> genérico contendo o texto do card inteiro

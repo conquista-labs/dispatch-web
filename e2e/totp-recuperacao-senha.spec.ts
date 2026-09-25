@@ -4,8 +4,9 @@ import { createHmac } from 'node:crypto'
 // RF-01a-l: registro de autenticador (TOTP, RFC 6238 de verdade) e recuperação de senha em 3
 // etapas. Cria um conferente de teste (mesma convenção de conferentes.spec.ts) porque o fluxo
 // troca a senha da conta pra valer — não pode reusar a conta seed fixa.
-const EMAIL = process.env.E2E_DISTRIBUIDORA_EMAIL ?? 'distribuidora@cartorio.com'
-const SENHA = process.env.E2E_DISTRIBUIDORA_SENHA ?? 'Senha123!'
+// Cadastro de pessoas e edição de regras são só do Administrador (dispatch-api ADR-0039).
+const EMAIL = process.env.E2E_ADMIN_EMAIL ?? 'administrador@cartorio.com'
+const SENHA = process.env.E2E_ADMIN_SENHA ?? 'Senha123!'
 
 // Base32 decode + HOTP/TOTP (RFC 4226/6238) — sem lib externa, só node:crypto.
 const base32ToBytes = (base32: string) => {
@@ -34,9 +35,10 @@ const totpCode = (base32Secret: string, stepOffset = 0) => {
 test('TOTP e recuperação de senha — registrar autenticador e redefinir a senha de ponta a ponta', async ({ page }) => {
   const conferenteEmail = `e2e-totp-${Date.now()}@cartorio.com`
   const senhaInicial = 'Senha123!'
+  const senhaTrocada = 'girassol amarelo no campo 7'
   const senhaNova = 'cavalo azul correndo livre 2'
 
-  // Cadastra o conferente de teste como distribuidora.
+  // Cadastra o conferente de teste como administrador.
   await page.goto('/login')
   await page.getByLabel('E-mail').fill(EMAIL)
   await page.getByLabel('Senha').fill(SENHA)
@@ -48,7 +50,7 @@ test('TOTP e recuperação de senha — registrar autenticador e redefinir a sen
   const dialog = page.getByRole('dialog')
   await dialog.getByLabel('Nome', { exact: true }).fill('Conferente E2E TOTP')
   await dialog.getByLabel('E-mail', { exact: true }).fill(conferenteEmail)
-  await dialog.getByLabel('Senha', { exact: true }).fill(senhaInicial)
+  await dialog.getByLabel('Senha inicial', { exact: true }).fill(senhaInicial)
   const [respostaCadastro] = await Promise.all([
     page.waitForResponse((res) => res.request().method() === 'POST' && res.url().endsWith('/conferentes')),
     dialog.getByRole('button', { name: 'Cadastrar' }).click(),
@@ -69,6 +71,17 @@ test('TOTP e recuperação de senha — registrar autenticador e redefinir a sen
   await page.getByLabel('Senha', { exact: true }).fill(senhaInicial)
   await page.getByRole('button', { name: 'Entrar' }).click()
 
+  // RF-45: conta nova troca a senha inicial antes de qualquer outra coisa — inclusive registrar o
+  // autenticador (o back recusa com 403 enquanto a troca estiver pendente).
+  await expect(page).toHaveURL(/\/trocar-senha/)
+  await page.screenshot({ path: 'e2e/.screenshots/trocar-senha-claro.png', fullPage: true })
+  await page.getByLabel('Senha inicial').fill(senhaInicial)
+  await page.getByLabel('Nova senha', { exact: true }).fill(senhaTrocada)
+  await page.getByLabel('Repita a nova senha').fill(senhaTrocada)
+  await page.getByRole('button', { name: 'Salvar e entrar' }).click()
+  await expect(page).toHaveURL(/\/dashboard/)
+
+  await page.goto('/totp/registrar')
   await expect(page.getByRole('heading', { name: 'Registre seu autenticador' })).toBeVisible()
   await expect(page.getByText('Sem câmera? Digite a chave')).toBeVisible()
   await page.screenshot({ path: 'e2e/.screenshots/totp-registrar-qr-claro.png', fullPage: true })
@@ -120,7 +133,7 @@ test('TOTP e recuperação de senha — registrar autenticador e redefinir a sen
 
   // Confirma que a senha nova de fato funciona (e só ela).
   await page.getByLabel('E-mail').fill(conferenteEmail)
-  await page.getByLabel('Senha', { exact: true }).fill(senhaInicial)
+  await page.getByLabel('Senha', { exact: true }).fill(senhaTrocada)
   await page.getByRole('button', { name: 'Entrar' }).click()
   await expect(page.getByText('E-mail ou senha incorretos.')).toBeVisible()
 

@@ -36,8 +36,9 @@ const esperarLinhaPeloNome = async (page: Page, nome: string) => {
 // API local com regras de alçada (ativa e inativa), equipes com escreventes (e ao menos um
 // escrevente sem equipe) e sugestões (pendentes e no histórico) — ver skill verify-visual.
 // Screenshot pontual, não fixture fixa.
-const EMAIL = process.env.E2E_DISTRIBUIDORA_EMAIL ?? 'distribuidora@cartorio.com'
-const SENHA = process.env.E2E_DISTRIBUIDORA_SENHA ?? 'Senha123!'
+// Cadastro de pessoas e edição de regras são só do Administrador (dispatch-api ADR-0039).
+const EMAIL = process.env.E2E_ADMIN_EMAIL ?? 'administrador@cartorio.com'
+const SENHA = process.env.E2E_ADMIN_SENHA ?? 'Senha123!'
 
 test('Central de regras — as 3 abas renderizam com dados reais', async ({ page }) => {
   await page.goto('/login')
