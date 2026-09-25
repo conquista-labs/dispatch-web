@@ -6,6 +6,8 @@ export type {
   FaixaBonificacao,
   KpisDashboard,
   PainelDeHoje,
+  PontoDaSerie,
+  SerieDashboard,
   ParcelasScore,
   PeriodoDashboard,
 } from './model/types'

@@ -4,6 +4,7 @@ import { cn } from '@/shared/lib/utils'
 import { SurfaceCard } from '@/shared/ui/surface-card'
 
 import { contagem, formatarComplexidade } from '../lib/apresentacao'
+import { aprovadoNaPrimeira, variacaoDeTempo, variacaoDeVolume, variacaoEmPontos } from '../lib/variacao'
 import { KpiCard } from './KpiCard'
 
 const pct = (fracao: number) => `${Math.round(fracao * 100)}%`
@@ -11,6 +12,7 @@ const pct = (fracao: number) => `${Math.round(fracao * 100)}%`
 type VisaoConferenteProps = {
   dashboard: Dashboard
   periodoLabel: string
+  comparadoCom?: string
 }
 
 type LinhaComparacao = { label: string; voce: string; media: string; melhorOuIgual: boolean }
@@ -18,8 +20,8 @@ type LinhaComparacao = { label: string; voce: string; media: string; melhorOuIgu
 // RF-45: só os próprios números — sem nome de colega, sem faixa de bônus (nem a própria). Layout do
 // protótipo aprovado (Dispatch v2): 4 KPIs, e score e "você e a média" lado a lado. O 4º KPI do
 // protótipo é "Ritmo"; aqui é o tempo médio bruto até o back calcular ritmo (ADR-0010).
-export const VisaoConferente = ({ dashboard, periodoLabel }: VisaoConferenteProps) => {
-  const { kpis, desempenho, mediaDaCasa } = dashboard
+export const VisaoConferente = ({ dashboard, periodoLabel, comparadoCom }: VisaoConferenteProps) => {
+  const { kpis, kpisAnterior, desempenho, mediaDaCasa } = dashboard
   const meu = desempenho[0]
 
   if (!meu) {
@@ -54,10 +56,10 @@ export const VisaoConferente = ({ dashboard, periodoLabel }: VisaoConferenteProp
           melhorOuIgual: meu.percentualNoPrazo >= mediaDaCasa.percentualNoPrazo,
         },
         {
-          label: 'Aprovados',
-          voce: pct(meu.percentualAprovado),
-          media: pct(mediaDaCasa.percentualAprovado),
-          melhorOuIgual: meu.percentualAprovado >= mediaDaCasa.percentualAprovado,
+          label: 'Aprovados na 1ª',
+          voce: aprovadoNaPrimeira(meu) === null ? '—' : pct(aprovadoNaPrimeira(meu)!),
+          media: aprovadoNaPrimeira(mediaDaCasa) === null ? '—' : pct(aprovadoNaPrimeira(mediaDaCasa)!),
+          melhorOuIgual: (aprovadoNaPrimeira(meu) ?? 0) >= (aprovadoNaPrimeira(mediaDaCasa) ?? 0),
         },
         {
           label: 'Tempo médio',
@@ -70,16 +72,25 @@ export const VisaoConferente = ({ dashboard, periodoLabel }: VisaoConferenteProp
 
   return (
     <div>
-      <h2 className="mb-2.5 text-[15px] font-semibold tracking-[-0.01em]">Seu resultado · {periodoLabel}</h2>
+      <div className="mb-2.5 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+        <h2 className="m-0 text-[15px] font-semibold tracking-[-0.01em]">Seu resultado · {periodoLabel}</h2>
+        {kpisAnterior && comparadoCom && <span className="text-[12px] text-apoio">{comparadoCom}</span>}
+      </div>
       <div className="grid grid-cols-4 gap-2 max-mobile:grid-cols-2">
         <KpiCard
           label="Atos conferidos"
           valor={String(kpis.atosConferidos)}
+          variacao={variacaoDeVolume(kpis.atosConferidos, kpisAnterior?.atosConferidos)}
           sub={`complexidade média ${formatarComplexidade(meu.complexidadeMedia)}`}
         />
         <KpiCard
           label="Dentro do prazo"
           valor={pct(meu.percentualNoPrazo)}
+          variacao={
+            kpisAnterior?.atosConferidos
+              ? variacaoEmPontos(kpis.percentualNoPrazo, kpisAnterior.percentualNoPrazo)
+              : null
+          }
           sub={contagem(
             Math.round((1 - meu.percentualNoPrazo) * meu.volume),
             'nenhum estourou',
@@ -88,8 +99,9 @@ export const VisaoConferente = ({ dashboard, periodoLabel }: VisaoConferenteProp
           )}
         />
         <KpiCard
-          label="Aprovados"
-          valor={pct(meu.percentualAprovado)}
+          label="Aprovados na 1ª"
+          valor={aprovadoNaPrimeira(meu) === null ? '—' : pct(aprovadoNaPrimeira(meu)!)}
+          variacao={kpisAnterior ? variacaoEmPontos(aprovadoNaPrimeira(kpis), aprovadoNaPrimeira(kpisAnterior)) : null}
           sub={contagem(
             Math.round((1 - meu.percentualAprovado) * meu.volume),
             'nenhum com apontamento',
@@ -100,6 +112,7 @@ export const VisaoConferente = ({ dashboard, periodoLabel }: VisaoConferenteProp
         <KpiCard
           label="Tempo médio"
           valor={meu.tempoMedio ? formatDuracaoConcluida(meu.tempoMedio) : '—'}
+          variacao={variacaoDeTempo(kpis.tempoMedio, kpisAnterior?.tempoMedio)}
           sub="por ato, bruto"
         />
       </div>

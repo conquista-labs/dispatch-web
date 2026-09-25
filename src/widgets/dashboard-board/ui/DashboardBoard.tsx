@@ -4,6 +4,7 @@ import { PERIODO_LABEL, useDashboard, type PeriodoDashboard } from '@/entities/d
 import { cn } from '@/shared/lib/utils'
 import { Carregando } from '@/shared/ui/carregando'
 
+import { COMPARADO_COM } from '../lib/variacao'
 import { FaixaDeHoje } from './FaixaDeHoje'
 import { VisaoConferente } from './VisaoConferente'
 import { VisaoGestao } from './VisaoGestao'
@@ -56,7 +57,7 @@ export const DashboardBoard = ({ titulo, subtitulo, souGestao }: DashboardBoardP
         ) : souGestao ? (
           <VisaoGestao dashboard={dashboard} periodo={periodo} periodoLabel={periodoLabel} />
         ) : (
-          <VisaoConferente dashboard={dashboard} periodoLabel={periodoLabel} />
+          <VisaoConferente dashboard={dashboard} periodoLabel={periodoLabel} comparadoCom={COMPARADO_COM[periodo]} />
         )}
       </div>
     </div>

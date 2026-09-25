@@ -8,6 +8,20 @@ const DIAS_DO_PERIODO: Record<PeriodoDashboard, number> = { Semana: 7, Mes: 30, 
 // O back usa janela móvel (7/30/90 dias até agora — ObterDashboard). "N por dia útil, em média" do
 // protótipo divide pelos dias de segunda a sexta dessa mesma janela; feriado não entra (o back ainda
 // não conhece feriados — gaps §24 da API).
+// Com o período por calendário (fatia 3), conta os dias úteis de `inicio` até `fim` (inclusive o
+// dia de hoje). Sem as datas (API anterior), cai na janela móvel abaixo.
+export const diasUteisEntre = (inicio: Date, fim: Date): number => {
+  const primeiro = new Date(inicio.getFullYear(), inicio.getMonth(), inicio.getDate())
+  const ultimo = new Date(fim.getFullYear(), fim.getMonth(), fim.getDate())
+  const totalDeDias = Math.round((ultimo.getTime() - primeiro.getTime()) / 86_400_000) + 1
+  let uteis = 0
+  for (let i = 0; i < totalDeDias; i++) {
+    const dia = new Date(primeiro.getFullYear(), primeiro.getMonth(), primeiro.getDate() + i)
+    if (dia.getDay() !== 0 && dia.getDay() !== 6) uteis++
+  }
+  return uteis
+}
+
 export const diasUteisNoPeriodo = (periodo: PeriodoDashboard, agora: Date): number => {
   let uteis = 0
   for (let i = 0; i < DIAS_DO_PERIODO[periodo]; i++) {

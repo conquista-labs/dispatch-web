@@ -9,6 +9,7 @@ import { SurfaceCard } from '@/shared/ui/surface-card'
 import {
   CLASSE_DA_FAIXA,
   contagem,
+  diasUteisEntre,
   diasUteisNoPeriodo,
   faixaDoTempoPorTipo,
   formatarComplexidade,
@@ -17,7 +18,9 @@ import {
   tomDaAprovacao,
   tomDoPrazo,
 } from '../lib/apresentacao'
+import { aprovadoNaPrimeira, COMPARADO_COM, variacaoDeTempo, variacaoDeVolume, variacaoEmPontos } from '../lib/variacao'
 import { KpiCard } from './KpiCard'
+import { SerieCard } from './SerieCard'
 
 const pct = (fracao: number) => `${Math.round(fracao * 100)}%`
 
@@ -76,10 +79,10 @@ const LinhaDesempenho = ({ d, ehAdministrador }: { d: DesempenhoConferente; ehAd
       className={cn(
         COLUNAS.aprovacao,
         'font-mono text-[12.5px] font-medium',
-        TEXTO_DO_TOM[tomDaAprovacao(d.percentualAprovado)],
+        aprovadoNaPrimeira(d) !== null && TEXTO_DO_TOM[tomDaAprovacao(aprovadoNaPrimeira(d)!)],
       )}
     >
-      {pct(d.percentualAprovado)}
+      {aprovadoNaPrimeira(d) === null ? '—' : pct(aprovadoNaPrimeira(d)!)}
     </span>
     <span role="cell" className={cn(COLUNAS.complexidade, 'text-[12.5px] text-apoio')}>
       {formatarComplexidade(d.complexidadeMedia)}
@@ -119,23 +122,37 @@ const LinhaDesempenho = ({ d, ehAdministrador }: { d: DesempenhoConferente; ehAd
 // RF-43a: pra distribuidora a tabela vira "Produção por conferente", sem cargo, score nem faixa
 // (o back já manda sem, e em ordem alfabética pra a ordem não entregar o ranking).
 export const VisaoGestao = ({ dashboard, periodo, periodoLabel }: VisaoGestaoProps) => {
-  const { kpis, desempenho, porTipoAto, cumprimentoPrazoEquipe } = dashboard
+  const { kpis, kpisAnterior, serie, desempenho, porTipoAto, cumprimentoPrazoEquipe } = dashboard
+  const aprovadosNa1a = aprovadoNaPrimeira(kpis)
   const ehAdministrador = useEhAdministrador()
-  const porDiaUtil = formatarMediaDiaria(kpis.atosConferidos / Math.max(1, diasUteisNoPeriodo(periodo, new Date())))
+  const diasUteis =
+    dashboard.periodoInicio && dashboard.periodoFim
+      ? diasUteisEntre(new Date(dashboard.periodoInicio), new Date(dashboard.periodoFim))
+      : diasUteisNoPeriodo(periodo, new Date())
+  const porDiaUtil = formatarMediaDiaria(kpis.atosConferidos / Math.max(1, diasUteis))
   const faixaTempo = faixaDoTempoPorTipo(porTipoAto)
 
   return (
     <div>
-      <h2 className="mb-2.5 text-[15px] font-semibold tracking-[-0.01em]">Resultado · {periodoLabel}</h2>
+      <div className="mb-2.5 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+        <h2 className="m-0 text-[15px] font-semibold tracking-[-0.01em]">Resultado · {periodoLabel}</h2>
+        {kpisAnterior && <span className="text-[12px] text-apoio">{COMPARADO_COM[periodo]}</span>}
+      </div>
       <div className="grid grid-cols-4 gap-2 max-mobile:grid-cols-2">
         <KpiCard
           label="Atos conferidos"
           valor={String(kpis.atosConferidos)}
+          variacao={variacaoDeVolume(kpis.atosConferidos, kpisAnterior?.atosConferidos)}
           sub={`${porDiaUtil} por dia útil, em média`}
         />
         <KpiCard
           label="Dentro do prazo"
           valor={pct(kpis.percentualNoPrazo)}
+          variacao={
+            kpisAnterior?.atosConferidos
+              ? variacaoEmPontos(kpis.percentualNoPrazo, kpisAnterior.percentualNoPrazo)
+              : null
+          }
           sub={contagem(
             Math.round((1 - kpis.percentualNoPrazo) * kpis.atosConferidos),
             'nenhum estourou',
@@ -144,8 +161,9 @@ export const VisaoGestao = ({ dashboard, periodo, periodoLabel }: VisaoGestaoPro
           )}
         />
         <KpiCard
-          label="Aprovados"
-          valor={pct(kpis.percentualAprovado)}
+          label="Aprovados na 1ª"
+          valor={aprovadosNa1a === null ? '—' : pct(aprovadosNa1a)}
+          variacao={kpisAnterior ? variacaoEmPontos(aprovadosNa1a, aprovadoNaPrimeira(kpisAnterior)) : null}
           sub={contagem(
             Math.round((1 - kpis.percentualAprovado) * kpis.atosConferidos),
             'nenhum voltou com apontamento',
@@ -156,9 +174,12 @@ export const VisaoGestao = ({ dashboard, periodo, periodoLabel }: VisaoGestaoPro
         <KpiCard
           label="Tempo médio"
           valor={kpis.tempoMedio ? formatDuracaoConcluida(kpis.tempoMedio) : '—'}
+          variacao={variacaoDeTempo(kpis.tempoMedio, kpisAnterior?.tempoMedio)}
           sub={faixaTempo ? `bruto, sem ajuste · ${faixaTempo}` : 'bruto, sem ajuste'}
         />
       </div>
+
+      {serie && serie.pontos.length > 0 && <SerieCard serie={serie} periodo={periodo} />}
 
       <div className="mt-6.5 mb-2.5 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
         {ehAdministrador ? (

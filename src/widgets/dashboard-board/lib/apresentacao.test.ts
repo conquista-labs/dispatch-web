@@ -4,6 +4,7 @@ import type { DesempenhoTipoAto } from '@/entities/dashboard'
 
 import {
   contagem,
+  diasUteisEntre,
   diasUteisNoPeriodo,
   formatarMediaDiaria,
   faixaDoTempoPorTipo,
@@ -25,6 +26,11 @@ describe('apresentação do Dashboard', () => {
     const quinta = new Date(2026, 8, 24, 10)
     expect(diasUteisNoPeriodo('Semana', quinta)).toBe(5)
     expect(diasUteisNoPeriodo('Mes', quinta)).toBe(22)
+  })
+
+  it('dias úteis do início do período até hoje (calendário)', () => {
+    expect(diasUteisEntre(new Date(2026, 8, 1), new Date(2026, 8, 25, 15))).toBe(19)
+    expect(diasUteisEntre(new Date(2026, 8, 21), new Date(2026, 8, 21, 9))).toBe(1)
   })
 
   it('cores por limiar da tabela do protótipo', () => {

@@ -902,3 +902,17 @@ endpoint falhar, a faixa não aparece (o resto do Dashboard não depende dela).
 Verificado: testes de `painel-de-hoje` e `FaixaDeHoje` (gestão com links, conferente sem, endpoint ausente);
 contra a API local da branch: faixa da gestão com gargalo, clique em "Exceções" abrindo a aba, "Seu dia" no
 escuro, celular.
+
+## 2026-09-25 — Variação, "Aprovados na 1ª" e gráfico por dia no Dashboard (fatias 3 e 4 do Dashboard v2)
+
+Consome os campos novos do `GET /dashboard` (dispatch-api #7, período por calendário — ADR-0041 do back).
+`KpiCard` ganha a variação contra o mesmo trecho do período anterior (volume em %, percentuais em pontos,
+tempo em minutos; verde/vermelho pelo sentido bom) e "variação contra o mês passado" ao lado do título;
+"Aprovados na 1ª" no KPI, na tabela e em "Você e a média"; `SerieCard` (barras empilhadas no prazo ×
+estourados em CSS, dia útil ou semana, dias futuros como traço); "por dia útil" contando do início do
+período. `lib/variacao.ts` com testes. Tipos novos opcionais: com a API anterior a variação e o gráfico
+não aparecem e "Aprovados na 1ª" cai no percentual antigo.
+
+Verificado: testes (`variacao`, `apresentacao`, `SerieCard`), `dashboard.spec.ts`; contra a API local da
+branch da API: mês com a série por dia útil, trimestre por semana (S1…S14), conferente no escuro, celular
+sem rolagem lateral; variação preenchida com a resposta interceptada (o banco local não tem agosto).
