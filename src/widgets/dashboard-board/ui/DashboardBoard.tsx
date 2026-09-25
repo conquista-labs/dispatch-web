@@ -4,6 +4,7 @@ import { PERIODO_LABEL, useDashboard, type PeriodoDashboard } from '@/entities/d
 import { cn } from '@/shared/lib/utils'
 import { Carregando } from '@/shared/ui/carregando'
 
+import { FaixaDeHoje } from './FaixaDeHoje'
 import { VisaoConferente } from './VisaoConferente'
 import { VisaoGestao } from './VisaoGestao'
 
@@ -46,6 +47,8 @@ export const DashboardBoard = ({ titulo, subtitulo, souGestao }: DashboardBoardP
           ))}
         </div>
       </header>
+
+      <FaixaDeHoje />
 
       <div className="mt-6.5">
         {isLoading || !dashboard ? (
