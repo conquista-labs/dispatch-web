@@ -1,2 +1,4 @@
 dist
 e2e/.screenshots
+# Saída crua do `shadcn add` (quarentena, ver add-shadcn-component)
+src/shared/ui/generated

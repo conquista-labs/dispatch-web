@@ -18,7 +18,8 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./vitest.setup.ts'],
     // e2e/ é Playwright (*.spec.ts, roda com @playwright/test, não vitest).
-    include: ['src/**/*.test.{ts,tsx}'],
+    // tooling/: testes de configuração do repositório (APIs do Node, ver tsconfig.node.json).
+    include: ['src/**/*.test.{ts,tsx}', 'tooling/**/*.test.ts'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html'],
@@ -33,6 +34,8 @@ export default defineConfig({
         'src/main.tsx',
         // Helper de teste, não código de produção.
         'src/shared/lib/test/**',
+        // Quarentena do `shadcn add` (gitignored): saída crua do registro, nunca importada.
+        'src/shared/ui/generated/**',
       ],
       // Ratchet (padrão adotado do swap-benefits-web, ADR-0005 de lá): o piso começa no que o
       // repositório de fato cobre hoje e só sobe — `autoUpdate` reescreve estes números aqui
