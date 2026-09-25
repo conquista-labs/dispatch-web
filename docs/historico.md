@@ -979,3 +979,20 @@ selecionado pra mover; as com prazo próprio ficam abertas (`separarPorPrazoPadr
 usar a busca pra achar a regra dentro do grupo.
 
 Verificado: testes; screenshots de Camadas (alerta, alcance, grupos) e Prazos; busca abrindo o grupo.
+
+## 2026-09-25 — Central de regras: auditoria v2, primeira leva (Parte 1)
+
+Auditoria completa da Central contra o protótipo v2 (admin e distribuidora, 1440/1280/390, dois temas). Primeira
+leva, só front: títulos das abas em 20px alinhados com a coluna lateral (o respiro de topo saiu das abas pro
+contêiner) e itens da lateral com 30px; Regras em vigor com contagem com unidade em todos os blocos ("79 tipos de
+ato", "6 parâmetros"), 4 linhas + "ver as outras N" no lugar da rolagem interna da Alçada (Operação não corta;
+busca mostra tudo), hora legível ("4h", "1h", não "4.5h"), "concluir o atual", aspas curvas, "pré e
+pós-conferência em D+1" quando as etapas coincidem e "Equipe X" (`rotuloDaEquipe`); distribuidora sem o título e o
+parágrafo repetidos e com a Alçada agrupada por pessoa (antes uma linha por regra); Aprendizado com título e
+explicação, "Aplicar regra", "1 descartada"; Prazos com os botões embaixo do texto no celular (a descrição ficava
+uma palavra por linha) e "1 escrevente"; Matriz com o aviso de lacunas ("N tipos sem ninguém… M com uma só
+pessoa", `lib/lacunas.ts`, derivado do alcance). Próximas levas: Camadas em linhas planas, construtor em modal,
+Tipos em tabela, stepper unido na Configuração.
+
+Verificado: testes de `AbaRegrasEmVigor`, `lacunas`, `prazo-em-vigor` e `alcada-em-vigor`; screenshots a 1440 e
+390px; `central-de-regras`/`alcada-v3` passam dos títulos novos e param no cenário do gaps §28.

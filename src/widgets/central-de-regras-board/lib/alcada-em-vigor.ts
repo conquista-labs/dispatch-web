@@ -57,7 +57,20 @@ export const itensDeAlcadaEmVigor = (
     })
   }
 
-  for (const regra of ativas.filter((r) => !r.regraBase && !ehEquipeEEtapaSemNivel(r))) {
+  // Regras por pessoa: uma linha por pessoa com o resumo, como na visão do admin (protótipo v2) —
+  // uma linha por regra repetia o nome da mesma pessoa várias vezes seguidas.
+  const restantes = ativas.filter((r) => !r.regraBase && !ehEquipeEEtapaSemNivel(r))
+  const porPessoa = new Map<string, RegraAlcada[]>()
+  for (const regra of restantes.filter((r) => r.sujeitoConferenteId)) {
+    porPessoa.set(regra.sujeitoConferenteId!, [...(porPessoa.get(regra.sujeitoConferenteId!) ?? []), regra])
+  }
+  ;[...porPessoa.entries()]
+    .map(([id, grupo]) => ({ nome: lookups.nomeConferente(id), grupo }))
+    .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
+    .forEach(({ nome, grupo }) =>
+      itens.push({ frase: `${nome}: ${resumoDasRegras(grupo, lookups)}`, detalhe: contagemDeRegras(grupo) }),
+    )
+  for (const regra of restantes.filter((r) => !r.sujeitoConferenteId)) {
     itens.push({ frase: fraseDaRegra(regra, lookups), detalhe: detalheDeOrigem(regra) })
   }
 

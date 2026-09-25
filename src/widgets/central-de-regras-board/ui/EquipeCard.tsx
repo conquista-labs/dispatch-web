@@ -111,7 +111,7 @@ export const EquipeCard = ({
           className="-ml-1.5 min-w-0 flex-1 rounded-md border border-transparent bg-transparent px-1.5 py-0.5 text-[14px] font-semibold text-foreground outline-none hover:border-border focus:border-foreground focus:bg-card"
         />
         <span className="flex-none rounded-full bg-secondary px-1.75 py-0.25 font-mono text-[11px] whitespace-nowrap text-text-3">
-          {escreventes.length} escreventes
+          {escreventes.length} {escreventes.length === 1 ? 'escrevente' : 'escreventes'}
         </span>
       </div>
 

@@ -63,6 +63,7 @@ export const AbaAprendizado = () => {
     ? historico.filter((s) => tituloDaSugestao(s, lookups).toLowerCase().includes(qHistorico))
     : historico
 
+  const descartadas = historico.filter((s) => s.status === 'Descartada').length
   const kpis = [
     { label: 'Tipos de ato no catálogo', valor: String(tiposAto.length), sub: `${regras.length} regras de alçada` },
     {
@@ -78,12 +79,17 @@ export const AbaAprendizado = () => {
     {
       label: 'Aplicadas até hoje',
       valor: String(historico.filter((s) => s.status === 'Aplicada').length),
-      sub: `${historico.filter((s) => s.status === 'Descartada').length} descartadas`,
+      sub: `${descartadas} ${descartadas === 1 ? 'descartada' : 'descartadas'}`,
     },
   ]
 
   return (
     <div>
+      <h2 className="m-0 text-xl font-semibold tracking-[-0.015em]">Aprendizado</h2>
+      <p className="mt-1.5 max-w-[72ch] text-[13px] text-pretty text-text-2">
+        A cada importação o sistema compara o que previu com o que aconteceu e propõe ajustes. Nada muda sem você
+        aprovar.
+      </p>
       <div className="mt-4.5 grid grid-cols-4 gap-2 max-mobile:grid-cols-2">
         {kpis.map((kpi) => (
           <SurfaceCard key={kpi.label} className="p-3.5">
@@ -95,7 +101,7 @@ export const AbaAprendizado = () => {
       </div>
 
       <div className="mt-6.5 mb-2.5 flex items-baseline justify-between gap-3">
-        <h2 className="m-0 text-[15px] font-semibold tracking-[-0.01em]">O que o sistema aprendeu e quer confirmar</h2>
+        <h3 className="m-0 text-[15px] font-semibold tracking-[-0.01em]">O que o sistema aprendeu e quer confirmar</h3>
         <Button variant="outline" size="sm" onClick={() => gerar.mutate()} disabled={gerar.isPending}>
           {gerar.isPending ? 'Procurando…' : 'Procurar padrões novos'}
         </Button>
@@ -128,8 +134,8 @@ export const AbaAprendizado = () => {
               </p>
               <p className="mt-1 font-mono text-[11px] text-muted-foreground">{sugestao.evidencia}</p>
               <div className="mt-3.5 flex gap-1.5">
-                <Button size="sm" onClick={() => aplicar.mutate(sugestao.id)} disabled={aplicar.isPending}>
-                  Aplicar
+                <Button onClick={() => aplicar.mutate(sugestao.id)} disabled={aplicar.isPending}>
+                  Aplicar regra
                 </Button>
                 <Button
                   variant="outline"
@@ -146,7 +152,7 @@ export const AbaAprendizado = () => {
       )}
 
       <div className="mt-6.5 mb-2.5 flex items-baseline justify-between gap-3">
-        <h2 className="m-0 text-[15px] font-semibold tracking-[-0.01em]">Histórico de aprendizado</h2>
+        <h3 className="m-0 text-[15px] font-semibold tracking-[-0.01em]">Histórico de aprendizado</h3>
         <span className="flex-none font-mono text-[11px] text-muted-foreground">
           {qHistorico ? `${historicoFiltrado.length} de ${historico.length}` : historico.length}
         </span>

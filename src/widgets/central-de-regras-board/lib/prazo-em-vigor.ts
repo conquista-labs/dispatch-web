@@ -18,8 +18,15 @@ export const chaveDoPrazo = (e: Equipe) =>
     e.cortePosConferenciaHorarioVencimento,
   ].join('|')
 
+// "pré e pós-conferência em D+1" quando as duas etapas têm o mesmo prazo (protótipo v2).
 export const fraseDoPrazo = (e: Equipe) =>
-  `pré-conferência em ${TIPO_PRAZO_LABEL[e.prazoPreConferencia]}, pós-conferência em ${TIPO_PRAZO_LABEL[e.prazoPosConferencia]}`
+  e.prazoPreConferencia === e.prazoPosConferencia
+    ? `pré e pós-conferência em ${TIPO_PRAZO_LABEL[e.prazoPreConferencia]}`
+    : `pré-conferência em ${TIPO_PRAZO_LABEL[e.prazoPreConferencia]}, pós-conferência em ${TIPO_PRAZO_LABEL[e.prazoPosConferencia]}`
+
+// "Equipe 5º andar" como no protótipo — sem repetir a palavra quando o nome já começa com ela
+// ("Equipe RIO" não vira "Equipe Equipe RIO").
+export const rotuloDaEquipe = (nome: string) => (/^equipe\b/i.test(nome) ? nome : `Equipe ${nome}`)
 
 // Prazo nas "Regras em vigor" (protótipo v2): o prazo mais comum vira uma linha só ("10 equipes no
 // prazo padrão: …", com os nomes), e só as equipes com prazo próprio aparecem uma a uma — com 30
@@ -46,7 +53,7 @@ export const itensDePrazoEmVigor = (equipes: Equipe[], escreventes: Escrevente[]
     if (agrupar && padrao.includes(equipe)) continue
     const doTime = escreventes.filter((e) => e.equipeId === equipe.id)
     itens.push({
-      frase: `Escreventes de ${equipe.nome}: ${fraseDoPrazo(equipe)}`,
+      frase: `${rotuloDaEquipe(equipe.nome)}: ${fraseDoPrazo(equipe)}`,
       // RNF-10: nome completo — dois escreventes com o mesmo primeiro nome ficariam indistinguíveis.
       detalhe: doTime.length
         ? `${plural(doTime.length, 'escrevente', 'escreventes')} · ${doTime.map((e) => e.nome).join(', ')}`

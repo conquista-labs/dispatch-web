@@ -62,9 +62,11 @@ export const AbaPrazos = () => {
 
   return (
     <div className="max-w-[960px]">
-      <header className="flex items-start justify-between gap-4">
+      {/* No celular o título e a descrição ficavam numa coluna de ~110px ao lado dos dois botões, uma
+          palavra por linha; abaixo de 760px os botões descem pra baixo do texto, como no protótipo. */}
+      <header className="flex items-start justify-between gap-4 max-mobile:flex-col max-mobile:gap-3">
         <div>
-          <h2 className="mt-5.5 mb-0 text-[15px] font-semibold tracking-[-0.01em]">Prazo por equipe e etapa</h2>
+          <h2 className="m-0 text-xl font-semibold tracking-[-0.015em]">Prazo por equipe e etapa</h2>
           <p className="mt-1.5 max-w-[66ch] text-[13px] text-pretty text-text-2">
             O prazo não vem no relatório: sai daqui. Na importação o sistema lê o escrevente, descobre a equipe dele e
             aplica o prazo combinado — um para pré-conferência, outro para pós.

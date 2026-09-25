@@ -11,6 +11,7 @@ import { Input } from '@/shared/ui/input'
 
 import { abreviacoesDeColuna } from '../lib/abreviacao'
 import { ESTADO_GRUPO, ESTADO_TIPO } from '../lib/alcance'
+import { lacunasDaMatriz } from '../lib/lacunas'
 import { CelulaAlcance } from './CelulaAlcance'
 
 type AbaAlcadaMatrizProps = {
@@ -73,6 +74,7 @@ export const AbaAlcadaMatriz = ({ conferentes, tiposAto, alcance }: AbaAlcadaMat
   }
 
   const grupos = GRUPOS.filter((g) => tiposAto.some((t) => t.grupo === g))
+  const lacunas = lacunasDaMatriz(tiposAto, conferentes, alcance)
   const abreviacoes = abreviacoesDeColuna(conferentes.map((c) => c.nome))
 
   // A matriz é por grupo: sem nenhum tipo classificado, ela ficava com o cabeçalho e nenhuma linha,
@@ -98,6 +100,12 @@ export const AbaAlcadaMatriz = ({ conferentes, tiposAto, alcance }: AbaAlcadaMat
         placeholder="buscar grupo ou tipo de ato…"
         className="mb-2.5"
       />
+
+      {lacunas && (
+        <div className="mb-2.5 rounded-[9px] border border-warn-border bg-warn-bg px-3.5 py-2.75 text-[12.5px] leading-[1.45] text-pretty text-warn-fg">
+          {lacunas}
+        </div>
+      )}
 
       <div className="overflow-x-auto rounded-[10px] border border-border bg-card shadow-sm">
         <div className="flex min-w-max border-b border-border bg-card px-3 py-2 text-[11px] font-medium text-text-2">

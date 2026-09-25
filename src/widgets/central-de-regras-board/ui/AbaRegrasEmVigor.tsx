@@ -7,7 +7,6 @@ import { useEscreventes } from '@/entities/escrevente'
 import { useRegrasAlcada } from '@/entities/regraAlcada'
 import { useTiposAto } from '@/entities/tipoAto'
 import { useEhAdministrador } from '@/entities/usuario'
-import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/ui/button'
 import { Carregando } from '@/shared/ui/carregando'
 import { Input } from '@/shared/ui/input'
@@ -22,12 +21,22 @@ type GrupoVigor = {
   itens: ItemVigor[]
   editarLabel?: string
   onEditar?: () => void
-  /** Alçada já passou de ~95 itens em produção — busca + rolagem própria, mesmo tratamento já
-   * dado à aba "Camadas" (achado real do dono). Os outros 3 grupos são bounded pelo domínio
-   * (nº de equipes/tipos/parâmetros fixos), não precisam disso. */
+  /** Alçada já passou de ~95 itens em produção — tem busca própria (achado real do dono). */
   totalSemFiltro?: number
-  // Contagem do cabeçalho no formato do protótipo ("4 pessoas e níveis · 6 regras"); sem ela, o nº de linhas.
-  contagem?: string
+  // Contagem do cabeçalho no formato do protótipo ("4 pessoas e níveis · 6 regras").
+  contagem: string
+  /** Quantas linhas aparecem antes do "ver as outras N" (protótipo: 4; Operação não corta). */
+  limite?: number
+}
+
+const LIMITE_POR_GRUPO = 4
+
+// "4h", "1h", "60 min", "1h30" — mesmo formato do `dur()` do protótipo; "4.5h" não é jeito de ler hora.
+const formatarMinutos = (minutos: number) => {
+  if (minutos < 60) return `${minutos} min`
+  const horas = Math.floor(minutos / 60)
+  const resto = minutos % 60
+  return resto ? `${horas}h${String(resto).padStart(2, '0')}` : `${horas}h`
 }
 
 // Sem os `onIrPara*` (quem não é admin só lê — RF-30a), cada família mostra "só a administração
@@ -66,6 +75,7 @@ export const AbaRegrasEmVigor = ({
   const { data: configuracao } = useConfiguracao()
   const ehAdministrador = useEhAdministrador()
   const [buscaAlcada, setBuscaAlcada] = useState('')
+  const [abertos, setAbertos] = useState<Set<string>>(new Set())
 
   if (!regras || !conferentes || !tiposAto || !equipes || !escreventes || !configuracao) {
     return <Carregando />
@@ -100,7 +110,7 @@ export const AbaRegrasEmVigor = ({
       detalhe: `${tiposAto.length - desativados.length} ativos · ${desativados.length} desativados`,
     },
     ...desativados.map((t) => ({
-      frase: `"${t.nome}" está desativado: novos protocolos desse tipo vão para exceção`,
+      frase: `“${t.nome}” está desativado: novos protocolos desse tipo vão para exceção`,
       detalhe: 'reative ou mescle em outro tipo',
     })),
   ]
@@ -112,14 +122,17 @@ export const AbaRegrasEmVigor = ({
     { frase: 'Modo de distribuição: Híbrido', detalhe: 'urgentes recebem dono; o resto fica no pool' },
     {
       frase: `Cada conferente conduz ${plural(configuracao.limiteDeAtosSimultaneos, 'ato', 'atos')} por vez`,
-      detalhe: 'iniciar outro exige concluir o(s) atual(is)',
+      detalhe:
+        configuracao.limiteDeAtosSimultaneos === 1
+          ? 'iniciar outro exige concluir o atual'
+          : 'iniciar outro exige concluir um dos atuais',
     },
     {
-      frase: `Semáforo: amarelo abaixo de ${configuracao.faixaAtencaoMinutos / 60}h, laranja abaixo de ${configuracao.faixaUrgenteMinutos}min`,
+      frase: `Semáforo: amarelo abaixo de ${formatarMinutos(configuracao.faixaAtencaoMinutos)}, laranja abaixo de ${formatarMinutos(configuracao.faixaUrgenteMinutos)}`,
       detalhe: 'vermelho quando o vencimento passa',
     },
     {
-      frase: `Correção de resultado pelo conferente: ${configuracao.janelaDeCorrecaoMinutos} min após concluir`,
+      frase: `Correção de resultado pelo conferente: ${formatarMinutos(configuracao.janelaDeCorrecaoMinutos)} após concluir`,
       detalhe: 'depois disso, só reabertura autorizada pela distribuidora',
     },
     {
@@ -139,7 +152,7 @@ export const AbaRegrasEmVigor = ({
       editarLabel: 'Editar alçada',
       onEditar: onIrParaAlcada,
       totalSemFiltro: alcadaItensTodos.length,
-      contagem: ehAdministrador ? contagemDaAlcadaEmVigor(regras) : undefined,
+      contagem: contagemDaAlcadaEmVigor(regras),
     },
     {
       nome: 'Prazo — de onde vem o vencimento',
@@ -148,71 +161,113 @@ export const AbaRegrasEmVigor = ({
       editarLabel: 'Editar prazos',
       onEditar: onIrParaPrazos,
     },
-    { nome: 'Catálogo de atos', itens: catalogoItens, editarLabel: 'Editar tipos', onEditar: onIrParaTipos },
-    { nome: 'Operação', itens: operacaoItens, editarLabel: 'Editar operação', onEditar: onIrParaConfig },
+    {
+      nome: 'Catálogo de atos',
+      itens: catalogoItens,
+      contagem: plural(tiposAto.length, 'tipo de ato', 'tipos de ato'),
+      editarLabel: 'Editar tipos',
+      onEditar: onIrParaTipos,
+    },
+    {
+      nome: 'Operação',
+      itens: operacaoItens,
+      contagem: plural(operacaoItens.length, 'parâmetro', 'parâmetros'),
+      editarLabel: 'Editar operação',
+      onEditar: onIrParaConfig,
+      limite: Infinity,
+    },
   ]
+
+  const alternar = (nome: string) =>
+    setAbertos((atual) => {
+      const proximo = new Set(atual)
+      if (proximo.has(nome)) proximo.delete(nome)
+      else proximo.add(nome)
+      return proximo
+    })
 
   return (
     <div className="max-w-[900px]">
-      <h2 className="mt-5.5 mb-0 text-[15px] font-semibold tracking-[-0.01em]">Tudo o que o sistema aplica hoje</h2>
-      <p className="mt-1.5 max-w-[72ch] text-[13px] text-pretty text-text-2">
-        Todas as regras ativas, escritas em português, na ordem em que o motor as consulta. É esta lista que explica o
-        destino de qualquer protocolo.
-      </p>
+      {/* O cabeçalho da aba é só do admin (protótipo: `centralCompleta`) — a distribuidora já tem o
+          título e a explicação da Central logo acima, e repetir os dois ficava redundante. */}
+      {ehAdministrador && (
+        <>
+          <h2 className="m-0 text-xl font-semibold tracking-[-0.015em]">Tudo o que o sistema aplica hoje</h2>
+          <p className="mt-1.5 max-w-[72ch] text-[13px] text-pretty text-text-2">
+            O que o motor aplica hoje, escrito em português e na ordem em que ele consulta. Cada bloco mostra o
+            essencial — abra para ver o resto, ou edite na aba correspondente.
+          </p>
+        </>
+      )}
 
       <div className="mt-4.5 flex flex-col gap-3.5">
-        {grupos.map((grupo) => (
-          <div key={grupo.nome}>
-            <div className="mb-1.5 flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
-              <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                <strong className="text-[13.5px] font-semibold">{grupo.nome}</strong>
-                <span className="flex-none font-mono text-[11px] text-muted-foreground">
-                  {grupo.totalSemFiltro !== undefined && grupo.totalSemFiltro !== grupo.itens.length
-                    ? `${grupo.itens.length} de ${grupo.totalSemFiltro}`
-                    : (grupo.contagem ?? grupo.itens.length)}
-                </span>
-              </div>
-              {grupo.onEditar ? (
-                <Button variant="outline" size="sm" onClick={grupo.onEditar} className="flex-none">
-                  {grupo.editarLabel}
-                </Button>
-              ) : (
-                <span className="flex-none text-[11.5px] text-muted-foreground">só a administração edita</span>
-              )}
-            </div>
-            {grupo.totalSemFiltro !== undefined && (
-              <Input
-                value={buscaAlcada}
-                onChange={(e) => setBuscaAlcada(e.target.value)}
-                placeholder={
-                  ehAdministrador
-                    ? 'buscar por nível, pessoa, tipo de ato, equipe…'
-                    : 'buscar por pessoa, tipo de ato, equipe…'
-                }
-                className="mb-1.5"
-              />
-            )}
-            <SurfaceCard
-              className={cn(
-                'p-0 px-3.5',
-                // Achado real (dono): esta lista já passou de ~95 itens em produção — sem
-                // rolagem própria, a página inteira virava uma barra de scroll só (mesmo
-                // tratamento já dado à aba "Camadas" da Alçada).
-                grupo.totalSemFiltro !== undefined && 'max-h-[420px] overflow-y-auto',
-              )}
-            >
-              {grupo.itens.map((item, indice) => (
-                <div key={indice} className="border-t border-secondary py-2.25 first:border-t-0">
-                  <div className="text-[13px] text-pretty text-text-5">{item.frase}</div>
-                  <div className="mt-0.5 text-[11.5px] text-pretty text-muted-foreground">{item.detalhe}</div>
+        {grupos.map((grupo) => {
+          // Com busca, mostra tudo o que bate — cortar resultado de busca esconderia o que se procurou.
+          const buscando = grupo.totalSemFiltro !== undefined && qAlcada !== ''
+          const limite = grupo.limite ?? LIMITE_POR_GRUPO
+          const aberto = abertos.has(grupo.nome) || buscando
+          const visiveis = aberto ? grupo.itens : grupo.itens.slice(0, limite)
+          const ocultos = grupo.itens.length - limite
+          return (
+            <div key={grupo.nome}>
+              <div className="mb-1.75 flex items-center justify-between gap-3">
+                <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                  <strong className="text-[13.5px] font-semibold">{grupo.nome}</strong>
+                  <span className="font-mono text-[11px] text-muted-foreground">
+                    {buscando ? `${grupo.itens.length} de ${grupo.totalSemFiltro}` : grupo.contagem}
+                  </span>
                 </div>
-              ))}
-              {grupo.totalSemFiltro !== undefined && grupo.itens.length === 0 && (
-                <p className="py-2.25 text-[12.5px] text-muted-foreground">Nenhuma regra bate com a busca.</p>
+                {grupo.onEditar ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={grupo.onEditar}
+                    className="h-6.5 flex-none px-2.5 text-[12px] text-text-2"
+                  >
+                    {grupo.editarLabel}
+                  </Button>
+                ) : (
+                  <span className="flex-none text-[11.5px] text-muted-foreground">só a administração edita</span>
+                )}
+              </div>
+              {grupo.totalSemFiltro !== undefined && (
+                <Input
+                  value={buscaAlcada}
+                  onChange={(e) => setBuscaAlcada(e.target.value)}
+                  placeholder={
+                    ehAdministrador
+                      ? 'buscar por nível, pessoa, tipo de ato, equipe…'
+                      : 'buscar por pessoa, tipo de ato, equipe…'
+                  }
+                  className="mb-1.5"
+                />
               )}
-            </SurfaceCard>
-          </div>
-        ))}
+              {/* Protótipo v2: cada bloco mostra as 4 primeiras linhas e "ver as outras N" — no lugar da
+                rolagem interna de 420px que a Alçada tinha (lista dentro de lista, achado do dono com
+                ~95 regras em produção). */}
+              <SurfaceCard className="p-0 px-3.5">
+                {visiveis.map((item, indice) => (
+                  <div key={indice} className="border-t border-secondary py-2.25 first:border-t-0">
+                    <div className="text-[13px] text-pretty text-text-5">{item.frase}</div>
+                    <div className="mt-0.5 text-[11.5px] text-pretty text-muted-foreground">{item.detalhe}</div>
+                  </div>
+                ))}
+                {buscando && grupo.itens.length === 0 && (
+                  <p className="py-2.25 text-[12.5px] text-muted-foreground">Nenhuma regra bate com a busca.</p>
+                )}
+                {!buscando && ocultos > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => alternar(grupo.nome)}
+                    className="w-full border-t border-secondary py-2.25 text-left text-[12px] font-medium text-text-2 hover:text-foreground max-mobile:min-h-11"
+                  >
+                    {aberto ? 'mostrar menos' : `ver as outras ${ocultos}`}
+                  </button>
+                )}
+              </SurfaceCard>
+            </div>
+          )
+        })}
       </div>
     </div>
   )

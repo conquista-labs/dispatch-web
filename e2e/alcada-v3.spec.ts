@@ -14,7 +14,7 @@ test('Central de regras — Alçada v3, as 3 sub-abas', async ({ page }) => {
   await page.getByRole('button', { name: 'Entrar' }).click()
   await page.getByRole('link', { name: 'Central de regras' }).click()
   await page.getByRole('button', { name: 'Alçada', exact: true }).click()
-  await expect(page.getByRole('heading', { name: 'Regras de alçada' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Alçada', exact: true })).toBeVisible()
 
   // Camadas (padrão).
   await expect(page.getByText('Base por nível')).toBeVisible()
@@ -50,7 +50,7 @@ test('Central de regras — Alçada v3, as 3 sub-abas', async ({ page }) => {
   })
   await page.reload()
   await page.getByRole('button', { name: 'Alçada', exact: true }).click()
-  await expect(page.getByRole('heading', { name: 'Regras de alçada' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Alçada', exact: true })).toBeVisible()
   await page.screenshot({ path: 'e2e/.screenshots/alcada-v3-camadas-escuro.png', fullPage: true })
 
   await page.getByRole('button', { name: 'Testar', exact: true }).click()
