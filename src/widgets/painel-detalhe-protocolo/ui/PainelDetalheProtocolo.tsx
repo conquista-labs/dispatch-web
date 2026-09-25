@@ -438,7 +438,7 @@ const BlocoHistorico = ({
 // mostra a seção, igual `motivoExcecao` só aparece quando existe). Mesmo padrão visual de
 // `ListaAlcada` — nome à esquerda, status + data à direita — reaproveitando STATUS_LABEL/
 // STATUS_TOM já definidos neste arquivo.
-const HistoricoConferencias = ({
+export const HistoricoConferencias = ({
   historico,
   nomePorConferenteId,
 }: {
