@@ -11,14 +11,17 @@ dois inteiros antes de começar.
 
 ## Passo 0 — leia o protótipo primeiro, sempre
 
-**Nunca desenhe uma tela de cabeça.** `../dispatch-prototype/Dispatch.dc.html` tem o markup real
-(cores, espaçamento em px, texto exato) de cada tela — procure a seção pela variável de estado
-que ativa ela (`grep -n "isFila\|isPainel\|isConferentes\|isInteligencia" ...`) e leia o bloco
-inteiro antes de traduzir pra Tailwind/shadcn. Os documentos de "opções"
-(`Logo - opções.dc.html`, `Tipografia - opções.dc.html`) **não** são a fonte — só o
-`Dispatch.dc.html` é o protótipo aprovado (ver `CLAUDE.md`, seção "Design system"). Se a tela
-que você precisa não está em nenhum dos dois arquivos do protótipo, pergunte ao dono antes de
-inventar layout — não é isso que ele pediu quando disse "fiel ao protótipo".
+**Nunca desenhe uma tela de cabeça.** `../dispatch-prototype/Dispatch v2.dc.html` (o protótipo
+aprovado — o histórico e os comentários de código o chamam de `Dispatch.dc.html`, nome até
+2026-09-25) tem o markup real (cores, espaçamento em px, texto exato) de cada tela — procure a
+seção pela variável de estado que ativa ela (`grep -n "isFila\|isPainel\|isConferentes\|isInteligencia" ...`)
+e leia o bloco inteiro antes de traduzir pra Tailwind/shadcn. Melhor ainda: abra o arquivo via
+`file://` no Playwright e navegue nele (`docs/patterns/verificacao-com-prototipo.md`). Documentos
+de "opções" (logo, tipografia), se reaparecerem, **não** são a fonte
+(`docs/decisions/0003-prototipo-aprovado-como-fonte-de-design.md`). Antes de "corrigir" algo pra
+bater com o protótipo, confira `docs/decisions/0010-divergencias-deliberadas-do-prototipo.md`. Se
+a tela que você precisa não está no protótipo, pergunte ao dono antes de inventar layout — não é
+isso que ele pediu quando disse "fiel ao protótipo".
 
 ## Estrutura a criar
 
