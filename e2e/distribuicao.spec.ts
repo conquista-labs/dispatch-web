@@ -14,7 +14,10 @@ test('Distribuição — as 3 abas renderizam com dados reais', async ({ page })
   await page.getByRole('button', { name: 'Entrar' }).click()
   // RF-03, ajustado a pedido do dono: login cai no Dashboard agora — navega explicitamente.
   await expect(page).toHaveURL(/\/dashboard/)
-  await page.getByRole('link', { name: 'Distribuição' }).click()
+  await page
+    .getByRole('link', { name: /^Distribuição/ })
+    .first()
+    .click()
   await expect(page).toHaveURL(/\/distribuicao/)
   await expect(page.getByRole('heading', { name: 'Distribuição' })).toBeVisible()
 

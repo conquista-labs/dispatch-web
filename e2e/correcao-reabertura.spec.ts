@@ -109,7 +109,7 @@ test('Correção de resultado e pedido de reabertura — ciclo completo pela UI'
   await page.getByRole('button', { name: 'Entrar' }).click()
   // RF-03, ajustado a pedido do dono: login cai no Dashboard agora — navega explicitamente.
   await expect(page).toHaveURL(/\/dashboard/)
-  await page.getByRole('link', { name: 'Minha fila' }).click()
+  await page.getByRole('link', { name: 'Minha fila', exact: true }).click()
   await expect(page).toHaveURL(/\/minha-fila/)
 
   const linhaConcluido = page.getByTestId(`concluido-${protocoloId}`)
@@ -163,7 +163,10 @@ test('Correção de resultado e pedido de reabertura — ciclo completo pela UI'
   await paginaDistribuidora.getByRole('button', { name: 'Entrar' }).click()
   // RF-03, ajustado a pedido do dono: login cai no Dashboard agora — navega explicitamente.
   await expect(paginaDistribuidora).toHaveURL(/\/dashboard/)
-  await paginaDistribuidora.getByRole('link', { name: 'Distribuição' }).click()
+  await paginaDistribuidora
+    .getByRole('link', { name: /^Distribuição/ })
+    .first()
+    .click()
   await expect(paginaDistribuidora).toHaveURL(/\/distribuicao/)
 
   await paginaDistribuidora.getByRole('button', { name: /Exceções/ }).click()
