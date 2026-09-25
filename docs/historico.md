@@ -842,3 +842,15 @@ distribuidora") e esperava `Conferindo` depois da reabertura (o back devolve `At
 ADR-0031). Agora importa o protocolo (`POST /protocolos/importar/confirmar`), acha o id na visão de
 distribuição e atribui à mão à conferente de teste (sem alçada, ADR-0027). Verificado: duas rodadas
 seguidas passando e a categoria de regressão inteira verde (12 testes).
+
+## 2026-09-25 — Bugs da auditoria visual (Parte 0 do PLANO-dashboard-v2)
+
+Achados comparando o app com o protótipo v2. `shared/ui/sheet.tsx`: a largura padrão das laterais vinha
+com o prefixo `data-[side=…]:` e vencia o `w-[…]` de cada tela (o `twMerge` não vê conflito entre
+variantes diferentes) — todo painel saía com 384px; agora a largura padrão entra sem o prefixo e cada tela
+manda. Login com dois painéis `flex: 1 1 420px` e quebra de linha (protótipo v2). Card de Conferentes com
+`flex-wrap` no cabeçalho. Regras em vigor: "definida pela administração" pra distribuidora. Matriz de
+alçada: estado vazio e `lib/abreviacao.ts` (iniciais quando o primeiro nome colide).
+
+Verificado: 208 testes; regressão do e2e verde; larguras medidas no navegador (detalhe 432px, lista 480px,
+filtros 360px, detalhe no celular 359px); login e Conferentes a 390px sem rolagem lateral.

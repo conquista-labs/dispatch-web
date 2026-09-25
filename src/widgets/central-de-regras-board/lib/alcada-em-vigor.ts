@@ -5,8 +5,14 @@ export type ItemVigor = { frase: string; detalhe: string }
 
 const plural = (n: number, um: string, muitos: string) => `${n} ${n === 1 ? um : muitos}`
 
-const detalheDeOrigem = (regra: RegraAlcada) =>
-  regra.origem === 'Manual' ? 'definida por você' : 'aprendida pelo sistema'
+// "definida por você" só faz sentido pra quem cria regra; a distribuidora lê regras que a
+// administração definiu (RF-30a).
+const detalheDeOrigem = (regra: RegraAlcada, ehAdministrador: boolean) =>
+  regra.origem === 'Aprendida'
+    ? 'aprendida pelo sistema'
+    : ehAdministrador
+      ? 'definida por você'
+      : 'definida pela administração'
 
 // "Equipe não faz etapa" com o nível escondido — no back são 3 regras (uma por nível, ADR-0024),
 // sem o nível ficariam 3 linhas idênticas.
@@ -22,7 +28,8 @@ export const itensDeAlcadaEmVigor = (
   ehAdministrador: boolean,
 ): ItemVigor[] => {
   const ativas = regras.filter((r) => r.ativa)
-  if (ehAdministrador) return ativas.map((r) => ({ frase: fraseDaRegra(r, lookups), detalhe: detalheDeOrigem(r) }))
+  if (ehAdministrador)
+    return ativas.map((r) => ({ frase: fraseDaRegra(r, lookups), detalhe: detalheDeOrigem(r, true) }))
 
   const itens: ItemVigor[] = []
 
@@ -56,7 +63,7 @@ export const itensDeAlcadaEmVigor = (
   }
 
   for (const regra of ativas.filter((r) => !r.regraBase && !ehEquipeEEtapaSemNivel(r))) {
-    itens.push({ frase: fraseDaRegra(regra, lookups), detalhe: detalheDeOrigem(regra) })
+    itens.push({ frase: fraseDaRegra(regra, lookups), detalhe: detalheDeOrigem(regra, false) })
   }
 
   return itens
