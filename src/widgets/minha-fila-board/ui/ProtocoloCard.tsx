@@ -8,6 +8,7 @@ import {
 } from '@/entities/protocolo'
 import { ObservacaoField } from '@/features/protocolo/definir-observacao'
 import { formatDataHora } from '@/shared/lib/format'
+import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/ui/button'
 import { Chip } from '@/shared/ui/chip'
 import { SurfaceCard } from '@/shared/ui/surface-card'
@@ -34,6 +35,8 @@ type ProtocoloCardProps = {
    * essa parte do card fica travada (a ação, ex.: "Pegar este", continua ativa). Diferente de
    * `somenteLeitura`, que desliga o card inteiro. */
   observacaoSomenteLeitura?: boolean
+  /** RF-24j — o "Ver" da faixa de prioridade alta destaca o card por alguns segundos. */
+  destacado?: boolean
 }
 
 // Card do pool disponível / atribuídos a você (RF-19) — mesmo layout dos dois, só muda o
@@ -48,11 +51,16 @@ export const ProtocoloCard = ({
   acaoVariante = 'outline',
   somenteLeitura,
   observacaoSomenteLeitura,
+  destacado,
 }: ProtocoloCardProps) => {
   const chip = prazoChip(protocolo.semaforo, protocolo.vencimentoEm, now)
 
   return (
-    <SurfaceCard tom={chip.tom}>
+    <SurfaceCard
+      tom={chip.tom}
+      data-protocolo-id={protocolo.id}
+      className={cn(destacado && 'ring-2 ring-foreground motion-safe:animate-anel-destaque')}
+    >
       <div className="flex items-center justify-between gap-1.5">
         <span className="font-mono text-[12.5px] font-medium">{protocolo.numero}</span>
         <PrazoTooltip>

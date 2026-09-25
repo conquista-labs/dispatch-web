@@ -32,8 +32,8 @@ export default defineConfig({
         'src/**/*.test.{ts,tsx}',
         // Só monta o root do React — 0% pra sempre por natureza, não por falta de teste.
         'src/main.tsx',
-        // Helper de teste, não código de produção.
-        'src/shared/lib/test/**',
+        // Helpers e fixtures de teste (shared/lib/test e `lib/test/` de qualquer slice), não código de produção.
+        'src/**/lib/test/**',
         // Quarentena do `shadcn add` (gitignored): saída crua do registro, nunca importada.
         'src/shared/ui/generated/**',
       ],
@@ -45,10 +45,10 @@ export default defineConfig({
       // código morto junto com o teste dele) é decisão explícita de PR, com nota.
       thresholds: {
         autoUpdate: true,
-        lines: 15.58,
-        functions: 13.19,
-        branches: 12.78,
-        statements: 16.13,
+        lines: 23.19,
+        functions: 18.16,
+        branches: 17.63,
+        statements: 23.51,
       },
     },
   },

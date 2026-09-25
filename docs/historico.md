@@ -778,3 +778,27 @@ funções 13,19%, statements 16,13%, branches 12,78%; pisos reescritos pelo `aut
 com cenário real via API local (importar → reprovar com observação → reimportar → marcar Alta): Minha
 fila, Distribuição (coluna estreita) e painel nos dois temas, screenshots lidos; dado de teste apagado
 depois. `npm run check` e `npm run build` limpos.
+
+## 2026-09-25 — Aviso de prioridade alta na Minha fila (RF-24h/i/j)
+
+Feature 2 do `PLANO-melhorias.md` (só front). ADR-0023. `useMinhaFila` com `refetchInterval: 30_000`
+(pausa em segundo plano) e `IndicadorAtualizacao` ("atualiza sozinha a cada 30s · última há Ns", relógio
+próprio). Em `widgets/minha-fila-board`: `lib/prioridade-alta.ts` (`listarAltasPendentes` — do conferente
+primeiro, depois pool, por vencimento, sobre a fila sem filtro; `localizar` — aba, lista completa, filtro
+escondendo), `lib/alta-vistos.ts` (`diffAltas` + sessionStorage por usuário), `model/use-aviso-prioridade-alta.ts`
+(toasts com `useEffectEvent`), `ui/AvisoPrioridadeAlta.tsx` (faixa sticky, até 3 botões ou 2 + "Ver os N"),
+`ui/ListaAltasSheet.tsx` (lista das altas com "Pegar" nas do pool). `FilaColunas` aceita aba controlada;
+`ProtocoloCard`/`EmConferenciaCard` ganham `data-protocolo-id` e `destacado` (anel com keyframes
+`anel-destaque`); `ListaCompletaPoolSheet` recebe `destaqueId`. `MinhaFilaBoard.irPara` faz, em ordem:
+limpa o filtro que esconde o card (aviso inline por 7s), troca a aba, abre a lista completa, destaca e rola
+(com uma segunda tentativa pro Sheet em portal).
+
+Verificado: testes de `prioridade-alta`, `alta-vistos`, `AvisoPrioridadeAlta`, `useAvisoPrioridadeAlta`
+(`vi.mock('sonner')`) e `MinhaFilaBoard` (6º do pool Alta → "Ver" → lista completa aberta, card com anel,
+rolagem chamada); fixture `lib/test/protocolo-de-teste.ts` compartilhada (e fora da cobertura, junto com
+qualquer `lib/test/`). `verify-visual` contra a API local com a base clonada: faixa com 1 e com 2, "Ver" abrindo
+a lista com o card destacado, toast de chegada vindo pelo polling em menos de 40s sem recarregar, F5 sem
+repetir o toast, tema escuro, e no celular a faixa presa abaixo da barra — o primeiro screenshot mobile
+mostrou o texto espremido sob os botões e a faixa 3,5px sob a barra (corrigido: texto em linha inteira,
+`top-[116px]`). Cenário revertido depois (prioridades de volta a Normal, importados apagados). 170 testes;
+cobertura 23% de linhas.

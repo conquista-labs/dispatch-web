@@ -97,6 +97,7 @@ no back — o front chama endpoint e renderiza. Por quê e alternativas:
 | [0020](docs/decisions/0020-playwright-com-duas-categorias-de-spec.md)                      | Playwright com duas categorias de spec, sem fixture automática de cenário                             |
 | [0021](docs/decisions/0021-global-setup-garante-contas-de-login.md)                        | `globalSetup` garante as contas fixas de login                                                        |
 | [0022](docs/decisions/0022-deploy-manual-no-netlify-com-build-remoto.md)                   | Deploy manual no Netlify com build remoto                                                             |
+| [0023](docs/decisions/0023-aviso-de-prioridade-alta-com-polling-e-sessionstorage.md)       | Aviso de prioridade alta: polling de 30s + memória em `sessionStorage`                                |
 
 ## Skills do projeto (`.claude/skills/`)
 

@@ -5,31 +5,13 @@ import type { InfoProtocolo, ProtocoloResumo } from '@/entities/protocolo'
 import { renderWithProviders } from '@/shared/lib/test/render-with-providers'
 import { TooltipProvider } from '@/shared/ui/tooltip'
 
+import { protocoloDeTeste } from '../lib/test/protocolo-de-teste'
 import { ProtocoloCard } from './ProtocoloCard'
 
 const agora = Date.parse('2026-09-25T12:00:00Z')
 
-const protocolo = (overrides: Partial<ProtocoloResumo> = {}): ProtocoloResumo => ({
-  id: 'p1',
-  numero: '263546',
-  tipoAtoId: 't1',
-  escreventeId: 'e1',
-  etapa: 'PosConferencia',
-  prioridade: 'Normal',
-  status: 'Pool',
-  donoId: null,
-  vencimentoEm: '2026-09-26T12:00:00Z',
-  motivoExcecao: null,
-  observacao: null,
-  semaforo: 'Verde',
-  iniciadoEm: null,
-  pausadoEm: null,
-  concluidoEm: null,
-  duracao: null,
-  andamentoEm: '2026-09-25T09:00:00Z',
-  numeroDaConferencia: 1,
-  ...overrides,
-})
+const protocolo = (overrides: Partial<ProtocoloResumo> = {}) =>
+  protocoloDeTeste('p1', { numero: '263546', ...overrides })
 
 const info: InfoProtocolo = {
   tipoAtoNome: 'Inventário',

@@ -13,6 +13,8 @@ type ListaCompletaPoolSheetProps = {
   acaoLabel?: string
   onAcao?: (protocoloId: string) => void
   acaoDesabilitada?: boolean
+  /** RF-24j — card de prioridade alta que o "Ver" da faixa trouxe até aqui. */
+  destaqueId?: string | null
 }
 
 // "+N protocolos" do pool disponível (RF-19), mesmo padrão de ListaCompletaColunaSheet
@@ -29,6 +31,7 @@ export const ListaCompletaPoolSheet = ({
   acaoLabel,
   onAcao,
   acaoDesabilitada,
+  destaqueId,
 }: ListaCompletaPoolSheetProps) => (
   <Sheet open={aberto} onOpenChange={(open) => !open && onFechar()}>
     <SheetContent side="right" className="w-[min(420px,92vw)] gap-0 overflow-y-auto p-0 sm:max-w-[420px]">
@@ -49,6 +52,7 @@ export const ListaCompletaPoolSheet = ({
             acaoLabel={acaoLabel}
             onAcao={onAcao ? () => onAcao(protocolo.id) : undefined}
             acaoDesabilitada={acaoDesabilitada}
+            destacado={protocolo.id === destaqueId}
           />
         ))}
         {protocolos.length === 0 && <p className="p-2 text-[12.5px] text-muted-foreground">Nada no pool.</p>}
