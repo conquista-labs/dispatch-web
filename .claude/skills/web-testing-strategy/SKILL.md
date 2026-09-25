@@ -1,5 +1,5 @@
 ---
-name: testing-strategy
+name: web-testing-strategy
 description: Decide que teste uma mudança do dispatch-web precisa (unidade, componente, Playwright ou nenhum), onde o arquivo vive na estrutura FSD, e o que fazer quando o ratchet de cobertura muda. Use ao terminar uma mudança em src/, ao revisar código sem teste, ou quando o usuário perguntar "isso precisa de teste?".
 ---
 
@@ -7,9 +7,11 @@ description: Decide que teste uma mudança do dispatch-web precisa (unidade, com
 
 Decide o que testar seguindo a política real deste repositório — não conselho genérico de teste.
 
-Leia antes: a seção **"Estratégia de testes"** do `CLAUDE.md` deste repositório (é lá que mora a
-decisão, este projeto não usa ADRs em `docs/`). Releia agora, não confie num resumo de antes
-nesta conversa — ela muda conforme o projeto anda.
+Leia antes: `docs/patterns/testing-strategy.md` (critério, setup e gotchas) e as decisões por trás
+dele — `docs/decisions/0011-adotar-vitest.md`, `0012-cobertura-com-ratchet-e-rtl.md` e, pra E2E,
+`0020-playwright-com-duas-categorias-de-spec.md` + `docs/patterns/e2e-tests.md`. Releia agora, não
+confie num resumo de antes nesta conversa — eles mudam conforme o projeto anda. Se a política
+mudar, isso é um ADR novo (skill `/adr`), não uma edição silenciosa daqui.
 
 ## Entrada
 
