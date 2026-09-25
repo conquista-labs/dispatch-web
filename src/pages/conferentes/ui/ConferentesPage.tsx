@@ -18,7 +18,7 @@ export const ConferentesPage = () => {
           </p>
         </div>
         {ehAdministrador && (
-          <div className="flex flex-none gap-2 max-mobile:w-full">
+          <div className="flex flex-none flex-wrap gap-2 max-mobile:w-full">
             <VincularExistenteDialog />
             <NovoConferenteDialog />
           </div>

@@ -86,4 +86,11 @@ describe('itensDeAlcadaEmVigor', () => {
 
     expect(itens).toEqual([{ frase: expect.stringContaining('Conferente c1'), detalhe: 'aprendida pelo sistema' }])
   })
+
+  it('regra manual vista pela distribuidora é "definida pela administração", não "por você"', () => {
+    const regraManual = regra({ id: 'r1', sujeitoConferenteId: 'c1', alvoTipoAtoId: 't1', origem: 'Manual' })
+
+    expect(itensDeAlcadaEmVigor([regraManual], lookups, false)[0].detalhe).toBe('definida pela administração')
+    expect(itensDeAlcadaEmVigor([regraManual], lookups, true)[0].detalhe).toBe('definida por você')
+  })
 })

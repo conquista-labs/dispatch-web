@@ -9,6 +9,7 @@ import { cn } from '@/shared/lib/utils'
 import { Carregando } from '@/shared/ui/carregando'
 import { Input } from '@/shared/ui/input'
 
+import { abreviacoesDeColuna } from '../lib/abreviacao'
 import { ESTADO_GRUPO, ESTADO_TIPO } from '../lib/alcance'
 import { CelulaAlcance } from './CelulaAlcance'
 
@@ -72,6 +73,22 @@ export const AbaAlcadaMatriz = ({ conferentes, tiposAto, alcance }: AbaAlcadaMat
   }
 
   const grupos = GRUPOS.filter((g) => tiposAto.some((t) => t.grupo === g))
+  const abreviacoes = abreviacoesDeColuna(conferentes.map((c) => c.nome))
+
+  // A matriz é por grupo: sem nenhum tipo classificado, ela ficava com o cabeçalho e nenhuma linha,
+  // sem dizer por quê.
+  if (grupos.length === 0) {
+    return (
+      <div className="rounded-[10px] border border-dashed border-border p-6 text-center">
+        <div className="text-[13px] font-medium">Nenhum tipo de ato está classificado em grupo ainda</div>
+        <p className="mx-auto mt-1 max-w-[60ch] text-[12.5px] text-pretty text-text-2">
+          A matriz mostra o alcance de cada pessoa por grupo de tipo de ato. Classifique os tipos em{' '}
+          <strong className="font-medium">Tipos de ato</strong> para usá-la; enquanto isso, a alçada segue valendo pelas
+          regras de Camadas.
+        </p>
+      </div>
+    )
+  }
 
   return (
     <div>
@@ -85,9 +102,9 @@ export const AbaAlcadaMatriz = ({ conferentes, tiposAto, alcance }: AbaAlcadaMat
       <div className="overflow-x-auto rounded-[10px] border border-border bg-card shadow-sm">
         <div className="flex min-w-max border-b border-border bg-card px-3 py-2 text-[11px] font-medium text-text-2">
           <span className="w-[220px] flex-none">Grupo / tipo de ato</span>
-          {conferentes.map((c) => (
+          {conferentes.map((c, i) => (
             <span key={c.id} title={c.nome} className="w-11 flex-none truncate text-center">
-              {c.nome.split(' ')[0].slice(0, 4)}
+              {abreviacoes[i]}
             </span>
           ))}
           <span className="w-20 flex-none text-right">cobertura</span>

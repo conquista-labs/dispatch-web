@@ -82,8 +82,10 @@ export const ConferenteCard = ({ conferente, tiposAlcancados, totalTipos, frases
       data-testid={`conferente-card-${conferente.id}`}
       className={cn('p-3.5 px-4', !conferente.naEscala && 'bg-secondary/40')}
     >
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex min-w-0 items-start gap-1.5">
+      {/* flex-wrap: no celular o bloco da direita (carga, presença, remover) desce pra linha de baixo
+          em vez de espremer nome e e-mail até 1 caractere por linha (achado da auditoria visual). */}
+      <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2.5">
+        <div className="flex min-w-0 flex-[1_1_220px] items-start gap-1.5">
           {/* RNF-10: nome/e-mail não truncam — dois conferentes parecidos ("Ana Silva"/"Ana
               Souza") não podem virar "Ana S..." indistinguível nessa lista. */}
           <div className="min-w-0">
@@ -97,7 +99,7 @@ export const ConferenteCard = ({ conferente, tiposAlcancados, totalTipos, frases
           )}
         </div>
 
-        <div className="flex flex-none items-center gap-2.5">
+        <div className="flex flex-none items-center gap-2.5 max-mobile:w-full max-mobile:justify-end">
           <div className="text-right">
             <div className={cn('font-mono text-[13.5px] font-medium', corCarga)}>
               {conferente.cargaAtual}/{conferente.capacidadeEstimada}
