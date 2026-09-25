@@ -5,17 +5,18 @@ import { useConfiguracao } from '@/entities/configuracao'
 import { useEquipes } from '@/entities/equipe'
 import { useEscreventes } from '@/entities/escrevente'
 import { TIPO_PRAZO_LABEL } from '@/entities/protocolo'
-import { fraseDaRegra, useRegrasAlcada } from '@/entities/regraAlcada'
+import { useRegrasAlcada } from '@/entities/regraAlcada'
 import { useTiposAto } from '@/entities/tipoAto'
+import { useEhAdministrador } from '@/entities/usuario'
 import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/ui/button'
 import { Carregando } from '@/shared/ui/carregando'
 import { Input } from '@/shared/ui/input'
 import { SurfaceCard } from '@/shared/ui/surface-card'
 
+import { itensDeAlcadaEmVigor, type ItemVigor } from '../lib/alcada-em-vigor'
 import { criarNomesDaCentralDeRegras } from '../lib/nomes'
 
-type ItemVigor = { frase: string; detalhe: string }
 type GrupoVigor = {
   nome: string
   itens: ItemVigor[]
@@ -27,11 +28,13 @@ type GrupoVigor = {
   totalSemFiltro?: number
 }
 
+// Sem os `onIrPara*` (quem não é admin só lê — RF-30a), cada família mostra "só a administração
+// edita" no lugar do botão.
 type AbaRegrasEmVigorProps = {
-  onIrParaAlcada: () => void
-  onIrParaTipos: () => void
-  onIrParaPrazos: () => void
-  onIrParaConfig: () => void
+  onIrParaAlcada?: () => void
+  onIrParaTipos?: () => void
+  onIrParaPrazos?: () => void
+  onIrParaConfig?: () => void
 }
 
 const plural = (n: number, um: string, muitos: string) => `${n} ${n === 1 ? um : muitos}`
@@ -59,6 +62,7 @@ export const AbaRegrasEmVigor = ({
   const { data: equipes } = useEquipes()
   const { data: escreventes } = useEscreventes()
   const { data: configuracao } = useConfiguracao()
+  const ehAdministrador = useEhAdministrador()
   const [buscaAlcada, setBuscaAlcada] = useState('')
 
   if (!regras || !conferentes || !tiposAto || !equipes || !escreventes || !configuracao) {
@@ -71,16 +75,15 @@ export const AbaRegrasEmVigor = ({
     equipes,
   )
 
-  const alcadaItensTodos: ItemVigor[] = regras
-    .filter((r) => r.ativa)
-    .map((r) => ({
-      frase: fraseDaRegra(r, {
-        nomeConferente: (id) => nomePorConferenteId.get(id) ?? '—',
-        nomeTipoAto: (id) => nomePorTipoAtoId.get(id) ?? '—',
-        nomeEquipe: (id) => nomePorEquipeId.get(id) ?? '—',
-      }),
-      detalhe: r.origem === 'Manual' ? 'definida por você' : 'aprendida pelo sistema',
-    }))
+  const alcadaItensTodos = itensDeAlcadaEmVigor(
+    regras,
+    {
+      nomeConferente: (id) => nomePorConferenteId.get(id) ?? '—',
+      nomeTipoAto: (id) => nomePorTipoAtoId.get(id) ?? '—',
+      nomeEquipe: (id) => nomePorEquipeId.get(id) ?? '—',
+    },
+    ehAdministrador,
+  )
   const qAlcada = buscaAlcada.trim().toLowerCase()
   const alcadaItens = qAlcada
     ? alcadaItensTodos.filter((item) => item.frase.toLowerCase().includes(qAlcada))
@@ -192,14 +195,18 @@ export const AbaRegrasEmVigor = ({
                   {grupo.editarLabel}
                 </Button>
               ) : (
-                <span className="flex-none text-[11.5px] text-muted-foreground">configuração do sistema</span>
+                <span className="flex-none text-[11.5px] text-muted-foreground">só a administração edita</span>
               )}
             </div>
             {grupo.totalSemFiltro !== undefined && (
               <Input
                 value={buscaAlcada}
                 onChange={(e) => setBuscaAlcada(e.target.value)}
-                placeholder="buscar por nível, pessoa, tipo de ato, equipe…"
+                placeholder={
+                  ehAdministrador
+                    ? 'buscar por nível, pessoa, tipo de ato, equipe…'
+                    : 'buscar por pessoa, tipo de ato, equipe…'
+                }
                 className="mb-1.5"
               />
             )}

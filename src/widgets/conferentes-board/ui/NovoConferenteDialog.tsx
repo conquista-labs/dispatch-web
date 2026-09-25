@@ -2,10 +2,19 @@ import { useState } from 'react'
 
 import type { Nivel } from '@/entities/conferente'
 import { NIVEL_LABEL } from '@/entities/conferente'
+import { gerarSenhaInicial, SENHA_INICIAL_MINIMA } from '@/entities/usuario'
 import { useCadastrarConferente } from '@/features/conferente/cadastrar'
 import { ehConflito409 } from '@/shared/lib/conflito-409'
 import { Button } from '@/shared/ui/button'
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/shared/ui/dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/shared/ui/dialog'
 import { Input } from '@/shared/ui/input'
 import { Label } from '@/shared/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
@@ -46,7 +55,7 @@ export const NovoConferenteDialog = () => {
   const valido =
     form.nome.trim().length > 0 &&
     form.email.trim().length > 0 &&
-    form.senha.length >= 6 &&
+    form.senha.length >= SENHA_INICIAL_MINIMA &&
     Number(form.jornadaHoras) > 0
 
   return (
@@ -57,6 +66,8 @@ export const NovoConferenteDialog = () => {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Novo conferente</DialogTitle>
+          {/* RF-45: mesma regra da conta de gestão — senha inicial, trocada no primeiro acesso. */}
+          <DialogDescription>A pessoa entra com esta senha e troca no primeiro acesso.</DialogDescription>
         </DialogHeader>
 
         <div className="flex flex-col gap-3">
@@ -81,14 +92,20 @@ export const NovoConferenteDialog = () => {
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="senha">Senha</Label>
-            <Input
-              id="senha"
-              type="password"
-              value={form.senha}
-              onChange={(event) => setForm({ ...form, senha: event.target.value })}
-            />
-            <span className="text-[11px] text-muted-foreground">mínimo 6 caracteres</span>
+            <Label htmlFor="senha">Senha inicial</Label>
+            <div className="flex gap-1.5">
+              <Input
+                id="senha"
+                value={form.senha}
+                placeholder={`mínimo ${SENHA_INICIAL_MINIMA} caracteres`}
+                onChange={(event) => setForm({ ...form, senha: event.target.value })}
+                className="min-w-0 flex-1 font-mono"
+                autoComplete="off"
+              />
+              <Button type="button" variant="outline" onClick={() => setForm({ ...form, senha: gerarSenhaInicial() })}>
+                Gerar
+              </Button>
+            </div>
           </div>
 
           <div className="flex gap-3">

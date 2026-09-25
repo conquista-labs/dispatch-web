@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-import { NIVEL_LABEL, type AlcanceDoConferente, type Conferente } from '@/entities/conferente'
+import { rotuloAnalista, type AlcanceDoConferente, type Conferente } from '@/entities/conferente'
 import { ETAPA_LABEL } from '@/entities/protocolo'
 import { fraseDaRegra, type RegraAlcada } from '@/entities/regraAlcada'
 import { useAlterarStatusRegraAlcada } from '@/features/regra-alcada/alterar-status'
@@ -96,7 +96,9 @@ export const AbaAlcadaCamadas = ({
           const info = CAMADA_INFO[camada]
           const cobertas =
             camada === 'nivel'
-              ? conferentes.filter((c) => todasDaCamada.some((r) => r.ativa && r.sujeitoNivel === c.nivel)).length
+              ? conferentes.filter((c) =>
+                  todasDaCamada.some((r) => r.ativa && r.sujeitoNivel !== null && r.sujeitoNivel === c.nivel),
+                ).length
               : null
           const resumo =
             camada === 'nivel'
@@ -197,9 +199,7 @@ export const AbaAlcadaCamadas = ({
           return (
             <div key={c.id} className={cn('flex min-w-max items-start gap-3 py-1.5', !c.ativo && 'opacity-50')}>
               <span className="w-[130px] flex-none text-[13px] text-pretty">{c.nome}</span>
-              <span className="mt-1 w-[110px] flex-none text-[11.5px] text-text-2">
-                Analista {NIVEL_LABEL[c.nivel]}
-              </span>
+              <span className="mt-1 w-[110px] flex-none text-[11.5px] text-text-2">{rotuloAnalista(c.nivel)}</span>
               <div className="mt-1.5 h-2 flex-1 overflow-hidden rounded-full bg-secondary">
                 <div className="h-2 rounded-full bg-foreground" style={{ width: `${largura}%` }} />
               </div>

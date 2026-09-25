@@ -1,4 +1,4 @@
-import { NIVEL_LABEL, type Conferente } from '@/entities/conferente'
+import { rotuloAnalista, type Conferente } from '@/entities/conferente'
 import type {
   ConcluidosHojePorConferente,
   GrupoPorConferente,
@@ -52,7 +52,9 @@ export const AbaPorConferente = ({
         const grupo = porConferente.find((g) => g.conferenteId === conferente.id)
         const feitosHoje = feitosHojePorConferenteId.get(conferente.id)
         const sub = conferente.naEscala
-          ? `Analista ${NIVEL_LABEL[conferente.nivel]}${feitosHoje ? ` · ${feitosHoje} feitos hoje` : ''}`
+          ? [rotuloAnalista(conferente.nivel), feitosHoje ? `${feitosHoje} feitos hoje` : null]
+              .filter(Boolean)
+              .join(' · ') || 'na escala'
           : 'ausente hoje — não recebe'
         return (
           <ProtocoloColuna

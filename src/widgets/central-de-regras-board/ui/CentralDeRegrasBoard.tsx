@@ -1,6 +1,7 @@
 import { useState } from 'react'
 
 import { useSugestoesPendentes } from '@/entities/sugestao'
+import { useEhAdministrador } from '@/entities/usuario'
 import { cn } from '@/shared/lib/utils'
 
 import { AbaAlcada } from './AbaAlcada'
@@ -17,9 +18,14 @@ type Aba = 'vigor' | 'aprendizado' | 'alcada' | 'tipos' | 'prazos' | 'config'
 // default do protótipo v2 — mudou de "Aprendizado" pra essa quando o dono atualizou o
 // protótipo). "Configuração" é a mais nova, adicionada quando o protótipo ganhou a aba
 // `config` de verdade (os 12 parâmetros da seção 8, antes só editáveis via curl/Swagger).
+// RF-30a: quem não é Administrador só consulta "Regras em vigor" — sem as outras abas, que
+// editam (o back barra com 403; aqui elas nem aparecem).
 export const CentralDeRegrasBoard = () => {
+  const ehAdministrador = useEhAdministrador()
   const [aba, setAba] = useState<Aba>('vigor')
-  const { data: pendentes } = useSugestoesPendentes()
+  const { data: pendentes } = useSugestoesPendentes({ enabled: ehAdministrador })
+
+  if (!ehAdministrador) return <AbaRegrasEmVigor />
 
   return (
     <div>

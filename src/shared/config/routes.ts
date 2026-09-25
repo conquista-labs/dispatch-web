@@ -4,6 +4,8 @@ export const ROUTES = {
   login: '/login',
   registrarTotp: '/totp/registrar',
   recuperarSenha: '/recuperar-senha',
+  // RF-45 — troca obrigatória da senha inicial no primeiro acesso.
+  trocarSenha: '/trocar-senha',
   distribuicao: '/distribuicao',
   importar: '/importar',
   conferentes: '/conferentes',
@@ -14,4 +16,6 @@ export const ROUTES = {
   filaConferentes: '/fila-conferentes',
   centralDeRegras: '/central-de-regras',
   dashboard: '/dashboard',
+  // 6.8 do documento v2 (RF-44 a 48) — só Administrador.
+  contas: '/contas',
 } as const

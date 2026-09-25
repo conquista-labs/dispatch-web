@@ -7,6 +7,7 @@ import { Carregando } from '@/shared/ui/carregando'
 import { AppShell } from '@/widgets/app-shell'
 
 import { RequireRole } from './require-role'
+import { RequireSessaoLiberada } from './require-sessao-liberada'
 import { SessionBoot } from './session-boot'
 
 // Lazy por página — cada uma vira um chunk próprio, baixado só quando a rota é visitada.
@@ -27,6 +28,8 @@ const RegistrarTotpPage = lazy(() => import('@/pages/registrar-totp').then((m) =
 const RecuperarSenhaPage = lazy(() =>
   import('@/pages/recuperar-senha').then((m) => ({ default: m.RecuperarSenhaPage })),
 )
+const TrocarSenhaPage = lazy(() => import('@/pages/trocar-senha').then((m) => ({ default: m.TrocarSenhaPage })))
+const ContasPage = lazy(() => import('@/pages/contas').then((m) => ({ default: m.ContasPage })))
 
 // Fallback do Suspense — o boundary fica acima de <Routes> inteiro, então isso aparece sem
 // nenhum chrome de AppShell ao redor (mesma situação de SessionBoot). Mesmo componente
@@ -47,8 +50,16 @@ export const Router = () => (
           {/* RF-01a-l: públicas, como /login — sem RequireRole, fora do AppShell. */}
           <Route path={ROUTES.registrarTotp} element={<RegistrarTotpPage />} />
           <Route path={ROUTES.recuperarSenha} element={<RecuperarSenhaPage />} />
+          {/* RF-45: fora do AppShell — a página mesma exige sessão e troca pendente. */}
+          <Route path={ROUTES.trocarSenha} element={<TrocarSenhaPage />} />
 
-          <Route element={<AppShell />}>
+          <Route
+            element={
+              <RequireSessaoLiberada>
+                <AppShell />
+              </RequireSessaoLiberada>
+            }
+          >
             <Route
               path={ROUTES.distribuicao}
               element={
@@ -102,6 +113,14 @@ export const Router = () => (
               element={
                 <RequireRole roles={['Distribuidora', 'Conferente']}>
                   <DashboardPage />
+                </RequireRole>
+              }
+            />
+            <Route
+              path={ROUTES.contas}
+              element={
+                <RequireRole roles={['Administrador']}>
+                  <ContasPage />
                 </RequireRole>
               }
             />

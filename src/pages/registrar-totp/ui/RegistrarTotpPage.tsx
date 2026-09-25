@@ -1,9 +1,9 @@
 import { isAxiosError } from 'axios'
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Navigate, useNavigate } from 'react-router-dom'
 import { QRCodeSVG } from 'qrcode.react'
 
-import { roleHomeRoute, useSessionStore } from '@/entities/usuario'
+import { type Papel, roleHomeRoute, useSessionStore } from '@/entities/usuario'
 import { LoginForm } from '@/features/auth/login'
 import { useConfirmarTotp } from '@/features/auth/confirmar-totp'
 import { useRegistrarTotp } from '@/features/auth/registrar-totp'
@@ -18,6 +18,9 @@ import { Logo } from '@/shared/ui/logo'
 // docs/decisions/0010-divergencias-deliberadas-do-prototipo.md.
 export const RegistrarTotpPage = () => {
   const usuario = useSessionStore((state) => state.usuario)
+
+  // RF-45: com a senha inicial ainda pendente o back recusa o registro (403) — troca primeiro.
+  if (usuario?.trocarSenha) return <Navigate to={ROUTES.trocarSenha} replace />
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-[18px]">
@@ -52,7 +55,7 @@ export const RegistrarTotpPage = () => {
   )
 }
 
-const RegistroTotp = ({ email, papel }: { email: string; papel: 'Distribuidora' | 'Conferente' }) => {
+const RegistroTotp = ({ email, papel }: { email: string; papel: Papel }) => {
   const navigate = useNavigate()
   const registrar = useRegistrarTotp()
   const confirmar = useConfirmarTotp()

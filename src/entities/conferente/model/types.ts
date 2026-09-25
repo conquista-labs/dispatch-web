@@ -6,7 +6,9 @@ export type Conferente = {
   nome: string
   email: string
   ativo: boolean
-  nivel: Nivel
+  // null quando quem pergunta não é Administrador — o back não devolve o cargo pra distribuidora
+  // (§3 do documento v2, dispatch-api ADR-0039). Toda tela trata a ausência sem inventar um nível.
+  nivel: Nivel | null
   jornadaHoras: number
   naEscala: boolean
   cargaAtual: number

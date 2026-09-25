@@ -2,6 +2,7 @@ import { Navigate } from 'react-router-dom'
 
 import { roleHomeRoute, useSessionStore } from '@/entities/usuario'
 import { LoginForm } from '@/features/auth/login'
+import { ROUTES } from '@/shared/config/routes'
 import { Logo } from '@/shared/ui/logo'
 
 // Layout fiel ao protótipo aprovado (../dispatch-prototype/Dispatch.dc.html, tela de login):
@@ -17,7 +18,7 @@ export const LoginPage = () => {
   const usuario = useSessionStore((state) => state.usuario)
 
   if (usuario) {
-    return <Navigate to={roleHomeRoute[usuario.papeis[0]]} replace />
+    return <Navigate to={usuario.trocarSenha ? ROUTES.trocarSenha : roleHomeRoute[usuario.papeis[0]]} replace />
   }
 
   return (

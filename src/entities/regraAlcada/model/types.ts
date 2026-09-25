@@ -33,6 +33,10 @@ export type RegraAlcada = {
   origem: OrigemRegra
   ativa: boolean
   usos: number
+  // Pra quem não é Administrador o back esconde o nível (`sujeitoNivel: null`) e marca as regras
+  // por nível que não são "equipe não faz etapa" como regra base — o front as junta numa linha só
+  // (RF-30a, dispatch-api ADR-0039). Sempre false pro admin.
+  regraBase: boolean
 }
 
 export type CriarRegraAlcadaRequest = {

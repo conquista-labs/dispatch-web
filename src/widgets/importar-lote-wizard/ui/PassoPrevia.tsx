@@ -1,5 +1,5 @@
 import { ETAPA_LABEL, type Etapa } from '@/entities/protocolo'
-import { useConferentes } from '@/entities/conferente'
+import { rotuloAnalista, useConferentes } from '@/entities/conferente'
 import type { ResumoImportacao } from '@/features/protocolo/importar-lote'
 import { formatDataHora } from '@/shared/lib/format'
 import { Button } from '@/shared/ui/button'
@@ -33,7 +33,8 @@ export const PassoPrevia = ({ resumo, etapa, linhaDeCorte, onVoltar, onConfirmar
     ...resumo.atribuidosPorConferente.map((atribuicao) => ({
       chave: atribuicao.conferenteId,
       nome: nomePorId.get(atribuicao.conferenteId) ?? 'Conferente',
-      sub: `Analista ${nivelPorId.get(atribuicao.conferenteId) ?? 'Pleno'}`,
+      // Nível só vem pro Administrador; sem ele, sem cargo inventado (antes caía num 'Pleno' fixo).
+      sub: rotuloAnalista(nivelPorId.get(atribuicao.conferenteId) ?? null) ?? 'conferente',
       qtd: atribuicao.quantidade,
     })),
   ].sort((a, b) => b.qtd - a.qtd)

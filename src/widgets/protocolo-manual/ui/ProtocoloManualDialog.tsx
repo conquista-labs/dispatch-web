@@ -198,7 +198,11 @@ export const ProtocoloManualDialog = ({
     label: e.nome,
     sub: e.equipeId ? (nomePorEquipeId.get(e.equipeId) ?? 'sem equipe') : 'sem equipe',
   }))
-  const conferenteOpcoes = (conferentes ?? []).map((c) => ({ valor: c.id, label: c.nome, sub: NIVEL_LABEL[c.nivel] }))
+  const conferenteOpcoes = (conferentes ?? []).map((c) => ({
+    valor: c.id,
+    label: c.nome,
+    sub: c.nivel ? NIVEL_LABEL[c.nivel] : undefined,
+  }))
   const nomeConferenteEscolhido = conferenteOpcoes.find((c) => c.valor === conferenteEscolhidoId)?.label
 
   return (
