@@ -1,5 +1,7 @@
 import { Button } from '@/shared/ui/button'
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/shared/ui/sheet'
+import { XIcon } from 'lucide-react'
+
+import { Sheet, SheetClose, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/shared/ui/sheet'
 
 import type { useFiltroProtocolos } from '../model/use-filtro-protocolos'
 import { FiltroEixo } from './FiltroEixo'
@@ -31,13 +33,31 @@ export const PainelFiltros = ({
   limpar,
 }: PainelFiltrosProps) => (
   <Sheet open={aberto} onOpenChange={(open) => !open && onFechar()}>
-    <SheetContent side="right" className="w-[min(360px,92vw)] gap-0 overflow-y-auto p-0 sm:max-w-[360px]">
-      <SheetHeader className="sticky top-0 z-10 border-b border-border bg-background p-5">
-        <SheetTitle className="text-[15px] font-semibold tracking-[-0.01em]">Filtros</SheetTitle>
-        <p className="text-[11.5px] text-muted-foreground">{subtitulo}</p>
+    {/* Protótipo aprovado (Dispatch v2): coluna com cabeçalho e rodapé fixos e o meio rolando —
+        o rodapé fica colado embaixo mesmo com poucas opções, e o × entra na linha do título. */}
+    <SheetContent
+      side="right"
+      showCloseButton={false}
+      className="w-[min(360px,92vw)] gap-0 overflow-hidden p-0 sm:max-w-[360px]"
+    >
+      <SheetHeader className="flex-none flex-row items-center justify-between gap-3 border-b border-border px-5 py-4.5">
+        <div className="min-w-0">
+          <SheetTitle className="text-[15px] font-semibold tracking-[-0.01em]">Filtros</SheetTitle>
+          <SheetDescription className="mt-0.5 text-[11.5px] text-muted-foreground">{subtitulo}</SheetDescription>
+        </div>
+        <SheetClose asChild>
+          <Button
+            variant="outline"
+            size="icon-sm"
+            className="flex-none text-text-2 max-mobile:size-11"
+            aria-label="Fechar filtros"
+          >
+            <XIcon />
+          </Button>
+        </SheetClose>
       </SheetHeader>
 
-      <div className="flex flex-col gap-5 p-4">
+      <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-5 pt-4 pb-5">
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between gap-2">
             <span className="text-[11.5px] font-semibold text-text-2">Equipe do escrevente</span>
@@ -101,7 +121,7 @@ export const PainelFiltros = ({
         </div>
       </div>
 
-      <div className="sticky bottom-0 flex gap-2 border-t border-border bg-background p-4">
+      <div className="flex flex-none gap-2 border-t border-border bg-background p-4">
         <Button variant="outline" className="flex-1 text-[13px]" onClick={limpar}>
           Limpar tudo
         </Button>

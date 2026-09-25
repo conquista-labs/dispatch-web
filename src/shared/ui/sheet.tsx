@@ -26,7 +26,9 @@ function SheetOverlay({ className, ...props }: React.ComponentProps<typeof Sheet
     <SheetPrimitive.Overlay
       data-slot="sheet-overlay"
       className={cn(
-        'fixed inset-0 z-50 bg-black/10 duration-100 supports-backdrop-filter:backdrop-blur-xs data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0',
+        // Véu do protótipo aprovado (rgba(9,9,11,.42), sem desfoque): o bg-black/10 com blur do shadcn
+        // quase não separava o painel de um quadro cheio de cards coloridos.
+        'fixed inset-0 z-50 bg-zinc-950/40 duration-100 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0',
         className,
       )}
       {...props}
