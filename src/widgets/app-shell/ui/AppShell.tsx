@@ -181,9 +181,14 @@ export const AppShell = () => {
 
   return (
     <div className="flex min-h-screen items-stretch">
+      {/* Preso na altura da tela: sem isso o menu esticava junto com páginas longas (Central de
+          regras, Conferentes) e a sessão/"Sair" iam parar lá no fim do conteúdo. `sticky` e não um
+          <main> com scroll próprio: a página continua rolando pela janela, e o que já depende disso
+          (faixa de prioridade alta presa no topo, "Ver" rolando até o card) segue igual.
+          `overflow-y-auto` cobre tela baixa demais pro menu inteiro. */}
       <aside
         className={cn(
-          'flex flex-none flex-col border-r border-border bg-card py-4 transition-[width] duration-150',
+          'sticky top-0 flex h-screen flex-none flex-col self-start overflow-y-auto border-r border-border bg-card py-4 transition-[width] duration-150',
           recolhida ? 'w-[68px]' : 'w-56',
         )}
       >
