@@ -889,3 +889,16 @@ Rótulos "Prazo acordado"/"Conferente", etapa com inicial maiúscula. A linha "P
 
 Verificado: testes; screenshots nos dois temas com a resposta do detalhe interceptada (rodada anterior
 reprovada) e contra a API local.
+
+## 2026-09-25 — "Hoje, agora" / "Seu dia" no Dashboard (RF-42a, fatia 1 do Dashboard v2)
+
+Consome `GET /dashboard/hoje` (dispatch-api #6; contrato no PLANO-dashboard-v2). `entities/dashboard`:
+`PainelDeHoje`, `getPainelDeHoje`, `usePainelDeHoje` (atualiza a cada 60s com a aba visível).
+`widgets/dashboard-board`: `lib/painel-de-hoje.ts` (textos e cores do protótipo, gargalo com o nome da equipe
+resolvido no front) e `ui/FaixaDeHoje.tsx` entre o cabeçalho e o "Resultado"; na gestão cada célula leva à aba
+da Distribuição que explica o número — `DistribuicaoBoard` passou a aceitar `?aba=` como aba inicial. Se o
+endpoint falhar, a faixa não aparece (o resto do Dashboard não depende dela).
+
+Verificado: testes de `painel-de-hoje` e `FaixaDeHoje` (gestão com links, conferente sem, endpoint ausente);
+contra a API local da branch: faixa da gestão com gargalo, clique em "Exceções" abrindo a aba, "Seu dia" no
+escuro, celular.

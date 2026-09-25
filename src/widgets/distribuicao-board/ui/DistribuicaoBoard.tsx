@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 
 import { useConferentes } from '@/entities/conferente'
 import { useEquipes } from '@/entities/equipe'
@@ -17,6 +18,7 @@ import { AbaPorConferente } from './AbaPorConferente'
 import { AbaPorStatus } from './AbaPorStatus'
 
 type Aba = 'conferente' | 'status' | 'excecoes'
+const ABAS: Aba[] = ['conferente', 'status', 'excecoes']
 
 // Texto e cor batendo com o protótipo aprovado (Dispatch.dc.html, `faixas()`/legenda): mesmos
 // limiares hardcoded do back (4h/60min, ver DistribuicaoEndpoints.cs) até existir tabela de
@@ -31,7 +33,11 @@ const LEGENDA = [
 // As 3 visões do mesmo conjunto de protocolos (RF-13) — "por conferente" (empurra), "por
 // status" (kanban) e "exceções" (RF-17).
 export const DistribuicaoBoard = () => {
-  const [aba, setAba] = useState<Aba>('conferente')
+  // `?aba=` escolhe a aba inicial — o "Hoje, agora" do Dashboard (RF-42a) leva direto à aba que
+  // explica cada número. Depois disso a aba é estado local, como sempre foi.
+  const [parametros] = useSearchParams()
+  const abaDaUrl = parametros.get('aba') as Aba | null
+  const [aba, setAba] = useState<Aba>(abaDaUrl && ABAS.includes(abaDaUrl) ? abaDaUrl : 'conferente')
   const [protocoloDetalheId, setProtocoloDetalheId] = useState<string | null>(null)
   const { data: visao, isLoading } = useVisaoDistribuicao()
   const { data: conferentes } = useConferentes()

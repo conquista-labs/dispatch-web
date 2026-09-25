@@ -70,3 +70,17 @@ export type Dashboard = {
   porTipoAto: DesempenhoTipoAto[]
   cumprimentoPrazoEquipe: CumprimentoPrazoEquipe[]
 }
+
+// Espelha a resposta de GET /dashboard/hoje (RF-42a) — "Hoje, agora" pra gestão, "Seu dia" pro
+// conferente. Os campos da outra visão vêm nulos. `gargalo.equipeId` nulo = escreventes sem equipe;
+// o nome da equipe o front resolve (back manda o fato cru).
+export type PainelDeHoje = {
+  visao: 'Gestao' | 'Conferente'
+  atualizadoEm: string
+  conferidosHoje: number
+  naFila: { pool: number; comConferente: number } | null
+  naMao: { total: number; emConferencia: number } | null
+  emRisco: { estourados: number; vencemEmUmaHora: number }
+  excecoes: number | null
+  gargalo: { equipeId: string | null; quantidade: number } | null
+}
