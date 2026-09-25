@@ -1,4 +1,3 @@
-import { ChevronRightIcon } from 'lucide-react'
 import { useState } from 'react'
 
 import { NIVEL_LABEL, rotuloAnalista, type AlcanceDoConferente, type Conferente } from '@/entities/conferente'
@@ -85,55 +84,71 @@ export const AbaAlcadaCamadas = ({
 
   // Protótipo v2: quem está na escala e não alcança nenhum tipo aparece num alerta no topo — é o
   // efeito colateral mais caro de uma regra mal feita (a pessoa some da distribuição sem aviso).
-  const semAlcance = conferentes.filter(
-    (c) => c.ativo && c.naEscala && (alcancePorConferenteId.get(c.id)?.tiposPermitidosIds.length ?? 0) === 0,
-  )
+  // Sem tipo nenhum OU sem etapa nenhuma dá no mesmo: a pessoa não recebe ato (protótipo conta os dois).
+  const semAlcance = conferentes.filter((c) => {
+    const a = alcancePorConferenteId.get(c.id)
+    return (
+      c.ativo && c.naEscala && ((a?.tiposPermitidosIds.length ?? 0) === 0 || (a?.etapasPermitidas.length ?? 0) === 0)
+    )
+  })
 
   return (
     <div>
       {semAlcance.length > 0 && (
-        <div role="alert" className="mb-4 rounded-[10px] border border-bad-border bg-bad-bg px-3.5 py-3">
-          <div className="text-[13px] font-semibold text-bad-fg">
+        // Três níveis como no protótipo: o quê (título), quem (nomes numa linha própria) e o porquê
+        // (explicação em cinza — tudo em vermelho gritava por igual e escondia os nomes).
+        <div role="alert" className="mb-2.5 rounded-[10px] border border-bad-border bg-bad-bg px-3.75 py-3.25">
+          <div className="text-[13.5px] font-semibold text-bad-fg">
             {semAlcance.length === 1
               ? '1 conferente não recebe nenhum ato'
-              : `${semAlcance.length} conferentes não recebem nenhum ato`}{' '}
-            — {semAlcance.map((c) => c.nome).join(', ')}
+              : `${semAlcance.length} conferentes não recebem nenhum ato`}
           </div>
-          <div className="mt-0.5 text-[12px] text-pretty text-bad-fg">
-            {semAlcance.length === 1
-              ? 'Está na escala, mas as regras abaixo barram todos os tipos de ato. Os protocolos que seriam dele vão para os outros ou para exceções.'
-              : 'Estão na escala, mas as regras abaixo barram todos os tipos de ato. Os protocolos que seriam deles vão para os outros ou para exceções.'}
+          <div className="mt-0.75 text-[12.5px] font-medium text-bad-fg">
+            {semAlcance.map((c) => c.nome).join(', ')}
           </div>
+          <p className="mt-1.5 max-w-[76ch] text-[12px] leading-normal text-pretty text-text-3">
+            As regras em vigor bloqueiam tudo para {semAlcance.length === 1 ? 'essa pessoa' : 'essas pessoas'}. Se não
+            for afastamento, é erro de configuração — a fila {semAlcance.length === 1 ? 'dela' : 'delas'} fica vazia e a
+            carga recai sobre os demais.
+          </p>
         </div>
       )}
 
-      <h2 className="mb-2.5 text-[15px] font-semibold tracking-[-0.01em]">O que cada um alcança hoje</h2>
-      {/* RNF-13 — rolagem própria e contida (achado no protótipo aprovado: essa mesma tabela
-          lá estoura a página inteira em telas estreitas, arrastando até a barra fixa do topo,
-          em vez de rolar só ela; aqui entra certo desde o início, mesmo padrão que a Matriz, do
-          lado, já usa). `min-w-max` em cada linha evita que ela esprema as colunas em vez de
-          rolar. */}
-      <SurfaceCard className="mb-6.5 overflow-x-auto p-4">
+      {/* RNF-13 — no protótipo esta lista estoura a página inteira em telas estreitas; aqui, abaixo
+          de 760px, cada linha empilha (nome e cargo / barra e quantidade / etapas) em vez de rolar
+          de lado ou espremer a barra até sumir. */}
+      <SurfaceCard className="px-4 py-3.5">
+        <h3 className="m-0 text-[13.5px] font-semibold tracking-[-0.01em]">O que cada um alcança hoje</h3>
+        <p className="mt-0.75 mb-2.5 max-w-[72ch] text-[11.5px] text-pretty text-muted-foreground">
+          O resultado das regras abaixo. É por aqui que se confere se uma pessoa está com a alçada certa.
+        </p>
         {conferentes.map((c) => {
           const a = alcancePorConferenteId.get(c.id)
           const qtd = a?.tiposPermitidosIds.length ?? 0
+          // "pré e pós-conferência" cabe numa linha da coluna de 150px; por extenso, quebrava em duas.
           const etapasLabel =
-            a && a.etapasPermitidas.length > 0
-              ? a.etapasPermitidas.map((e) => ETAPA_LABEL[e]).join(' e ')
-              : 'nenhuma etapa liberada'
+            !a || a.etapasPermitidas.length === 0
+              ? 'nenhuma etapa liberada'
+              : a.etapasPermitidas.length === 2
+                ? 'pré e pós-conferência'
+                : ETAPA_LABEL[a.etapasPermitidas[0]]
           const largura = totalTipos > 0 ? Math.round((qtd / totalTipos) * 100) : 0
           return (
             <div
               key={c.id}
               className={cn(
-                '-mx-2 flex min-w-max items-start gap-3 rounded-md px-2 py-1.5',
+                '-mx-2 flex items-center gap-3 rounded-[7px] px-2 py-1.75 max-mobile:flex-wrap max-mobile:gap-x-3 max-mobile:gap-y-1',
                 !c.ativo && 'opacity-50',
                 qtd === 0 && c.naEscala && 'bg-bad-bg',
               )}
             >
-              <span className="w-[130px] flex-none text-[13px] text-pretty">{c.nome}</span>
-              <span className="mt-1 w-[110px] flex-none text-[11.5px] text-text-2">{rotuloAnalista(c.nivel)}</span>
-              <div className="mt-1.5 h-2 flex-1 overflow-hidden rounded-full bg-secondary">
+              <span className="w-[130px] flex-none text-[13px] text-pretty max-mobile:w-auto max-mobile:flex-1">
+                {c.nome}
+              </span>
+              <span className="w-[110px] flex-none text-[11.5px] text-text-2 max-mobile:w-auto">
+                {rotuloAnalista(c.nivel)}
+              </span>
+              <div className="h-2 min-w-16 flex-1 overflow-hidden rounded-full bg-secondary max-mobile:basis-[calc(100%-64px)]">
                 <div
                   className={cn('h-2 rounded-full', qtd === 0 ? 'bg-bad-border-2' : 'bg-foreground')}
                   style={{ width: `${largura}%` }}
@@ -141,13 +156,18 @@ export const AbaAlcadaCamadas = ({
               </div>
               <span
                 className={cn(
-                  'mt-1 w-[52px] flex-none text-right font-mono text-[12.5px] font-medium',
+                  'w-[52px] flex-none text-right font-mono text-[12.5px] font-medium',
                   qtd === 0 && 'text-bad-fg',
                 )}
               >
                 {qtd}/{totalTipos}
               </span>
-              <span className="mt-1 w-[150px] flex-none text-right text-[11.5px] text-muted-foreground">
+              <span
+                className={cn(
+                  'w-[150px] flex-none text-right text-[11.5px] max-mobile:w-full max-mobile:text-left',
+                  a && a.etapasPermitidas.length > 0 ? 'text-muted-foreground' : 'text-bad-fg',
+                )}
+              >
                 {etapasLabel}
               </span>
             </div>
@@ -155,17 +175,18 @@ export const AbaAlcadaCamadas = ({
         })}
       </SurfaceCard>
 
-      <h2 className="mb-2.5 text-[15px] font-semibold tracking-[-0.01em]">
-        As regras que produzem isso — agrupadas por quem elas afetam
-      </h2>
+      <div className="mt-5.5 mb-1 flex flex-wrap items-baseline justify-between gap-x-3">
+        <h3 className="m-0 text-[13.5px] font-semibold">As regras que produzem isso</h3>
+        <span className="text-[11.5px] text-muted-foreground">agrupadas por quem elas afetam</span>
+      </div>
       <Input
         value={busca}
         onChange={(e) => setBusca(e.target.value)}
         placeholder="buscar por nível, pessoa, tipo de ato, equipe…"
-        className="mb-3"
+        className="mb-2.5"
       />
 
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-2.5">
         {CAMADAS.map((camada) => {
           const todasDaCamada = regras.filter((r) => camadaDe(r) === camada)
           const regrasDaCamada = todasDaCamada.filter(passaNaBusca)
@@ -183,7 +204,7 @@ export const AbaAlcadaCamadas = ({
 
           return (
             <div key={camada} className="overflow-hidden rounded-[10px] border border-border bg-card shadow-sm">
-              <div className="flex items-start justify-between gap-3 border-b border-secondary bg-secondary/60 p-3">
+              <div className="flex items-start justify-between gap-3 border-b border-secondary bg-secondary px-3.75 py-3">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="text-[13.5px] font-semibold">{info.nome}</span>
@@ -196,18 +217,16 @@ export const AbaAlcadaCamadas = ({
                 <Button
                   variant="outline"
                   size="sm"
-                  className="flex-none"
+                  className="h-7 flex-none px-2.5 text-[12px]"
                   onClick={() => onAbrirBuilderParaCamada(camada)}
                 >
                   {info.novaLabel}
                 </Button>
               </div>
 
-              {/* Rolagem própria (achado pelo dono: "Base por nível" passa de 80 regras quando o
-                  construtor cria uma por tipo de ato selecionado) — cada camada rola dentro de
-                  si mesma em vez de esticar a página inteira, mesmo espírito do que já foi
-                  corrigido pra "O que cada um alcança hoje" mais abaixo. */}
-              <div className="flex max-h-[420px] flex-col gap-1.5 overflow-y-auto p-2">
+              {/* Uma linha por sujeito, recolhida — as ~80 regras de "Base por nível" (achado do dono)
+                  ficam dentro do grupo, então a camada não precisa mais de rolagem própria. */}
+              <div className="flex flex-col">
                 {agruparPorSujeito(regrasDaCamada, nomesDaFrase.nomeConferente).map((grupo) => (
                   <GrupoDeSujeito
                     key={grupo.chave}
@@ -228,7 +247,7 @@ export const AbaAlcadaCamadas = ({
                   />
                 ))}
                 {regrasDaCamada.length === 0 && (
-                  <div className="rounded-[8px] border border-dashed border-border p-3.5 text-center text-[12px] text-muted-foreground">
+                  <div className="p-3.5 text-center text-[12px] text-muted-foreground">
                     {todasDaCamada.length === 0
                       ? 'nenhuma regra nesta camada — quem chegar aqui herda a camada de cima'
                       : 'nenhuma regra bate com a busca'}
@@ -275,36 +294,42 @@ type GrupoDeSujeitoProps = {
   renderizarRegra: (regra: RegraAlcada) => React.ReactNode
 }
 
-// Linha recolhível do sujeito: resumo do que as regras ativas dele fazem; expandida, cada regra com
-// ativar/remover (o que o protótipo não tem — aqui a aba edita). Busca ativa abre os grupos.
+// Linha plana do sujeito, como no protótipo v2: toggle quadrado "+/−", nome numa coluna, resumo do
+// que as regras ativas fazem e a contagem à direita. Expandida, cada regra com ativar/remover (o que
+// o protótipo não tem — aqui a aba edita). Busca ativa abre os grupos. No celular o resumo quebra
+// linha em vez de truncar (o protótipo esconde parte do resumo — RNF-10).
 const GrupoDeSujeito = ({ rotulo, regras, abertoPorBusca, nomesDaFrase, renderizarRegra }: GrupoDeSujeitoProps) => {
   const [aberto, setAberto] = useState(false)
   const expandido = aberto || abertoPorBusca
   const ativas = regras.filter((r) => r.ativa)
 
   return (
-    <div className="rounded-[8px] border border-border bg-card">
+    <div className="border-b border-secondary last:border-b-0">
       <button
         type="button"
         onClick={() => setAberto(!aberto)}
         aria-expanded={expandido}
-        className="flex w-full items-start gap-2 px-2.5 py-2 text-left hover:bg-secondary/60"
+        className={cn(
+          'flex w-full items-center gap-2.75 px-3.75 py-2.75 text-left hover:bg-secondary/60 max-mobile:flex-wrap',
+          expandido && 'bg-secondary',
+        )}
       >
-        <ChevronRightIcon
-          className={cn('mt-0.5 size-3.5 flex-none text-text-2 transition-transform', expandido && 'rotate-90')}
-        />
-        <span className="min-w-0 flex-1">
-          <span className="text-[13px] font-semibold">{rotulo}</span>
-          <span className="text-[13px] text-text-3"> — {resumoDasRegras(ativas, nomesDaFrase)}</span>
+        <span
+          aria-hidden
+          className="flex size-[18px] flex-none items-center justify-center rounded-[5px] border border-border bg-card font-mono text-[12px] leading-none font-medium text-text-2"
+        >
+          {expandido ? '−' : '+'}
         </span>
-        <span className="flex-none font-mono text-[11px] text-apoio">
+        <span className="min-w-[140px] flex-none text-[13px] font-semibold">{rotulo}</span>
+        <span className="min-w-0 flex-1 truncate text-[12.5px] text-text-3 max-mobile:basis-full max-mobile:pl-[29px] max-mobile:whitespace-normal">
+          {resumoDasRegras(ativas, nomesDaFrase)}
+        </span>
+        <span className="flex-none font-mono text-[10.5px] text-muted-foreground max-mobile:order-first max-mobile:ml-auto">
           {regras.length} {regras.length === 1 ? 'regra' : 'regras'}
           {regras.length !== ativas.length && ` · ${regras.length - ativas.length} inativa(s)`}
         </span>
       </button>
-      {expandido && (
-        <div className="flex flex-col gap-1.5 border-t border-secondary p-2">{regras.map(renderizarRegra)}</div>
-      )}
+      {expandido && <div className="flex flex-col gap-1.25 px-2.5 pt-1 pb-2.5">{regras.map(renderizarRegra)}</div>}
     </div>
   )
 }
@@ -317,15 +342,23 @@ type RegraCardProps = {
   ocupado: boolean
 }
 
+// Regra expandida, compacta como no protótipo: frase 12,5px, tags de reserva/aprendida, aplicações em
+// mono e os controles pequenos (antes tinham tamanho de botão cheio e dominavam a linha).
 const RegraCard = ({ regra, frase, onAlternar, onRemover, ocupado }: RegraCardProps) => (
-  <SurfaceCard
-    className={cn('flex flex-wrap items-center justify-between gap-3.5 p-2.5', !regra.ativa && 'opacity-55')}
+  <div
+    className={cn(
+      'flex flex-wrap items-center justify-between gap-3 rounded-[8px] border border-border bg-background px-3 py-2.25',
+      !regra.ativa && 'opacity-55',
+    )}
   >
     <div className="min-w-0 flex-1">
-      <div className="text-[13px] font-medium text-pretty">{frase}</div>
-      <div className="mt-1 font-mono text-[10.5px] text-muted-foreground">
-        {regra.origem === 'Manual' ? 'definida por você' : 'aprendida'} · {regra.usos}{' '}
-        {regra.usos === 1 ? 'aplicação' : 'aplicações'}
+      <div className="flex flex-wrap items-center gap-1.75">
+        <span className="text-[12.5px] font-medium text-pretty">{frase}</span>
+        {regra.permissao === 'Reserva' && <TagDeRegra>reserva</TagDeRegra>}
+        {regra.origem === 'Aprendida' && <TagDeRegra>aprendida</TagDeRegra>}
+      </div>
+      <div className="mt-0.75 font-mono text-[10.5px] text-muted-foreground">
+        {regra.usos} {regra.usos === 1 ? 'aplicação' : 'aplicações'}
       </div>
     </div>
     <div className="flex flex-none gap-1.5">
@@ -333,15 +366,25 @@ const RegraCard = ({ regra, frase, onAlternar, onRemover, ocupado }: RegraCardPr
         onClick={onAlternar}
         disabled={ocupado}
         className={cn(
-          'rounded-full border px-2.5 py-1 text-xs font-medium',
+          'rounded-full border px-2.5 py-0.75 text-[11.5px] font-medium max-mobile:min-h-9',
           regra.ativa ? 'border-ok-border bg-ok-bg text-ok-fg' : 'border-border bg-card text-text-2',
         )}
       >
         {regra.ativa ? 'Ativa' : 'Inativa'}
       </button>
-      <Button variant="outline" size="sm" onClick={onRemover} disabled={ocupado}>
+      <button
+        onClick={onRemover}
+        disabled={ocupado}
+        className="rounded-md border border-border bg-card px-2.25 py-0.75 text-[11.5px] font-medium text-text-2 hover:text-foreground max-mobile:min-h-9"
+      >
         Remover
-      </Button>
+      </button>
     </div>
-  </SurfaceCard>
+  </div>
+)
+
+const TagDeRegra = ({ children }: { children: React.ReactNode }) => (
+  <span className="rounded-full border border-warn-border bg-warn-bg px-1.75 py-px font-mono text-[10px] font-medium text-warn-fg">
+    {children}
+  </span>
 )

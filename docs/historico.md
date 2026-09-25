@@ -1015,3 +1015,19 @@ Tipos em tabela, stepper unido na Configuração.
 
 Verificado: testes de `AbaRegrasEmVigor`, `lacunas`, `prazo-em-vigor` e `alcada-em-vigor`; screenshots a 1440 e
 390px; `central-de-regras`/`alcada-v3` passam dos títulos novos e param no cenário do gaps §28.
+
+## 2026-09-25 — Central de regras: Alçada no layout do protótipo v2 (segunda leva)
+
+Construtor "Nova regra" vira modal (`AlcadaBuilderDialog`, no lugar do card inline que empurrava a aba): frase da
+regra ao vivo no título, passos 1 Quem / 2 Pode ou não pode / 3 O quê, frase de apoio da permissão escolhida e
+rodapé com o que falta (`falta` no `useAlcadaBuilder`) e "Criar regra" desabilitado até completar; no celular os
+dois botões ficam lado a lado (o protótipo derruba "Criar regra" pra baixo). Camadas: alerta de alcance zero em
+três níveis (título, nomes, explicação em cinza) e contando também quem não tem etapa liberada; "O que cada um
+alcança hoje" com título e subtítulo dentro do card, linhas centradas, etapas curtas ("pré e pós-conferência") e
+empilhadas no celular; grupos por sujeito em linhas planas com toggle "+/−", resumo e contagem (sem rolagem
+interna — as regras ficam dentro do grupo); regras expandidas compactas, com tags "reserva"/"aprendida". Frase
+das regras de nível diz "Analista Júnior" (era "Nível Júnior", enquanto o grupo dizia "Analista"). Sub-abas em
+largura total. Véu do Dialog e do AlertDialog igual ao do Sheet (escuro, sem desfoque).
+
+Verificado: testes de `AlcadaBuilderDialog`, `falta` e `fraseDaRegra`; screenshots a 1440 (dois temas) e 390px;
+`central-de-regras`/`alcada-v3` param no cenário do gaps §28, como no `main`.

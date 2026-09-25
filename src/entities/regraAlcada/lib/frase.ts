@@ -15,7 +15,7 @@ export type LookupsFraseRegra = {
 // de alvo), o front monta a frase; não existe rótulo pronto vindo do servidor.
 export const fraseDaRegra = (regra: RegraAlcada, lookups: LookupsFraseRegra): string => {
   const quem = regra.sujeitoNivel
-    ? `Nível ${NIVEL_LABEL[regra.sujeitoNivel]}`
+    ? `Analista ${NIVEL_LABEL[regra.sujeitoNivel]}`
     : regra.sujeitoConferenteId
       ? lookups.nomeConferente(regra.sujeitoConferenteId)
       : '—'

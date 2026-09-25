@@ -13,13 +13,13 @@ import { useAlcadaBuilder } from '../model/use-alcada-builder'
 import { AbaAlcadaCamadas } from './AbaAlcadaCamadas'
 import { AbaAlcadaMatriz } from './AbaAlcadaMatriz'
 import { AbaAlcadaTestar } from './AbaAlcadaTestar'
-import { AlcadaBuilderCard } from './AlcadaBuilderCard'
+import { AlcadaBuilderDialog } from './AlcadaBuilderDialog'
 
 type SubAba = 'camadas' | 'matriz' | 'testar'
 
 // RF-31 a RF-34 — motor v3: 3 sub-abas (Camadas/Matriz/Testar), mesmo construtor guiado
 // compartilhado entre elas (RF-32), agora com alvo de grupo e permissão de reserva. O
-// construtor em si (estado + JSX) mora em useAlcadaBuilder/AlcadaBuilderCard — extraído numa
+// construtor em si (estado + JSX) mora em useAlcadaBuilder/AlcadaBuilderDialog — extraído numa
 // auditoria de qualidade, esta função virou só o shell da sub-aba (fetch + as 3 visões).
 export const AbaAlcada = () => {
   const { data: regras } = useRegrasAlcada()
@@ -62,14 +62,13 @@ export const AbaAlcada = () => {
             barrado nem recebe o protocolo, e se ninguém sobrar o ato vai para exceções com o motivo.
           </p>
         </div>
-        {!builder.aberto && (
-          <Button variant="outline" size="sm" className="flex-none" onClick={builder.abrir}>
-            Nova regra
-          </Button>
-        )}
+        <Button variant="outline" className="flex-none" onClick={builder.abrir}>
+          Nova regra
+        </Button>
       </div>
 
-      <div className="my-3.5 inline-flex max-w-full gap-0.5 overflow-x-auto rounded-lg bg-secondary p-0.75">
+      {/* Largura toda, como as abas da Distribuição e do protótipo v2. */}
+      <div className="my-3.5 flex max-w-full gap-0.5 overflow-x-auto rounded-lg bg-secondary p-0.75">
         {(
           [
             ['camadas', 'Camadas'],
@@ -81,7 +80,7 @@ export const AbaAlcada = () => {
             key={valor}
             onClick={() => setSubAba(valor)}
             className={cn(
-              'flex-none rounded-md px-3 py-1.5 text-[13px] font-medium whitespace-nowrap text-muted-foreground',
+              'flex-none rounded-md px-3 py-1 text-[13px] font-medium whitespace-nowrap text-muted-foreground max-mobile:py-2',
               subAba === valor && 'bg-card text-foreground shadow-sm',
             )}
           >
@@ -90,7 +89,7 @@ export const AbaAlcada = () => {
         ))}
       </div>
 
-      <AlcadaBuilderCard builder={builder} conferentes={conferentes} />
+      <AlcadaBuilderDialog builder={builder} conferentes={conferentes} />
 
       {subAba === 'camadas' && (
         <AbaAlcadaCamadas

@@ -68,7 +68,7 @@ type UseAlcadaBuilderParams = {
 // Extraído de AbaAlcada.tsx (achado numa auditoria de qualidade — o componente misturava
 // fetch, estado do construtor de regra e a montagem do payload de criação, tudo numa função
 // só, ~300 linhas). Estado + lógica derivada do construtor guiado (RF-32) — o card em si
-// (JSX) fica em AlcadaBuilderCard.tsx.
+// (JSX) fica em AlcadaBuilderDialog.tsx.
 export const useAlcadaBuilder = ({
   conferentes,
   equipes,
@@ -122,7 +122,7 @@ export const useAlcadaBuilder = ({
 
   const quemTexto =
     builder.sujeitoTipo === 'nivel'
-      ? `Nível ${NIVEL_LABEL[builder.sujeitoNivel]}`
+      ? `Analista ${NIVEL_LABEL[builder.sujeitoNivel]}`
       : (nomePorConferenteId.get(builder.sujeitoConferenteId) ?? '…')
 
   const nomeDaEquipe = (valor: string) =>
@@ -164,6 +164,19 @@ export const useAlcadaBuilder = ({
         : builder.alvoSelecionados.length > 0
 
   const podeCriarComSujeito = podeCriar && (builder.sujeitoTipo === 'nivel' || builder.sujeitoConferenteId !== '')
+
+  // Rodapé do construtor (protótipo v2): diz o que ainda impede "Criar regra", em vez de só
+  // esconder ou desabilitar o botão sem explicação.
+  const falta =
+    builder.alvoTipo !== 'equipeEtapa' && builder.sujeitoTipo === 'pessoa' && builder.sujeitoConferenteId === ''
+      ? 'Falta escolher quem.'
+      : builder.alvoTipo === 'equipeEtapa' && builder.alvoSelecionados.length === 0
+        ? 'Falta escolher a equipe.'
+        : builder.alvoTipo === 'equipeEtapa' && builder.equipeEEtapaEtapas.length === 0
+          ? 'Falta escolher a etapa.'
+          : podeCriar
+            ? null
+            : 'Falta escolher o quê.'
 
   const handleCriarRegra = async () => {
     const sujeito =
@@ -249,6 +262,7 @@ export const useAlcadaBuilder = ({
     quemTexto,
     alvoTexto,
     podeCriar: podeCriarComSujeito,
+    falta,
     alvoOpcoes,
     etapaOpcoes,
     handleCriarRegra,
