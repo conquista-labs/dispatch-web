@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
 
 import { type Conta, useContas } from '@/entities/conta'
 import { cn } from '@/shared/lib/utils'
@@ -20,7 +20,7 @@ export const ContasBoard = () => {
 
   return (
     <div>
-      <div className="overflow-hidden rounded-[10px] border border-border bg-card shadow-xs">
+      <div className="overflow-hidden rounded-[10px] border border-border bg-card shadow-sm">
         {contas.map((conta) => (
           <div
             key={conta.id}
@@ -36,7 +36,9 @@ export const ContasBoard = () => {
                 {conta.ehVoce && <span className="text-[11px] text-muted-foreground">você</span>}
               </div>
               <div className="mt-0.5 flex min-w-0 flex-wrap items-baseline gap-x-2">
-                <span className="min-w-0 font-mono text-[11.5px] break-all text-muted-foreground">{conta.email}</span>
+                <span className="min-w-0 font-mono text-[11.5px] break-words text-muted-foreground">
+                  {comQuebraNoEmail(conta.email)}
+                </span>
                 {conta.tambemConfere && (
                   <span className="flex-none text-[11.5px] whitespace-nowrap text-text-2">· também confere</span>
                 )}
@@ -62,7 +64,7 @@ export const ContasBoard = () => {
                   <button
                     type="button"
                     onClick={() => setDesativando(conta)}
-                    className="min-h-8 rounded-md border border-border bg-card px-[11px] text-[12px] font-medium text-text-2 hover:border-bad-border hover:bg-bad-bg hover:text-bad-fg"
+                    className="min-h-8 rounded-[6px] border border-border bg-card px-[11px] text-[12px] font-medium text-text-2 hover:border-bad-border hover:bg-bad-bg hover:text-bad-fg max-mobile:min-h-11 max-mobile:px-3.5"
                   >
                     Desativar
                   </button>
@@ -94,3 +96,14 @@ export const ContasBoard = () => {
     </div>
   )
 }
+
+// RNF-10: no celular o e-mail quebra depois do "@" e antes de cada "." (`<wbr>`), não no meio de
+// uma palavra como o `break-all` fazia ("…@cartori|o.com"). Parte longa sem ponto ainda quebra
+// onde precisar (`break-words`).
+const comQuebraNoEmail = (email: string) =>
+  email.split(/(?=[.@])|(?<=@)/).map((parte, indice) => (
+    <Fragment key={indice}>
+      {indice > 0 && <wbr />}
+      {parte}
+    </Fragment>
+  ))

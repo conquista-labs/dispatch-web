@@ -108,9 +108,7 @@ export const ConferentesBoard = () => {
 const Kpi = ({ label, valor, tom }: { label: string; valor: string; tom?: 'bad' | 'ok' }) => (
   <SurfaceCard className="p-3">
     <div className="text-[11.5px] font-medium text-text-2">{label}</div>
-    <div
-      className={`mt-1 font-mono text-xl font-semibold ${tom === 'bad' ? 'text-bad-fg' : tom === 'ok' ? 'text-ok-fg' : ''}`}
-    >
+    <div className={`mt-1 text-xl font-semibold ${tom === 'bad' ? 'text-bad-fg' : tom === 'ok' ? 'text-ok-fg' : ''}`}>
       {valor}
     </div>
   </SurfaceCard>

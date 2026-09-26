@@ -1089,3 +1089,24 @@ havia diálogo aberto (o construtor de regra em modal fechava sozinho no screens
 
 Verificado: `npm run e2e` 24/24 duas vezes seguidas contra a API local (~40 s cada), mais `central-de-regras` e
 `dashboard` isoladas duas vezes (primeira rodada cria a sugestão, a segunda reaproveita).
+
+## 2026-09-26 — Telas restantes no layout do protótipo v2 (Parte 1, bloco 3)
+
+Última leva da fidelidade visual do PLANO-dashboard-v2, a partir de duas auditorias contra o protótipo v2
+(desktop e 390px). **Chip**: `fonte="padrao"` saía em JetBrains Mono no app inteiro — `font-normal` é peso, não
+família, e o `font-mono` da base sobrevivia ao twMerge; agora tem `font-sans`, e a variante nova `sans` serve ao
+status de "Concluídos hoje". **Importar**: sem subtítulo, textarea com a medida do protótipo, pílulas do resumo
+em sans com uma cor por significado, passo 3 em uma coluna no celular e avisos no formato do protótipo (título,
+orientação, itens em pílula) com texto fiel ao back — o tipo novo entra no catálogo ao confirmar, não vai para
+exceções; escreventes sem equipe com a contagem tirada das linhas da prévia. **Minha fila / Fila de
+conferentes**: abas do celular na largura toda (44px, contador em mono), "ver como" desce para baixo do título
+no celular, borda da legenda com as cores `*-bar`, card "Em conferência" com tipo de ato e escrevente · equipe
+ao lado do prazo, "Concluídos hoje" com um card por item. **Conferentes**: `max-width` 960, KPIs em sans,
+rótulo "Alçada", presença em pílula, "Remover" discreto. **Contas**: e-mail quebra no "@" e no "." (`<wbr>`),
+"Desativar" com 44px no celular. **Menu do celular**: tema e Sair com borda e 36px, chips todos com borda e o
+ativo com fundo de superfície (decisão do dono: seguir o protótipo, não o preto invertido); rótulo "Tema
+claro/escuro" na sidebar. ADR-0010 ganha as divergências que ficam (ver como só leitura, linha "entrada",
+revisão com busca, prévia fiel ao motor, painel de detalhe, contraste AA, vincular conta existente).
+
+Fica para o par API + front: legenda do semáforo com as faixas da configuração (o conferente não lê `/config`),
+contagem por tipo desconhecido na prévia, e a prévia marcando só a primeira linha de cada tipo novo.

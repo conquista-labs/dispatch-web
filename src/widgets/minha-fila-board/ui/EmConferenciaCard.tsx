@@ -5,6 +5,7 @@ import {
   prazoChip,
   PrazoTooltip,
   PrioridadeAltaTag,
+  type InfoProtocolo,
   type ProtocoloResumo,
 } from '@/entities/protocolo'
 import { ObservacaoField } from '@/features/protocolo/definir-observacao'
@@ -14,14 +15,11 @@ import { Button } from '@/shared/ui/button'
 import { Chip } from '@/shared/ui/chip'
 import { SurfaceCard } from '@/shared/ui/surface-card'
 
-const ETAPA_LABEL: Record<ProtocoloResumo['etapa'], string> = {
-  PreConferencia: 'Pré-conferência',
-  PosConferencia: 'Pós-conferência',
-}
-
 type EmConferenciaCardProps = {
   protocolo: ProtocoloResumo
   now: number
+  /** Tipo de ato, escrevente e equipe — mesmo resolvedor dos cards do pool e das atribuídas. */
+  info: InfoProtocolo
   onAprovar?: () => void
   onReprovar?: () => void
   /** Pedido do dono ("a pessoa sai pra almoçar") — congela o cronômetro sem devolver o ato pra
@@ -40,6 +38,7 @@ type EmConferenciaCardProps = {
 export const EmConferenciaCard = ({
   protocolo,
   now,
+  info,
   onAprovar,
   onReprovar,
   onPausar,
@@ -80,15 +79,24 @@ export const EmConferenciaCard = ({
           )}
         </div>
       </div>
-      <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-        {protocolo.prioridade === 'Alta' && <PrioridadeAltaTag />}
-        <NumeroConferenciaTag numero={protocolo.numeroDaConferencia} />
-        <span className="text-[13px] text-text-5">{ETAPA_LABEL[protocolo.etapa]}</span>
-      </div>
-      <div className="mt-1">
+      {/* Protótipo v2: tipo do ato, as tags (quando houver) e o prazo com escrevente · equipe ao
+          lado — antes o card mostrava a etapa no lugar do tipo e não dizia de quem era o ato. */}
+      <div className="mt-1.5 text-[13px] text-pretty text-text-5">{info.tipoAtoNome ?? '—'}</div>
+      {(protocolo.prioridade === 'Alta' || protocolo.numeroDaConferencia > 1) && (
+        <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+          {protocolo.prioridade === 'Alta' && <PrioridadeAltaTag />}
+          <NumeroConferenciaTag numero={protocolo.numeroDaConferencia} />
+        </div>
+      )}
+      <div className="mt-1 flex min-w-0 items-center gap-1.5">
         <PrazoTooltip>
-          <Chip tom={chip.tom}>{chip.label}</Chip>
+          <Chip tom={chip.tom} className="flex-none">
+            {chip.label}
+          </Chip>
         </PrazoTooltip>
+        <span className="min-w-0 truncate text-[11.5px] text-muted-foreground">
+          {[info.escreventeNome, info.equipeNome ?? 'sem equipe'].filter(Boolean).join(' · ')}
+        </span>
       </div>
 
       <ObservacaoField protocoloId={protocolo.id} observacao={protocolo.observacao} somenteLeitura={somenteLeitura} />

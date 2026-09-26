@@ -52,8 +52,10 @@ export const ConcluidosHojeList = ({
   if (concluidos.length === 0) return null
 
   return (
-    <SurfaceCard className="mt-1.5">
-      <div className="mb-1.5 text-xs font-semibold text-text-2">Concluídos hoje · {concluidos.length}</div>
+    // Protótipo v2: título solto e um card por concluído (antes era uma lista dentro de um card só).
+    // O número não é sublinhado como lá — aqui ele não abre o detalhe (gaps §2, RF-24e).
+    <div className="mt-1.5 flex flex-col gap-1.5">
+      <div className="px-0.5 text-xs font-semibold text-text-2">Concluídos hoje · {concluidos.length}</div>
       {concluidos.map((protocolo) => {
         const restanteMs = protocolo.concluidoEm
           ? JANELA_DE_CORRECAO_MS - (now - new Date(protocolo.concluidoEm).getTime())
@@ -63,14 +65,10 @@ export const ConcluidosHojeList = ({
         const tipoAtoNome = protocolo.tipoAtoId ? (nomePorTipoAtoId.get(protocolo.tipoAtoId) ?? '—') : '—'
 
         return (
-          <div
-            key={protocolo.id}
-            data-testid={`concluido-${protocolo.id}`}
-            className="border-t border-secondary py-1.5 first:border-t-0"
-          >
+          <SurfaceCard key={protocolo.id} data-testid={`concluido-${protocolo.id}`} className="px-3 py-2.5">
             <div className="flex items-center justify-between gap-2">
-              <span className="font-mono text-xs text-text-2">{protocolo.numero}</span>
-              <Chip tom={STATUS_TOM[protocolo.status] ?? 'neutro'}>
+              <span className="font-mono text-[12.5px] font-medium">{protocolo.numero}</span>
+              <Chip tom={STATUS_TOM[protocolo.status] ?? 'neutro'} fonte="sans">
                 {STATUS_LABEL[protocolo.status] ?? protocolo.status}
               </Chip>
             </div>
@@ -127,9 +125,9 @@ export const ConcluidosHojeList = ({
                   Pedir reabertura à distribuidora
                 </Button>
               ))}
-          </div>
+          </SurfaceCard>
         )
       })}
-    </SurfaceCard>
+    </div>
   )
 }

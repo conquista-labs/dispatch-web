@@ -255,7 +255,7 @@ export const PassoDados = ({ onContinuar, carregando, erro }: PassoDadosProps) =
               placeholder={
                 'protocolo,tipoAto,escrevente,dataHoraAndamento\n262414,VENDA E COMPRA,BARBARA RIBEIRO,2026-08-26 10:16:53'
               }
-              className="h-48 w-full resize-y rounded-lg border border-dashed border-border bg-background p-3 font-mono text-xs text-foreground outline-none focus:border-primary"
+              className="min-h-[132px] w-full resize-y rounded-lg border border-dashed border-zinc-300 bg-background px-3 py-[11px] font-mono text-[12.5px] leading-[1.6] text-foreground outline-none focus:border-primary dark:border-zinc-700"
             />
           </>
         )}

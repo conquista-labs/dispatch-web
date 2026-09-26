@@ -89,7 +89,7 @@ export const ConferenteCard = ({ conferente, tiposAlcancados, totalTipos, frases
           {/* RNF-10: nome/e-mail não truncam — dois conferentes parecidos ("Ana Silva"/"Ana
               Souza") não podem virar "Ana S..." indistinguível nessa lista. */}
           <div className="min-w-0">
-            <div className="text-[14px] font-medium text-pretty">{conferente.nome}</div>
+            <div className="text-[14.5px] font-semibold text-pretty">{conferente.nome}</div>
             <div className="font-mono text-[11.5px] break-words text-muted-foreground">{conferente.email}</div>
           </div>
           {ehAdministrador && (
@@ -99,29 +99,32 @@ export const ConferenteCard = ({ conferente, tiposAlcancados, totalTipos, frases
           )}
         </div>
 
-        <div className="flex flex-none items-center gap-2.5 max-mobile:w-full max-mobile:justify-end">
+        <div className="flex flex-none items-center gap-2.5 max-mobile:w-full">
           <div className="text-right">
-            <div className={cn('font-mono text-[13.5px] font-medium', corCarga)}>
+            <div className={cn('font-mono text-[15px] font-medium', corCarga)}>
               {conferente.cargaAtual}/{conferente.capacidadeEstimada}
             </div>
             <div className="text-[10px] text-muted-foreground">na mão · capacidade</div>
           </div>
 
-          <Button
-            variant="outline"
-            size="sm"
-            className={conferente.naEscala ? 'border-ok-border bg-ok-bg text-ok-fg hover:bg-ok-bg' : undefined}
+          {/* Presença em pílula, como no protótipo v2: verde "Na escala", neutra "Ausente". */}
+          <button
+            type="button"
+            className={cn(
+              'rounded-full border px-[11px] py-1 text-[12px] font-medium whitespace-nowrap hover:border-muted-foreground disabled:opacity-50 max-mobile:min-h-11 max-mobile:px-3.5',
+              conferente.naEscala ? 'border-ok-border bg-ok-bg text-ok-fg' : 'border-border bg-card text-text-2',
+            )}
             onClick={() => marcarPresenca.mutate({ conferenteId: conferente.id, presente: !conferente.naEscala })}
             disabled={marcarPresenca.isPending}
           >
             {conferente.naEscala ? 'Na escala' : 'Ausente'}
-          </Button>
+          </button>
 
           {ehAdministrador && (
             <Button
               variant="outline"
               size="sm"
-              className="hover:border-bad-border hover:bg-bad-bg hover:text-bad-fg"
+              className="bg-card text-[12px] text-text-2 hover:border-bad-border hover:bg-bad-bg hover:text-bad-fg"
               onClick={() => remover.mutate(conferente.id)}
               disabled={remover.isPending}
             >
@@ -159,7 +162,7 @@ export const ConferenteCard = ({ conferente, tiposAlcancados, totalTipos, frases
           <button
             type="button"
             onClick={ciclarNivel}
-            className="rounded-full border border-border bg-secondary px-2.5 py-1 text-[12px] font-medium hover:bg-muted"
+            className="rounded-full border border-border bg-card px-2.5 py-[3px] text-[11.5px] font-medium text-text-5 hover:border-muted-foreground"
           >
             {rotuloAnalista(conferente.nivel)}
           </button>
@@ -176,10 +179,11 @@ export const ConferenteCard = ({ conferente, tiposAlcancados, totalTipos, frases
 
       {pills.length > 0 && (
         <div className="mt-2 flex flex-wrap items-center gap-1.5">
+          <span className="text-[11.5px] font-medium text-text-2">Alçada</span>
           {pills.map((frase, indice) => (
             <span
               key={indice}
-              className="rounded-full border border-border bg-secondary px-2 py-0.5 text-[11px] text-pretty text-text-2"
+              className="rounded-full border border-secondary bg-background px-2 py-px text-[11.5px] text-pretty text-text-3"
             >
               {frase}
             </span>

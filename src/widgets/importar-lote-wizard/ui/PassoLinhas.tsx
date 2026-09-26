@@ -62,12 +62,16 @@ export const PassoLinhas = ({
     : comIndice
   const podeExcluir = linhas.length > 1 && !recalculando
 
-  const badgesTodas: { label: string; tom: React.ComponentProps<typeof Chip>['tom'] }[] = [
-    { label: `${resumo.totalNoArquivo} linhas lidas`, tom: 'neutro' },
-    { label: `${resumo.processadas} novos`, tom: 'neutro' },
-    { label: `${resumo.ignoradasPelaLinhaDeCorte} já existem`, tom: 'atencao' },
-    { label: `${resumo.excecoes} exigem decisão`, tom: 'vencido' },
-    { label: `${semEquipe} sem equipe (prazo padrão)`, tom: 'neutro' },
+  // Pílulas do resumo em sans com uma cor por significado, como no protótipo v2 (`resumoLote`).
+  const badgesTodas: { label: string; className: string }[] = [
+    { label: `${resumo.totalNoArquivo} linhas lidas`, className: 'border-border bg-secondary text-text-3' },
+    { label: `${resumo.processadas} novos`, className: 'border-border bg-card text-foreground' },
+    {
+      label: `${resumo.ignoradasPelaLinhaDeCorte} já existem`,
+      className: 'border-warn-border bg-warn-bg text-warn-fg',
+    },
+    { label: `${resumo.excecoes} exigem decisão`, className: 'border-bad-border bg-bad-bg text-bad-fg' },
+    { label: `${semEquipe} sem equipe (prazo padrão)`, className: 'border-border bg-card text-text-2' },
   ]
   const badges = badgesTodas.filter((b) => !b.label.startsWith('0 '))
 
@@ -79,15 +83,15 @@ export const PassoLinhas = ({
 
       <div className="mt-2.5 mb-3 flex flex-wrap items-center gap-1.5">
         {badges.map((b) => (
-          <Chip key={b.label} tom={b.tom}>
+          <PilulaResumo key={b.label} className={b.className}>
             {b.label}
-          </Chip>
+          </PilulaResumo>
         ))}
         {excluidas > 0 && (
           <span className="flex items-center gap-1.5 text-[12px] text-text-2">
-            <Chip tom="neutro">
+            <PilulaResumo className="border-border bg-card text-text-2">
               {excluidas === 1 ? '1 linha excluída deste lote' : `${excluidas} linhas excluídas deste lote`}
-            </Chip>
+            </PilulaResumo>
             <button
               type="button"
               onClick={onDesfazerExclusoes}
@@ -213,3 +217,7 @@ export const PassoLinhas = ({
     </div>
   )
 }
+
+const PilulaResumo = ({ className, children }: { className: string; children: React.ReactNode }) => (
+  <span className={cn('rounded-full border px-2.5 py-[3px] text-[12px] font-medium', className)}>{children}</span>
+)

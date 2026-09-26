@@ -7,11 +7,11 @@ export const ConferentesPage = () => {
   const ehAdministrador = useEhAdministrador()
 
   return (
-    <div className="px-7 pt-6 pb-7 max-mobile:px-3.5 max-mobile:pt-4">
+    <div className="max-w-[960px] px-7 pt-6 pb-7 max-mobile:px-3.5 max-mobile:pt-4">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="m-0 text-xl font-semibold tracking-[-0.015em]">Conferentes</h1>
-          <p className="mt-1.5 max-w-[70ch] text-[13.5px] text-muted-foreground">
+          <p className="mt-1.5 text-[13.5px] text-muted-foreground">
             {ehAdministrador
               ? 'Quem está na escala hoje, o nível e a jornada de cada um. O nível define a alçada, e a alçada é o que o motor de distribuição consulta.'
               : 'Quem está na escala hoje e quanto cada um tem na mão. Marque ausência aqui — os protocolos da pessoa voltam ao pool na hora. Cadastro e jornada ficam com a administração.'}

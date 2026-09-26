@@ -16,14 +16,15 @@ const chipVariants = cva(
         critico: 'border-crit-border bg-crit-bg-2 text-crit-fg',
         vencido: 'border-bad-border-2 bg-bad-bg-2 text-bad-fg',
       },
-      // 'mono' (default) é o padrão de sempre (prazo/status — 11px JetBrains Mono, bate com o
-      // protótipo). 'padrao' é pra pills de equipe/etapa especificamente, que no protótipo usam
-      // a fonte de texto comum em 10.5px, não mono (achado num backlog de fidelidade visual) —
-      // twMerge (via `cn`) resolve o conflito de font-mono/text-[11px] vs. font-normal/
-      // text-[10.5px] no momento em que o componente aplica `className`.
+      // 'mono' (default) é o padrão de sempre (prazo — 11px JetBrains Mono, bate com o
+      // protótipo). 'padrao' é pra pills de equipe/etapa, que no protótipo usam a fonte de texto
+      // em 10.5px; 'sans' é pro status de resultado (Aprovado/Não aprovado), sans 11px com mais
+      // respiro. As duas precisam do `font-sans` explícito: `font-normal` é peso, não família, e
+      // sem ele o `font-mono` da base sobrevivia ao twMerge (as pills saíam em JetBrains Mono).
       fonte: {
         mono: '',
-        padrao: 'font-normal text-[10.5px]',
+        padrao: 'font-sans font-normal text-[10.5px]',
+        sans: 'px-2 font-sans',
       },
     },
     defaultVariants: {

@@ -19,10 +19,10 @@ import {
 } from '@/widgets/minha-fila-board'
 
 const LEGENDA = [
-  { label: 'no prazo', className: 'bg-ok-bg border-ok-border-2' },
-  { label: 'atenção', className: 'bg-warn-bg-2 border-warn-border-2' },
-  { label: 'crítico', className: 'bg-crit-bg-2 border-crit-border' },
-  { label: 'vencido', className: 'bg-bad-bg-2 border-bad-border-2' },
+  { label: 'no prazo', className: 'bg-ok-bg border-ok-bar' },
+  { label: 'atenção', className: 'bg-warn-bg-2 border-warn-bar' },
+  { label: 'crítico', className: 'bg-crit-bg-2 border-crit-bar' },
+  { label: 'vencido', className: 'bg-bad-bg-2 border-bad-bar' },
 ]
 
 type FilaDoConferenteBoardProps = {
@@ -165,7 +165,13 @@ export const FilaDoConferenteBoard = ({ conferenteId }: FilaDoConferenteBoardPro
             </div>
             <div className="flex flex-col gap-2">
               {filaFiltrada.emConferencia.map((protocolo) => (
-                <EmConferenciaCard key={protocolo.id} protocolo={protocolo} now={now} somenteLeitura />
+                <EmConferenciaCard
+                  key={protocolo.id}
+                  protocolo={protocolo}
+                  now={now}
+                  info={resolverInfoProtocolo(protocolo)}
+                  somenteLeitura
+                />
               ))}
               {filaFiltrada.emConferencia.length === 0 && (
                 <div className="rounded-[10px] border border-dashed border-border p-4 text-center text-xs text-muted-foreground">

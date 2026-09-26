@@ -30,7 +30,7 @@ const IndicadorDePassos = ({ passo }: { passo: Passo }) => {
   const indiceAtual = passo === 'concluido' ? PASSOS.length : PASSOS.findIndex((p) => p.valor === passo)
 
   return (
-    <div className="mb-5 flex items-center gap-2">
+    <div className="mb-5 flex items-center gap-2.5">
       {PASSOS.map((item, indice) => {
         const atingido = indiceAtual >= indice
         const atual = indiceAtual === indice
