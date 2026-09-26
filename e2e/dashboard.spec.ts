@@ -1,9 +1,8 @@
-import { expect, test } from '@playwright/test'
+import { CONTAS, expect, test } from './support/cenario'
 
-// Verificação visual do Dashboard (RF-42-46) — precisa da API local com dado real acumulado
-// de protocolos concluídos (sessões de teste anteriores já deixaram volume suficiente). Não é
-// fixture fixa — se o banco local for zerado, a tela ainda renderiza (estado vazio), só sem
-// número interessante pra conferir visualmente.
+// Verificação visual do Dashboard (RF-42-46). As visões de gestão renderizam com qualquer banco
+// (estado vazio incluso). A visão do conferente só mostra o score com algo concluído no período —
+// esse teste monta o próprio ato concluído pela fixture `cenario` (ADR-0025).
 const EMAIL_DISTRIBUIDORA = process.env.E2E_DISTRIBUIDORA_EMAIL ?? 'distribuidora@cartorio.com'
 const SENHA_DISTRIBUIDORA = process.env.E2E_DISTRIBUIDORA_SENHA ?? 'Senha123!'
 const EMAIL_ADMIN = process.env.E2E_ADMIN_EMAIL ?? 'administrador@cartorio.com'
@@ -62,7 +61,14 @@ test('Dashboard — distribuidora vê a produção por conferente, sem score nem
   await page.screenshot({ path: 'e2e/.screenshots/dashboard-distribuidora-claro.png', fullPage: true })
 })
 
-test('Dashboard — visão conferente mostra só os próprios números, sem faixa de bônus', async ({ page }) => {
+test('Dashboard — visão conferente mostra só os próprios números, sem faixa de bônus', async ({ page, cenario }) => {
+  await cenario.alcadaPlena(CONTAS.conferenteVisual)
+  await cenario.esvaziarFila('conferenteVisual')
+  const [protocolo] = await cenario.importar([{}])
+  await cenario.atribuir(protocolo.id, CONTAS.conferenteVisual)
+  await cenario.iniciar(protocolo.id, 'conferenteVisual')
+  await cenario.concluir(protocolo.id, 'conferenteVisual')
+
   await page.goto('/login')
   await page.getByLabel('E-mail').fill(EMAIL_CONFERENTE)
   await page.getByLabel('Senha').fill(SENHA_CONFERENTE)

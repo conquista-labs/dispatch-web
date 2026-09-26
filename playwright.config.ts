@@ -9,6 +9,11 @@ export default defineConfig({
   testDir: './e2e',
   globalSetup: './e2e/global-setup.ts',
   fullyParallel: false,
+  // Um worker só: todos os specs dividem o mesmo banco local e os mesmos dados fixos da fixture
+  // `cenario` (tipo "E2e Reservado", equipe e escreventes "E2e …", contas seed). Em paralelo, um
+  // teste via a Reserva do outro na tela, e a varredura de sobras do começo de um cenário apagava
+  // o protocolo ou a regra de outro teste no meio (ADR-0025).
+  workers: 1,
   retries: 0,
   reporter: [['list']],
   use: {
