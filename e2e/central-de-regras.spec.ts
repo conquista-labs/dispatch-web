@@ -1,4 +1,6 @@
-import { expect, type Page, test } from '@playwright/test'
+import { type Page } from '@playwright/test'
+
+import { capturarPaginaInteira, expect, test } from './support/cenario'
 
 // O nome do tipo de ato é um botão com o texto (vira campo só ao clicar pra renomear) — a linha é
 // achada pelo botão com o nome exato, e cada passo re-resolve a linha do zero (a lista é ordenada
@@ -12,15 +14,16 @@ const esperarLinhaPeloNome = async (page: Page, nome: string) => {
   return { linha }
 }
 
-// Verificação visual da tela Central de regras (RF-31 a RF-41) contra dados reais — precisa da
-// API local com regras de alçada (ativa e inativa), equipes com escreventes (e ao menos um
-// escrevente sem equipe) e sugestões (pendentes e no histórico) — ver skill verify-visual.
-// Screenshot pontual, não fixture fixa.
+// Verificação visual da tela Central de regras (RF-31 a RF-41) com login real. O que a tela precisa
+// e o banco local pode não ter — uma sugestão pendente no Aprendizado — a fixture `cenario` garante
+// (ADR-0025); o resto (regras, equipes, escreventes sem equipe) os próprios dados fixos da fixture
+// já provêm.
 // Cadastro de pessoas e edição de regras são só do Administrador (dispatch-api ADR-0039).
 const EMAIL = process.env.E2E_ADMIN_EMAIL ?? 'administrador@cartorio.com'
 const SENHA = process.env.E2E_ADMIN_SENHA ?? 'Senha123!'
 
-test('Central de regras — as 3 abas renderizam com dados reais', async ({ page }) => {
+test('Central de regras — as 3 abas renderizam com dados reais', async ({ page, cenario }) => {
+  await cenario.garantirSugestaoPendente()
   await page.goto('/login')
   await page.getByLabel('E-mail').fill(EMAIL)
   await page.getByLabel('Senha').fill(SENHA)
@@ -34,19 +37,19 @@ test('Central de regras — as 3 abas renderizam com dados reais', async ({ page
 
   // Regras em vigor (aba padrão desde o protótipo v2).
   await expect(page.getByRole('heading', { name: 'Tudo o que o sistema aplica hoje' })).toBeVisible()
-  await page.screenshot({ path: 'e2e/.screenshots/central-de-regras-vigor-claro.png', fullPage: true })
+  await capturarPaginaInteira(page, 'e2e/.screenshots/central-de-regras-vigor-claro.png')
 
   // Tipos de ato.
   await page.getByRole('button', { name: 'Tipos de ato' }).click()
   await expect(page.getByRole('heading', { name: 'Catálogo de tipos de ato' })).toBeVisible()
   await expect(page.getByText('em circulação').first()).toBeVisible()
-  await page.screenshot({ path: 'e2e/.screenshots/central-de-regras-tipos-claro.png', fullPage: true })
+  await capturarPaginaInteira(page, 'e2e/.screenshots/central-de-regras-tipos-claro.png')
 
   // Aprendizado.
   await page.getByRole('button', { name: 'Aprendizado' }).click()
   await expect(page.getByText('Propostas na fila')).toBeVisible()
   await expect(page.getByRole('button', { name: 'Aplicar regra' }).first()).toBeVisible()
-  await page.screenshot({ path: 'e2e/.screenshots/central-de-regras-aprendizado-claro.png', fullPage: true })
+  await capturarPaginaInteira(page, 'e2e/.screenshots/central-de-regras-aprendizado-claro.png')
 
   // Alçada.
   // `exact: true` porque "Regras em vigor" tem um botão "Editar alçada", que também contém a
@@ -55,19 +58,19 @@ test('Central de regras — as 3 abas renderizam com dados reais', async ({ page
   await page.getByRole('button', { name: 'Alçada', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Alçada', exact: true })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'O que cada um alcança hoje' })).toBeVisible()
-  await page.screenshot({ path: 'e2e/.screenshots/central-de-regras-alcada-claro.png', fullPage: true })
+  await capturarPaginaInteira(page, 'e2e/.screenshots/central-de-regras-alcada-claro.png')
 
   // Construtor guiado (RF-32).
   await page.getByRole('button', { name: 'Nova regra', exact: true }).click()
   await expect(page.getByRole('button', { name: 'Por pessoa' })).toBeVisible()
-  await page.screenshot({ path: 'e2e/.screenshots/central-de-regras-builder-claro.png', fullPage: true })
+  await capturarPaginaInteira(page, 'e2e/.screenshots/central-de-regras-builder-claro.png')
   await page.getByRole('button', { name: 'Cancelar' }).click()
 
   // Prazos por equipe.
   await page.getByRole('button', { name: 'Prazos por equipe' }).click()
   await expect(page.getByRole('heading', { name: 'Prazo por equipe e etapa' })).toBeVisible()
   await expect(page.getByText('Escreventes sem equipe')).toBeVisible()
-  await page.screenshot({ path: 'e2e/.screenshots/central-de-regras-prazos-claro.png', fullPage: true })
+  await capturarPaginaInteira(page, 'e2e/.screenshots/central-de-regras-prazos-claro.png')
 
   // Tema escuro, aba Alçada de novo.
   await page.addInitScript(() => {
@@ -79,15 +82,15 @@ test('Central de regras — as 3 abas renderizam com dados reais', async ({ page
   // mode violation quando a aba "vigor" já está na tela (ex.: logo após um reload).
   await page.getByRole('button', { name: 'Alçada', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Alçada', exact: true })).toBeVisible()
-  await page.screenshot({ path: 'e2e/.screenshots/central-de-regras-alcada-escuro.png', fullPage: true })
+  await capturarPaginaInteira(page, 'e2e/.screenshots/central-de-regras-alcada-escuro.png')
 
   await page.getByRole('button', { name: 'Regras em vigor' }).click()
   await expect(page.getByRole('heading', { name: 'Tudo o que o sistema aplica hoje' })).toBeVisible()
-  await page.screenshot({ path: 'e2e/.screenshots/central-de-regras-vigor-escuro.png', fullPage: true })
+  await capturarPaginaInteira(page, 'e2e/.screenshots/central-de-regras-vigor-escuro.png')
 
   await page.getByRole('button', { name: 'Tipos de ato' }).click()
   await expect(page.getByText('em circulação').first()).toBeVisible()
-  await page.screenshot({ path: 'e2e/.screenshots/central-de-regras-tipos-escuro.png', fullPage: true })
+  await capturarPaginaInteira(page, 'e2e/.screenshots/central-de-regras-tipos-escuro.png')
 })
 
 // Comportamento real da aba Tipos de ato (RF-34a-b,d-f), não só aparência: cadastra um tipo de

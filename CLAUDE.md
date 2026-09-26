@@ -94,11 +94,12 @@ no back — o front chama endpoint e renderiza. Por quê e alternativas:
 | [0017](docs/decisions/0017-sessao-persistida-versionada.md)                                | Sessão persistida com `version` + `migrate`                                                                      |
 | [0018](docs/decisions/0018-loading-com-spinner-unificado.md)                               | Loading unificado com spinner, não skeleton                                                                      |
 | [0019](docs/decisions/0019-listas-longas-busca-no-cliente-paginacao-so-em-tipos-de-ato.md) | Listas longas: busca + rolagem no cliente; paginação no servidor só em Tipos de ato                              |
-| [0020](docs/decisions/0020-playwright-com-duas-categorias-de-spec.md)                      | Playwright com duas categorias de spec, sem fixture automática de cenário                                        |
+| [0020](docs/decisions/0020-playwright-com-duas-categorias-de-spec.md)                      | Playwright headless lendo o PNG; categoria "pontual" substituída pelo 0025                                       |
 | [0021](docs/decisions/0021-global-setup-garante-contas-de-login.md)                        | `globalSetup` garante as contas fixas de login                                                                   |
 | [0022](docs/decisions/0022-deploy-manual-no-netlify-com-build-remoto.md)                   | Deploy manual no Netlify com build remoto                                                                        |
 | [0023](docs/decisions/0023-aviso-de-prioridade-alta-com-polling-e-sessionstorage.md)       | Aviso de prioridade alta: polling de 30s + memória em `sessionStorage`                                           |
 | [0024](docs/decisions/0024-perfil-administrador-no-front.md)                               | Perfil Administrador: `useEhAdministrador`, campo cortado é `null`, travas antecipadas, guarda da troca de senha |
+| [0025](docs/decisions/0025-cenario-e2e-montado-pela-api-no-proprio-teste.md)               | Cenário de e2e montado pela API no próprio teste (fixture `cenario`), suíte com um worker                        |
 
 ## Skills do projeto (`.claude/skills/`)
 

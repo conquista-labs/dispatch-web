@@ -40,7 +40,9 @@ test('Contas — admin cria conta, a pessoa troca a senha no primeiro acesso, ad
   await dialog.getByRole('button', { name: 'Gerar' }).click()
   const senhaInicial = await dialog.getByLabel('Senha inicial').inputValue()
   expect(senhaInicial).toMatch(/^.{4}-.{4}-\d{2}$/)
-  await page.screenshot({ path: 'e2e/.screenshots/contas-criar-claro.png', fullPage: true })
+  // Sem `fullPage` com o diálogo aberto: com ele, a conta nascia mas o `waitForResponse` abaixo nunca
+  // via o POST /contas e o teste estourava o tempo (ver e2e-tests.md).
+  await page.screenshot({ path: 'e2e/.screenshots/contas-criar-claro.png' })
   await Promise.all([
     page.waitForResponse((res) => res.request().method() === 'POST' && res.url().endsWith('/contas')),
     dialog.getByRole('button', { name: 'Criar conta' }).click(),

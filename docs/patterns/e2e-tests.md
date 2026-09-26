@@ -9,8 +9,9 @@ metadata:
 
 # Testes E2E (Playwright)
 
-> Decisões em [ADR-0020](../decisions/0020-playwright-com-duas-categorias-de-spec.md) e
-> [ADR-0021](../decisions/0021-global-setup-garante-contas-de-login.md). Fluxo de verificação
+> Decisões em [ADR-0020](../decisions/0020-playwright-com-duas-categorias-de-spec.md),
+> [ADR-0021](../decisions/0021-global-setup-garante-contas-de-login.md) e
+> [ADR-0025](../decisions/0025-cenario-e2e-montado-pela-api-no-proprio-teste.md). Fluxo de verificação
 > visual na skill `verify-visual`; cadeia completa na skill `web-gate`.
 
 ## Quando recorrer a isto
@@ -30,16 +31,30 @@ metadata:
 - `npm run e2e` (tudo) ou `npx playwright test e2e/<arquivo>.spec.ts`. Screenshots em
   `e2e/.screenshots/` (gitignored) — **leia o PNG**.
 
-## As duas categorias
+## Cenário pela fixture `cenario` (ADR-0025)
 
-| Categoria                  | Specs                                                                                                                                                     | Expectativa                                                                                                 |
-| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| Regressão permanente       | `auth`, `login`, `cursor`, `session-isolation`, `conferentes`, `contas`, `fila-conferentes`, `correcao-reabertura`, `totp-recuperacao-senha`              | Sempre passa. Criam e apagam o próprio dado via API                                                         |
-| Verificação visual pontual | `minha-fila`, `distribuicao`, `importar`, `central-de-regras`, `distribuicao-v2`, `dashboard` (visão conferente), `painel-detalhe-protocolo`, `alcada-v3` | Dependem de cenário criado à mão (documentado no topo de cada arquivo). Falhar sem re-semear **é esperado** |
+**Toda spec passa em qualquer banco local e roda de novo sobre o próprio resíduo** — não existe
+mais "falha esperada por falta de cenário". Falhou, é defeito (ou a API local está velha).
 
-Quando algo falhar, confira o motivo exato de cada falha antes de chamar de regressão (houve
-rodadas com 7–8 falhas pré-existentes, todas de cenário). `dashboard` visão conferente falha se
-`conferente-visual@cartorio.com` não tem nenhum protocolo concluído (`desempenho: []`).
+- Spec que precisa de dado importa `test`/`expect` de `./support/cenario` (não de
+  `@playwright/test`) e declara `{ cenario }`: `importar`, `atribuir`, `iniciar`, `concluir`,
+  `definirPrioridade`, `regra`, `alcadaPlena`, `reservaSemNinguem`, `esvaziarFila`,
+  `garantirSugestaoPendente`, `apagarAoFinal` (protocolo que a própria tela cria). Tudo o que for
+  criado é desfeito no fim, passando ou falhando.
+- **Dado do teste** (protocolo com prefixo `E2E`, regra) é apagado; **dado fixo** (tipos "E2e
+  Cenario"/"E2e Reservado", "E2e Equipe", escreventes "E2e …", conferente fora da escala, a sugestão
+  pendente de escrevente órfão) é achado-ou-criado e reaproveitado — a API não apaga esses.
+- Precisa de um tipo/equipe/conferente novo pra um cenário? Acrescente um nome fixo em `FIXOS`, não
+  um nome por rodada.
+- Busca na tela pelo `cenario.prefixo` pra isolar o que é deste teste.
+- **A suíte roda com `workers: 1`** — os dados fixos são compartilhados e a varredura de sobras do
+  começo de um cenário apagaria o dado de outro teste em paralelo. Não ligue paralelismo.
+- `entrar(page, 'distribuidora')` faz o login pela tela; `usarTemaEscuro(page)` antes do próximo
+  carregamento.
+
+`auth`, `login`, `cursor`, `session-isolation`, `conferentes`, `contas`, `fila-conferentes`,
+`correcao-reabertura`, `totp-recuperacao-senha` e `minha-fila` (só os títulos das colunas) não
+precisam da fixture — criam o próprio dado à mão ou não dependem de dado.
 
 Spec **temporário** (criado pra verificar uma mudança e apagado depois) é normal aqui — cria o
 cenário via API, verifica, limpa.
@@ -105,6 +120,12 @@ cenário via API, verifica, limpa.
 - Artefatos do Chromium headless **não são bugs**: botão desabilitado com `border-radius` +
   opacidade aparece com "degradê" (o CSS é cor sólida — confira com `getComputedStyle`);
   scrollbar customizada não é pintada. Confirme por estilo computado e registre a limitação.
+- **Não use `fullPage: true`** — use `capturarPaginaInteira(page, path)` (`e2e/support/cenario.ts`).
+  O `fullPage` desta versão do Playwright redimensiona a janela pra 1×1 por um instante, cruza os
+  760px e o AppShell remonta: Sheet, diálogo e o modal do construtor de regra fecham, aba e busca se
+  perdem. Com um diálogo aberto, a resposta de rede seguinte também pode não ser vista pelo
+  `waitForResponse` (caso de `contas.spec.ts`). Specs antigas que ainda usam `fullPage` sem nada
+  aberto funcionam, mas não copie.
 - `Sheet` com rolagem própria: `fullPage` não captura o conteúdo abaixo da dobra — use
   `innerText` do conteúdo. Página muito longa com `fullPage` pode renderizar estranho — escope o
   screenshot ao elemento.

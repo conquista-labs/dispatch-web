@@ -17,7 +17,9 @@ metadata:
 
 `Accepted` — 2026-08-27 (commit `f86f395`). Complementado (não substituído) pelo
 [ADR-0021](0021-global-setup-garante-contas-de-login.md) em 2026-09-15. Registrado
-retroativamente em 2026-09-25.
+retroativamente em 2026-09-25. **A categoria 2 (verificação visual pontual) e o "não virar
+fixture automática de cenário por ora" foram substituídos pelo
+[ADR-0025](0025-cenario-e2e-montado-pela-api-no-proprio-teste.md)** em 2026-09-25.
 
 ## Contexto
 

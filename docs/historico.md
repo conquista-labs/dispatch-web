@@ -1074,3 +1074,18 @@ conector. Gaps §1.
 Verificado: `npm run check` (271 testes, 62 arquivos), build; no navegador contra a API local com o `.xls` real
 do dono (fora do repo): 26 de 26 lidos, etapa Pré-conferência travada, 15 antes da linha de corte, revisão e
 prévia com 11 no pool (sem confirmar); arquivo errado mostra `formato_nao_reconhecido`; temas claro e escuro.
+
+## 2026-09-25 — E2E com cenário próprio: fixture `cenario` e suíte sempre verde (ADR-0025)
+
+As specs que dependiam de cenário semeado à mão (`distribuicao`, `distribuicao-v2`, `importar`,
+`central-de-regras`, `painel-detalhe-protocolo`, `alcada-v3`, `dashboard` na visão do conferente) passam a
+montar e desfazer o próprio cenário pela API com a fixture `cenario` (`e2e/support/cenario.ts`): protocolo com
+prefixo `E2E` e regra são apagados no fim; tipo, equipe, escreventes, conferente fora da escala e a sugestão
+pendente de escrevente órfão são dados fixos reaproveitados; uma varredura no começo apaga o que uma rodada
+interrompida deixou. A suíte roda com `workers: 1` — em paralelo, uma spec via a Reserva da outra na tela e a
+varredura de um cenário apagava o dado de outro teste. `capturarPaginaInteira` substitui `fullPage: true` onde
+havia diálogo aberto (o construtor de regra em modal fechava sozinho no screenshot). Substitui a categoria
+"verificação pontual" do ADR-0020; pattern `e2e-tests.md` reescrito na parte de cenário.
+
+Verificado: `npm run e2e` 24/24 duas vezes seguidas contra a API local (~40 s cada), mais `central-de-regras` e
+`dashboard` isoladas duas vezes (primeira rodada cria a sugestão, a segunda reaproveita).
