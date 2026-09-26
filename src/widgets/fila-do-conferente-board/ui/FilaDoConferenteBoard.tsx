@@ -2,7 +2,12 @@ import { useState } from 'react'
 
 import { useEquipes } from '@/entities/equipe'
 import { useEscreventes } from '@/entities/escrevente'
-import { criarResolverInfoProtocolo, useConcluidosHojeDoConferente, useFilaDoConferente } from '@/entities/protocolo'
+import {
+  criarResolverInfoProtocolo,
+  LegendaPrazo,
+  useConcluidosHojeDoConferente,
+  useFilaDoConferente,
+} from '@/entities/protocolo'
 import { useTiposAto } from '@/entities/tipoAto'
 import { useIsMobile } from '@/shared/lib/use-is-mobile'
 import { useNow } from '@/shared/lib/use-now'
@@ -17,13 +22,6 @@ import {
   MAX_POOL_VISIVEL_MOBILE,
   ProtocoloCard,
 } from '@/widgets/minha-fila-board'
-
-const LEGENDA = [
-  { label: 'no prazo', className: 'bg-ok-bg border-ok-bar' },
-  { label: 'atenção', className: 'bg-warn-bg-2 border-warn-bar' },
-  { label: 'crítico', className: 'bg-crit-bg-2 border-crit-bar' },
-  { label: 'vencido', className: 'bg-bad-bg-2 border-bad-bar' },
-]
 
 type FilaDoConferenteBoardProps = {
   conferenteId: string
@@ -75,15 +73,7 @@ export const FilaDoConferenteBoard = ({ conferenteId }: FilaDoConferenteBoardPro
 
   return (
     <div>
-      <div className="flex flex-wrap items-center gap-3.5">
-        <span className="text-[11.5px] font-medium text-apoio">Prazo do ato</span>
-        {LEGENDA.map((item) => (
-          <span key={item.label} className="flex items-center gap-1.5 text-[11.5px] text-text-3">
-            <span className={`block size-2.5 flex-none rounded-[3px] border ${item.className}`} />
-            {item.label}
-          </span>
-        ))}
-      </div>
+      <LegendaPrazo faixas={fila?.faixas} />
       <div className="mt-3.5">
         <BarraDeFiltros {...filtroProtocolos} subtitulo="aplicados às três colunas da fila dele" />
       </div>
