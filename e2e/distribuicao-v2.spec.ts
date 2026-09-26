@@ -1,6 +1,6 @@
 import { type Locator, type Page } from '@playwright/test'
 
-import { capturarPaginaInteira, CONTAS, entrar, expect, test, usarTemaEscuro } from './support/cenario'
+import { capturarPaginaInteira, CONTAS, entrar, expect, FIXOS, test, usarTemaEscuro } from './support/cenario'
 
 // Segunda fatia do "v2" de Distribuição/Minha fila — prioridade manual, RF-14 (tipo/escrevente/
 // equipe no card), RF-16 (loading no redistribuir), RF-18c (lista expandida da coluna) e RF-18e/
@@ -8,6 +8,8 @@ import { capturarPaginaInteira, CONTAS, entrar, expect, test, usarTemaEscuro } f
 // busca do quadro com o prefixo do cenário isola os cards deste teste do resto do banco local.
 
 const BUSCA = 'Buscar protocolo, tipo de ato, escrevente, equipe…'
+// Na Minha fila do conferente a busca não procura por escrevente/equipe (ADR-0046).
+const BUSCA_CONFERENTE = 'Buscar protocolo ou tipo de ato…'
 
 // Cada eixo do painel de Filtros é um rótulo + um gatilho de Combo cujo nome é o valor atual
 // ("todas", "alta"...) — o gatilho é achado pela seção do rótulo, não pelo texto do botão.
@@ -150,49 +152,48 @@ test('Distribuição v2 — prioridade, RF-14, RF-16, RF-18c, RF-18e', async ({ 
   await capturarPaginaInteira(page, 'e2e/.screenshots/distribuicao-v2-conferente-escuro.png')
 })
 
-// RF-24f como Conferente: o eixo Equipe depende de GET /equipes e GET /escreventes, que o
-// Conferente também precisa poder ler. Já pegou um bug real — essas rotas eram só da
-// Distribuidora, então pro Conferente todo protocolo caía em "sem equipe" e o filtro "funcionava"
-// (marcava ativo) sem reduzir nada. Por isso a asserção é a contagem antes/depois.
-test('Minha fila (Conferente) — painel de Filtros RF-24f realmente filtra', async ({ page, cenario }) => {
+// Minha fila do conferente (dispatch-api ADR-0046, decisão do dono 2026-09-26): ele pega do pool na
+// ordem da fila (só o primeiro da vez tem "Pegar este") e não vê de quem é o ato antes de entrar
+// em conferência — sem escrevente/equipe no card, sem o eixo "Equipe" nos filtros e sem busca por
+// eles. O filtro por tipo de ato continua filtrando de verdade (contagem antes/depois).
+test('Minha fila (Conferente) — pool em ordem, sem escrevente, filtro por tipo de ato', async ({ page, cenario }) => {
   await cenario.alcadaPlena(CONTAS.conferenteRf27)
-  const { comEquipe, equipe } = await cenario.escreventes()
-  const [daEquipe, semEquipe] = await cenario.importar([{ escrevente: comEquipe }, {}])
+  await cenario.esvaziarFila('conferenteRf27')
+  const { comEquipe } = await cenario.escreventes()
+  const reservado = await cenario.tipoAto(FIXOS.tipoAtoReservado, 'Notariais')
+  const [doCenario, doReservado] = await cenario.importar([
+    { escrevente: comEquipe },
+    { escrevente: comEquipe, tipoAto: reservado.nome },
+  ])
 
   await entrar(page, 'conferenteRf27')
   await page.getByRole('link', { name: 'Minha fila', exact: true }).click()
   await expect(page.getByText('Pool disponível')).toBeVisible()
-  await page.getByPlaceholder(BUSCA).fill(cenario.prefixo)
 
+  // Sem filtro: um "Pegar este" só, no primeiro card do pool (o próximo da vez), e a orientação.
+  await expect(page.getByRole('button', { name: 'Pegar este' })).toHaveCount(1)
+  const primeiroDoPool = page.locator('[data-protocolo-id]').first()
+  await expect(primeiroDoPool.getByRole('button', { name: 'Pegar este' })).toBeVisible()
+  await expect(page.getByText(/Pegue na ordem da fila/)).toBeVisible()
+
+  await page.getByPlaceholder(BUSCA_CONFERENTE).fill(cenario.prefixo)
   const contagemDoPool = page
     .locator('strong:has-text("Pool disponível")')
     .locator('xpath=following-sibling::span[1]')
     .first()
   await expect(contagemDoPool).toHaveText('2')
+  // De quem é o ato não aparece — nem o escrevente, nem a equipe dele.
+  await expect(page.getByText(comEquipe, { exact: true })).toHaveCount(0)
+  await expect(page.getByText(FIXOS.equipe, { exact: true })).toHaveCount(0)
 
-  let filtros = await abrirFiltros(page)
-  await alternarOpcao(page, filtros, 'Equipe do escrevente', equipe)
+  const filtros = await abrirFiltros(page)
+  await expect(filtros.getByText('Equipe do escrevente', { exact: true })).toHaveCount(0)
+  await alternarOpcao(page, filtros, 'Tipo de ato', reservado.nome)
   await aplicarFiltros(page)
   await expect(contagemDoPool).toHaveText('1')
-  await expect(page.getByText(daEquipe.numero, { exact: true })).toBeVisible()
-  await expect(page.getByText(semEquipe.numero, { exact: true })).toHaveCount(0)
-
-  // Troca a equipe por "sem equipe".
-  filtros = await abrirFiltros(page)
-  await alternarOpcao(page, filtros, 'Equipe do escrevente', equipe)
-  await alternarOpcao(page, filtros, 'Equipe do escrevente', 'sem equipe')
-  await aplicarFiltros(page)
-  await expect(contagemDoPool).toHaveText('1')
-  await expect(page.getByText(semEquipe.numero, { exact: true })).toBeVisible()
-  await expect(page.getByText(daEquipe.numero, { exact: true })).toHaveCount(0)
+  await expect(page.getByText(doReservado.numero, { exact: true })).toBeVisible()
+  await expect(page.getByText(doCenario.numero, { exact: true })).toHaveCount(0)
   await capturarPaginaInteira(page, 'e2e/.screenshots/minha-fila-v2-filtro-claro.png')
-
-  filtros = await abrirFiltros(page)
-  await filtros.getByRole('button', { name: 'Limpar tudo' }).click()
-  await filtros.getByRole('button', { name: 'Fechar', exact: true }).click()
-  await expect(page.getByPlaceholder(BUSCA)).toHaveValue('')
-  await page.getByPlaceholder(BUSCA).fill(cenario.prefixo)
-  await expect(contagemDoPool).toHaveText('2')
 
   await usarTemaEscuro(page)
   await page.reload()

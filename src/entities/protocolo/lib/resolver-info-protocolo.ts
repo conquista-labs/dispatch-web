@@ -20,7 +20,7 @@ export const criarResolverInfoProtocolo = (
   const nomePorTipoAtoId = new Map((tiposAto ?? []).map((t) => [t.id, t.nome]))
 
   const resolverInfo = (protocolo: ProtocoloResumo): InfoProtocolo => {
-    const escrevente = escreventePorId.get(protocolo.escreventeId)
+    const escrevente = protocolo.escreventeId ? escreventePorId.get(protocolo.escreventeId) : undefined
     return {
       tipoAtoNome: protocolo.tipoAtoId ? (nomePorTipoAtoId.get(protocolo.tipoAtoId) ?? null) : null,
       escreventeNome: escrevente?.nome ?? null,
