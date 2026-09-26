@@ -41,8 +41,8 @@ export const PassoPrevia = ({ resumo, etapa, linhaDeCorte, onVoltar, onConfirmar
   ].sort((a, b) => b.qtd - a.qtd)
 
   // Quantas linhas novas de cada escrevente sem equipe — sai das próprias linhas da prévia (a
-  // lista `escreventesSemEquipe` do back só traz os nomes). A contagem por tipo desconhecido
-  // espera o back mandar: aqui o nome da linha pode vir sem acento e o da lista com.
+  // lista `escreventesSemEquipe` do back só traz os nomes). A de cada tipo desconhecido vem pronta
+  // do back (`tiposDesconhecidosContagem`): o nome da linha pode vir sem acento e o da lista com.
   const linhasSemEquipe = (resumo.linhas ?? []).filter((l) => !l.jaExiste && !l.equipe)
   const semEquipe = resumo.escreventesSemEquipe.map((nome) => {
     const qtd = linhasSemEquipe.filter(
@@ -50,6 +50,9 @@ export const PassoPrevia = ({ resumo, etapa, linhaDeCorte, onVoltar, onConfirmar
     ).length
     return qtd > 0 ? `${nome} · ${qtd}` : nome
   })
+  const tiposNovos = resumo.tiposDesconhecidosContagem
+    ? resumo.tiposDesconhecidosContagem.map((t) => `${t.nome} · ${t.quantidade}`)
+    : resumo.tiposDesconhecidos
 
   return (
     <div>
@@ -76,12 +79,12 @@ export const PassoPrevia = ({ resumo, etapa, linhaDeCorte, onVoltar, onConfirmar
       {/* Texto fiel ao back, não ao protótipo: lá o tipo desconhecido "vai para a fila de exceções";
           aqui a confirmação cadastra o tipo no catálogo e ele distribui pela alçada que já vale
           (dispatch-api ADR-0012) — o que a distribuidora precisa é conferir alçada e peso dele. */}
-      {resumo.tiposDesconhecidos.length > 0 && (
+      {tiposNovos.length > 0 && (
         <Aviso
           tom="bad"
           titulo="Tipos de ato que o sistema não conhece"
           orientacao="Entram no catálogo ao confirmar e distribuem pela alçada que já vale para eles. Confira a alçada e o peso de complexidade em Central de regras · Tipos de ato."
-          itens={resumo.tiposDesconhecidos}
+          itens={tiposNovos}
         />
       )}
       {semEquipe.length > 0 && (
