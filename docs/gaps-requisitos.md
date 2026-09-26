@@ -26,12 +26,12 @@ depois", "fora de escopo", "simplificação consciente" e "divergência".
 
 ## Índice por situação
 
-| Situação       | Itens                                                                                                                                                                                                                                                                            |
-| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 🔴 Aberto      | §1 .csv/.xlsx · §2 RF-24e · §3 RF-34c · §7 casos concretos · §16 tipo de ato livre no manual · §19 tema antes do login · §20 tema por usuário · §21 atribuir grupo · §22 busca em Conferentes · §27 rótulos de exceção · §28 cenários e2e manuais · §34 RNF-10 no `SeletorUnico` |
-| 🔍 Verificação | §24 scrollbar · §25 teto do Dashboard                                                                                                                                                                                                                                            |
-| ✅ Fechado     | §5 · §6 · §10 · §11 · §12 · §13 · §14 · §15 · §17 · §18 · §30 · §31 · §32 · §33 · §35 · §36 · §39 · §40 · §41 · §42                                                                                                                                                              |
-| ⚪ Sem mudança | §4 RF-01m/n · §8 KPIs mock · §9 SAÍDAS · §23 paginação no back · §26 ícone em botões · §29 alçada por item · §37 Subscritor · §38 CI                                                                                                                                             |
+| Situação       | Itens                                                                                                                                                                                                                                                            |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 🔴 Aberto      | §2 RF-24e · §3 RF-34c · §7 casos concretos · §16 tipo de ato livre no manual · §19 tema antes do login · §20 tema por usuário · §21 atribuir grupo · §22 busca em Conferentes · §27 rótulos de exceção · §28 cenários e2e manuais · §34 RNF-10 no `SeletorUnico` |
+| 🔍 Verificação | §24 scrollbar · §25 teto do Dashboard                                                                                                                                                                                                                            |
+| ✅ Fechado     | §1 · §5 · §6 · §10 · §11 · §12 · §13 · §14 · §15 · §17 · §18 · §30 · §31 · §32 · §33 · §35 · §36 · §39 · §40 · §41 · §42                                                                                                                                         |
+| ⚪ Sem mudança | §4 RF-01m/n · §8 KPIs mock · §9 SAÍDAS · §23 paginação no back · §26 ícone em botões · §29 alçada por item · §37 Subscritor · §38 CI                                                                                                                             |
 
 **Não auditado**: este levantamento só cobre o que o histórico registrou. Requisitos que nunca
 foram citados nele (ex.: RF-44 "Exportar CSV", RF-42a "Hoje, agora") não foram conferidos contra o
@@ -41,14 +41,14 @@ código — confira antes de assumir que estão prontos ou faltando.
 
 ## Detalhamento
 
-### §1 🔴 RF-05/RF-06 — importar arquivo `.csv`/`.xlsx`
+### §1 ✅ RF-05/RF-06 — importar arquivo `.csv`/`.xlsx`
 
-- **Falta**: só colar linhas está implementado; não há upload de arquivo nem parsing de planilha.
-- **Como sabemos**: comentários em `widgets/importar-lote-wizard/ui/PassoDados.tsx` ("arquivo de
-  verdade (.csv/.xlsx) fica pra depois") e `shared/lib/parse-csv.ts` (parser mínimo, sem campo com
-  vírgula). Mesma pendência documentada no back.
-- **Onde entraria**: `PassoDados` (input de arquivo) + uma lib de planilha, ou o back aceitar o
-  arquivo.
+- **Fechado em 2026-09-25** para o formato que o cartório exporta hoje (`.xls`): o passo 1 do Importar
+  aceita o arquivo (botão ou arrastar) e o conector do back (`POST /protocolos/importar/converter`,
+  dispatch-api ADR-0045) devolve as linhas no formato da importação, a etapa do relatório e a conferência
+  de totais. `features/protocolo/converter-relatorio` + `PassoDados`. Colar CSV continua como alternativa.
+- **Continua de fora**: upload de `.xlsx`/`.csv` — não há relatório nesses formatos; entraria como outro
+  adaptador no back, sem mudar a tela (o front não lê planilha).
 
 ### §2 🔴 RF-24e — clicar no card de Minha fila abre o painel de detalhe
 
