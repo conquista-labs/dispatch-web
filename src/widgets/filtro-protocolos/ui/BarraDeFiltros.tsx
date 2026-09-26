@@ -8,7 +8,12 @@ import { Input } from '@/shared/ui/input'
 import type { useFiltroProtocolos } from '../model/use-filtro-protocolos'
 import { PainelFiltros } from './PainelFiltros'
 
-type BarraDeFiltrosProps = ReturnType<typeof useFiltroProtocolos> & { subtitulo: string }
+type BarraDeFiltrosProps = ReturnType<typeof useFiltroProtocolos> & {
+  subtitulo: string
+  /** Minha fila do conferente: sem eixo nem busca por escrevente/equipe — a tela esconde essa
+   * informação pra ele não escolher o ato por ela (decisão do dono, 2026-09-26). */
+  semEscrevente?: boolean
+}
 
 // "yyyy-mm-dd" (dia local) <-> Date, direto pelos campos locais — sem passar por UTC/ISO no
 // meio, senão o dia pode escorregar num fuso horário extremo.
@@ -26,7 +31,7 @@ const dataParaChave = (data: Date): string =>
 // a fila-do-conferente (visão da distribuidora) — recebe tudo pronto do hook
 // useFiltroProtocolos, não sabe de onde os protocolos vieram.
 export const BarraDeFiltros = (props: BarraDeFiltrosProps) => {
-  const { filtro, setTexto, setData, contagemFiltrosAtivos, subtitulo } = props
+  const { filtro, setTexto, setData, contagemFiltrosAtivos, subtitulo, semEscrevente = false } = props
   const [painelAberto, setPainelAberto] = useState(false)
 
   return (
@@ -34,7 +39,9 @@ export const BarraDeFiltros = (props: BarraDeFiltrosProps) => {
       <Input
         value={filtro.texto}
         onChange={(event) => setTexto(event.target.value)}
-        placeholder="Buscar protocolo, tipo de ato, escrevente, equipe…"
+        placeholder={
+          semEscrevente ? 'Buscar protocolo ou tipo de ato…' : 'Buscar protocolo, tipo de ato, escrevente, equipe…'
+        }
         className="min-w-[220px] flex-1 max-mobile:min-w-0 max-mobile:basis-full"
       />
       <DatePicker

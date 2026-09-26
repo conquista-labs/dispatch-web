@@ -8,8 +8,9 @@ import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/ui/button'
 import { Carregando } from '@/shared/ui/carregando'
 import { SurfaceCard } from '@/shared/ui/surface-card'
+import { Switch } from '@/shared/ui/switch'
 
-type TipoCampo = 'dur' | 'num' | 'pct'
+type TipoCampo = 'dur' | 'num' | 'pct' | 'bool'
 
 type CampoConfig = {
   chave: keyof Configuracao
@@ -57,6 +58,23 @@ const SECOES: { nome: string; sub: string; campos: CampoConfig[] }[] = [
         unidade: 'ato(s)',
         passo: 1,
         min: 1,
+      },
+      {
+        chave: 'limiteDeAtosNaMao',
+        rotulo: 'Atos na mão por conferente',
+        ajuda:
+          'Até quantos atos (atribuídos + em conferência) a pessoa pode pegar do pool. A distribuidora ainda pode atribuir acima disso.',
+        tipo: 'num',
+        unidade: 'ato(s)',
+        passo: 1,
+        min: 1,
+      },
+      {
+        chave: 'poolEmOrdemObrigatoria',
+        rotulo: 'Pool em ordem obrigatória',
+        ajuda:
+          'Ligado, o conferente só pega o próximo da fila — prioridade alta primeiro, depois quem vence antes. Desligado, escolhe qualquer um do pool.',
+        tipo: 'bool',
       },
       {
         chave: 'janelaDeCorrecaoMinutos',
@@ -214,6 +232,8 @@ const validar = (v: Configuracao): Partial<Record<keyof Configuracao, string>> =
   else if (v.faixaAtencaoMinutos > 0 && v.faixaUrgenteMinutos >= v.faixaAtencaoMinutos)
     e.faixaUrgenteMinutos = 'A urgência precisa ser menor que a atenção — senão o laranja nunca aparece.'
   if (!(v.limiteDeAtosSimultaneos >= 1)) e.limiteDeAtosSimultaneos = 'Precisa ser pelo menos 1.'
+  if (v.limiteDeAtosNaMao !== undefined && !(v.limiteDeAtosNaMao >= 1))
+    e.limiteDeAtosNaMao = 'Precisa ser pelo menos 1.'
   if (!(v.janelaDeCorrecaoMinutos > 0)) e.janelaDeCorrecaoMinutos = 'A janela de correção precisa ser maior que zero.'
   if (!(v.tempoMedioPorAtoMinutos > 0)) e.tempoMedioPorAtoMinutos = 'O tempo médio por ato precisa ser maior que zero.'
   if (!(v.diasDeMemoriaDescarte >= 0)) e.diasDeMemoriaDescarte = 'Não pode ser negativo.'
@@ -311,14 +331,17 @@ const Controle = ({ comErro, children }: { comErro?: boolean; children: ReactNod
   </div>
 )
 
+type ValorCampo = number | boolean
+
 type CampoProps = {
   campo: CampoConfig
-  valor: number
+  valor: ValorCampo
   erro?: string
-  onAlterar: (valor: number) => void
+  onAlterar: (valor: ValorCampo) => void
 }
 
-const Campo = ({ campo, valor, erro, onAlterar }: CampoProps) => {
+const Campo = ({ campo, valor: valorBruto, erro, onAlterar }: CampoProps) => {
+  const valor = typeof valorBruto === 'number' ? valorBruto : 0
   const minimoDoPercentual = campo.tipo === 'pct' ? (campo.min ?? 0) : 0
   const linha = (controle: ReactNode, direita?: ReactNode) => (
     <div className="border-t border-secondary py-3 first:border-t-0">
@@ -335,6 +358,13 @@ const Campo = ({ campo, valor, erro, onAlterar }: CampoProps) => {
       {erro && <div className="mt-1 text-[11.5px] text-bad-fg">{erro}</div>}
     </div>
   )
+
+  if (campo.tipo === 'bool') {
+    return linha(
+      <Switch checked={valorBruto === true} onCheckedChange={onAlterar} aria-label={campo.rotulo} />,
+      <span className="w-[52px] text-[12px] text-text-2">{valorBruto === true ? 'ligado' : 'desligado'}</span>,
+    )
+  }
 
   // Faixas/janelas: dois steppers lado a lado (horas, minutos) — mesma UX do protótipo
   // (`configVals.dur`) — em vez de um único campo em minutos puros, bem menos legível pra
@@ -425,7 +455,7 @@ export const AbaConfiguracao = () => {
 
   const sujo = TODAS_AS_CHAVES.some((chave) => rascunho[chave] !== configuracao[chave])
 
-  const alterar = (chave: keyof Configuracao, valor: number) => {
+  const alterar = (chave: keyof Configuracao, valor: ValorCampo) => {
     setRascunho((atual) => (atual ? { ...atual, [chave]: valor } : atual))
     setErros((atual) => {
       if (!(chave in atual)) return atual
@@ -481,23 +511,25 @@ export const AbaConfiguracao = () => {
       )}
 
       <div className="mt-4.5 flex flex-col gap-3.5">
-        {/* Seção cujo campo a API não manda (API anterior à fatia 2) não aparece. */}
-        {SECOES.filter((secao) => secao.campos.every((campo) => rascunho[campo.chave] !== undefined)).map((secao) => (
+        {/* Campo que a API não manda (API anterior) não aparece; seção sem nenhum campo, também não. */}
+        {SECOES.filter((secao) => secao.campos.some((campo) => rascunho[campo.chave] !== undefined)).map((secao) => (
           <div key={secao.nome}>
             <div className="mb-1.5">
               <strong className="text-[13.5px] font-semibold">{secao.nome}</strong>
               <div className="mt-0.5 text-[11.5px] text-pretty text-muted-foreground">{secao.sub}</div>
             </div>
             <SurfaceCard className="p-0 px-3.5">
-              {secao.campos.map((campo) => (
-                <Campo
-                  key={campo.chave}
-                  campo={campo}
-                  valor={rascunho[campo.chave] ?? 0}
-                  erro={erros[campo.chave]}
-                  onAlterar={(valor) => alterar(campo.chave, valor)}
-                />
-              ))}
+              {secao.campos
+                .filter((campo) => rascunho[campo.chave] !== undefined)
+                .map((campo) => (
+                  <Campo
+                    key={campo.chave}
+                    campo={campo}
+                    valor={rascunho[campo.chave] ?? 0}
+                    erro={erros[campo.chave]}
+                    onAlterar={(valor) => alterar(campo.chave, valor)}
+                  />
+                ))}
             </SurfaceCard>
             {secao.campos.some((campo) => campo.chave === 'pesoVolume') && (
               <div

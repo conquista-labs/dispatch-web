@@ -12,6 +12,8 @@ type PainelFiltrosProps = ReturnType<typeof useFiltroProtocolos> & {
   /** "aplicados às três visões do quadro" (Distribuição) / "aplicados às três colunas da sua
    * fila" (Minha fila) — mesmo texto do protótipo, varia por tela. */
   subtitulo: string
+  /** Sem o eixo "Equipe do escrevente" (Minha fila do conferente). */
+  semEscrevente?: boolean
 }
 
 const contaLabel = (marcadas: number, total: number) => (marcadas ? `${marcadas} de ${total}` : '')
@@ -23,6 +25,7 @@ export const PainelFiltros = ({
   aberto,
   onFechar,
   subtitulo,
+  semEscrevente = false,
   filtro,
   contagens,
   contagemFiltrosAtivos,
@@ -58,21 +61,23 @@ export const PainelFiltros = ({
       </SheetHeader>
 
       <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-5 pt-4 pb-5">
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-[11.5px] font-semibold text-text-2">Equipe do escrevente</span>
-            <span className="font-mono text-[10.5px] text-muted-foreground">
-              {contaLabel(filtro.equipeIds.length, contagens.equipes.length)}
-            </span>
+        {!semEscrevente && (
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-[11.5px] font-semibold text-text-2">Equipe do escrevente</span>
+              <span className="font-mono text-[10.5px] text-muted-foreground">
+                {contaLabel(filtro.equipeIds.length, contagens.equipes.length)}
+              </span>
+            </div>
+            <FiltroEixo
+              placeholder="buscar equipe do escrevente…"
+              vazioLabel="todas"
+              opcoes={contagens.equipes}
+              selecionados={filtro.equipeIds}
+              onAlternar={alternarEquipe}
+            />
           </div>
-          <FiltroEixo
-            placeholder="buscar equipe do escrevente…"
-            vazioLabel="todas"
-            opcoes={contagens.equipes}
-            selecionados={filtro.equipeIds}
-            onAlternar={alternarEquipe}
-          />
-        </div>
+        )}
 
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between gap-2">

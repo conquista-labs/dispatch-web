@@ -19,13 +19,25 @@ type Props = {
   resolverInfo: (protocolo: ProtocoloResumo) => InfoProtocolo
   onVer: (protocoloId: string) => void
   onPegar: (protocoloId: string) => void
+  /** Regra do pool: só o próximo da vez (e abaixo do limite) ganha o botão. */
+  podePegar?: (protocoloId: string) => boolean
   pegando: boolean
 }
 
 // RF-24h — "Ver os N" da faixa (e "Ver todos" do toast): a lista só das altas, na mesma ordem da
 // faixa — os do conferente primeiro, depois os do pool, cada grupo por vencimento. Clicar num item
 // leva até o card (RF-24j); os do pool já dão pra pegar daqui.
-export const ListaAltasSheet = ({ aberto, onFechar, altas, now, resolverInfo, onVer, onPegar, pegando }: Props) => (
+export const ListaAltasSheet = ({
+  aberto,
+  onFechar,
+  altas,
+  now,
+  resolverInfo,
+  onVer,
+  onPegar,
+  podePegar,
+  pegando,
+}: Props) => (
   <Sheet open={aberto} onOpenChange={(open) => !open && onFechar()}>
     <SheetContent side="right" className="w-[min(420px,92vw)] gap-0 overflow-y-auto p-0 sm:max-w-[420px]">
       <SheetHeader className="sticky top-0 z-10 border-b border-border bg-background p-5">
@@ -62,7 +74,7 @@ export const ListaAltasSheet = ({ aberto, onFechar, altas, now, resolverInfo, on
                 <PrazoTooltip>
                   <Chip tom={chip.tom}>{chip.label}</Chip>
                 </PrazoTooltip>
-                {onde === 'pool' && (
+                {onde === 'pool' && (podePegar?.(protocolo.id) ?? true) && (
                   <Button
                     size="sm"
                     variant="outline"

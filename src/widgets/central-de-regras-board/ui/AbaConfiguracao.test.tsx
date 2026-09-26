@@ -23,8 +23,9 @@ const configuracao: Configuracao = {
 }
 
 const salvar = vi.fn().mockResolvedValue(undefined)
+let respostaDoBack: Configuracao = configuracao
 vi.mock('@/entities/configuracao/api/get-configuracao', () => ({
-  getConfiguracao: () => Promise.resolve(configuracao),
+  getConfiguracao: () => Promise.resolve(respostaDoBack),
 }))
 vi.mock('@/features/configuracao/atualizar/api/atualizar-configuracao', () => ({
   atualizarConfiguracao: (...args: unknown[]) => salvar(...args),
@@ -44,5 +45,28 @@ describe('AbaConfiguracao', () => {
 
     await userEvent.click(screen.getByRole('button', { name: 'Salvar configuração' }))
     expect(salvar.mock.calls[0][0]).toEqual(expect.objectContaining({ faixaAtencaoMinutos: 300 }))
+  })
+
+  // Regra do pool (2026-09-26): campos novos só aparecem quando a API manda.
+  it('sem os campos da regra do pool, eles não aparecem', async () => {
+    respostaDoBack = configuracao
+    renderWithProviders(<AbaConfiguracao />)
+
+    expect(await screen.findByText('Atos simultâneos por conferente')).toBeInTheDocument()
+    expect(screen.queryByText('Pool em ordem obrigatória')).not.toBeInTheDocument()
+  })
+
+  it('desligar a ordem obrigatória e mexer no limite vão juntos no salvar', async () => {
+    salvar.mockClear()
+    respostaDoBack = { ...configuracao, limiteDeAtosNaMao: 5, poolEmOrdemObrigatoria: true }
+    renderWithProviders(<AbaConfiguracao />)
+
+    await userEvent.click(await screen.findByRole('switch', { name: 'Pool em ordem obrigatória' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Diminuir Atos na mão por conferente' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Salvar configuração' }))
+
+    expect(salvar.mock.calls[0][0]).toEqual(
+      expect.objectContaining({ poolEmOrdemObrigatoria: false, limiteDeAtosNaMao: 4 }),
+    )
   })
 })

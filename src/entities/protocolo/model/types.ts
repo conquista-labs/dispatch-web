@@ -32,7 +32,9 @@ export type ProtocoloResumo = {
   // Nome do tipo como veio no relatório — só quando o tipo é desconhecido (tipoAtoId null). Opcional
   // até a API nova subir em produção.
   tipoAtoNomeOriginal?: string | null
-  escreventeId: string
+  // Null só na Minha fila do conferente, no pool e nas atribuídas: ele não vê de quem é o ato antes
+  // de entrar em conferência (dispatch-api ADR-0046). Nas telas de gestão vem sempre.
+  escreventeId: string | null
   etapa: Etapa
   prioridade: Prioridade
   status: StatusProtocolo

@@ -19,7 +19,7 @@ export type {
   VisaoDistribuicao,
 } from './model/types'
 export { INTERVALO_ATUALIZACAO_FILA_MS, MINHA_FILA_QUERY_KEY, useMinhaFila } from './model/use-minha-fila'
-export type { MinhaFila } from './api/get-minha-fila'
+export type { MinhaFila, RegraDoPool } from './api/get-minha-fila'
 export { CONCLUIDOS_HOJE_QUERY_KEY, useConcluidosHoje } from './model/use-concluidos-hoje'
 export { useConcluidosHojeDoConferente, useFilaDoConferente } from './model/use-fila-do-conferente'
 export { VISAO_DISTRIBUICAO_QUERY_KEY, useVisaoDistribuicao } from './model/use-visao-distribuicao'

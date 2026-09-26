@@ -12,6 +12,10 @@ type ListaCompletaPoolSheetProps = {
   somenteLeitura?: boolean
   acaoLabel?: string
   onAcao?: (protocoloId: string) => void
+  /** Regra do pool: sem isso, a ação vale pra todo card. */
+  podeAgir?: (protocoloId: string) => boolean
+  /** Minha fila do conferente: sem escrevente e equipe nos cards. */
+  ocultarEscrevente?: boolean
   acaoDesabilitada?: boolean
   /** RF-24j — card de prioridade alta que o "Ver" da faixa trouxe até aqui. */
   destaqueId?: string | null
@@ -30,6 +34,8 @@ export const ListaCompletaPoolSheet = ({
   somenteLeitura,
   acaoLabel,
   onAcao,
+  podeAgir,
+  ocultarEscrevente,
   acaoDesabilitada,
   destaqueId,
 }: ListaCompletaPoolSheetProps) => (
@@ -50,7 +56,8 @@ export const ListaCompletaPoolSheet = ({
             info={resolverInfo(protocolo)}
             somenteLeitura={somenteLeitura}
             acaoLabel={acaoLabel}
-            onAcao={onAcao ? () => onAcao(protocolo.id) : undefined}
+            ocultarEscrevente={ocultarEscrevente}
+            onAcao={onAcao && (podeAgir?.(protocolo.id) ?? true) ? () => onAcao(protocolo.id) : undefined}
             acaoDesabilitada={acaoDesabilitada}
             destacado={protocolo.id === destaqueId}
           />

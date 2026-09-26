@@ -20,6 +20,11 @@ export type Configuracao = {
   pesoPrazo?: number
   pesoQualidade?: number
   pesoComplexidade?: number
+  // Regra do pool (decisão do dono, 2026-09-26): até quantos atos na mão (atribuídos + em
+  // conferência) o conferente pode pegar do pool, e se ele pega na ordem da fila. Opcionais pela
+  // mesma razão acima.
+  limiteDeAtosNaMao?: number
+  poolEmOrdemObrigatoria?: boolean
 }
 
 // Mesmo shape de Configuracao — os campos juntos, sem edição parcial (mesmo padrão de PUT

@@ -9,6 +9,8 @@ export const usePegarProtocolo = () => {
 
   return useMutation({
     mutationFn: pegarProtocolo,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: MINHA_FILA_QUERY_KEY }),
+    // onSettled, não onSuccess: um 409 (fora da vez, limite na mão, outro conferente pegou antes)
+    // também muda a fila — sem recarregar, o botão ficaria no card que já não é o da vez.
+    onSettled: () => queryClient.invalidateQueries({ queryKey: MINHA_FILA_QUERY_KEY }),
   })
 }

@@ -37,6 +37,9 @@ type ProtocoloCardProps = {
   observacaoSomenteLeitura?: boolean
   /** RF-24j — o "Ver" da faixa de prioridade alta destaca o card por alguns segundos. */
   destacado?: boolean
+  /** Minha fila do conferente, antes de o ato entrar em conferência: sem escrevente e sem equipe,
+   * pra ele não escolher o ato por eles (decisão do dono, 2026-09-26). */
+  ocultarEscrevente?: boolean
 }
 
 // Card do pool disponível / atribuídos a você (RF-19) — mesmo layout dos dois, só muda o
@@ -52,6 +55,7 @@ export const ProtocoloCard = ({
   somenteLeitura,
   observacaoSomenteLeitura,
   destacado,
+  ocultarEscrevente = false,
 }: ProtocoloCardProps) => {
   const chip = prazoChip(protocolo.semaforo, protocolo.vencimentoEm, now)
 
@@ -71,14 +75,18 @@ export const ProtocoloCard = ({
       <div className="mt-1 flex flex-wrap items-center gap-1.5">
         {protocolo.prioridade === 'Alta' && <PrioridadeAltaTag />}
         <NumeroConferenciaTag numero={protocolo.numeroDaConferencia} />
-        <Chip tom={info.equipeNome ? 'neutro' : 'vencido'} fonte="padrao" className="font-medium">
-          {info.equipeNome ?? 'sem equipe'}
-        </Chip>
+        {!ocultarEscrevente && (
+          <Chip tom={info.equipeNome ? 'neutro' : 'vencido'} fonte="padrao" className="font-medium">
+            {info.equipeNome ?? 'sem equipe'}
+          </Chip>
+        )}
         <Chip tom="neutro" fonte="padrao">
           {ETAPA_LABEL[protocolo.etapa]}
         </Chip>
       </div>
-      <div className="mt-1 text-[11.5px] text-pretty text-muted-foreground">{info.escreventeNome ?? '—'}</div>
+      {!ocultarEscrevente && (
+        <div className="mt-1 text-[11.5px] text-pretty text-muted-foreground">{info.escreventeNome ?? '—'}</div>
+      )}
       <div className="mt-0.5 font-mono text-[10.5px] text-muted-foreground">
         entrada {formatDataHora(protocolo.andamentoEm)}
       </div>
