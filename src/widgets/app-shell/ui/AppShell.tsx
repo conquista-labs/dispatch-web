@@ -134,22 +134,22 @@ export const AppShell = () => {
             <Logo size="sm" />
             <span className="text-[14.5px] font-semibold tracking-[-0.01em]">Dispatch</span>
           </div>
-          <div className="flex flex-none items-center gap-1">
+          <div className="flex flex-none items-center gap-2">
             <button
               onClick={toggleTema}
               aria-label="Alternar tema"
-              className="flex size-9 flex-none items-center justify-center rounded-md text-text-2 hover:bg-secondary hover:text-foreground"
+              className="flex size-9 flex-none items-center justify-center rounded-full border border-border bg-card text-text-2 hover:bg-secondary hover:text-foreground"
             >
               <span
                 className="block size-3.5 flex-none rounded-full border-[1.5px] border-current"
                 style={{ background: 'linear-gradient(90deg, currentColor 50%, transparent 50%)' }}
               />
             </button>
-            <LogoutButton className="w-auto rounded-md px-2.5 py-2 text-center" />
+            <LogoutButton className="h-9 w-auto rounded-full border border-border bg-card px-3.5 py-0 text-center text-[13px] font-medium" />
           </div>
         </header>
 
-        <nav className="sticky top-[53px] z-10 flex flex-none gap-1.5 overflow-x-auto border-b border-border bg-card px-3 py-2 whitespace-nowrap">
+        <nav className="sticky top-[57px] z-10 flex flex-none gap-1.5 overflow-x-auto border-b border-border bg-background px-3.5 py-[9px] whitespace-nowrap">
           {itensNav.map((item) => {
             const badge = badgeDoItem(item.to)
             return (
@@ -158,10 +158,10 @@ export const AppShell = () => {
                 to={item.to}
                 className={({ isActive }) =>
                   cn(
-                    'flex flex-none items-center gap-1.5 rounded-full border px-3 py-2 text-[13px] transition-colors',
-                    isActive
-                      ? 'border-foreground bg-foreground font-semibold text-background'
-                      : 'border-border font-normal text-text-3',
+                    // Protótipo v2: todos com borda; o ativo ganha fundo de superfície e peso 600
+                    // (antes era preto invertido — decisão do dono, 2026-09-26, seguir o protótipo).
+                    'flex min-h-[38px] flex-none items-center gap-[7px] rounded-full border border-border px-[15px] text-[13.5px] transition-colors',
+                    isActive ? 'bg-card font-semibold text-foreground' : 'font-normal text-text-3',
                   )
                 }
               >
@@ -284,7 +284,7 @@ export const AppShell = () => {
             />
             {!recolhida && (
               <>
-                <span className="flex-1">{tema === 'dark' ? 'Escuro' : 'Claro'}</span>
+                <span className="flex-1">{tema === 'dark' ? 'Tema escuro' : 'Tema claro'}</span>
                 <span className="text-[11px] text-muted-foreground">trocar</span>
               </>
             )}

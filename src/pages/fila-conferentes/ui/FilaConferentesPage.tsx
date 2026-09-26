@@ -27,7 +27,7 @@ export const FilaConferentesPage = () => {
 
   return (
     <div className="px-7 pt-6 pb-7 max-mobile:px-3.5 max-mobile:pt-4">
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
         <div>
           <h1 className="m-0 text-xl font-semibold tracking-[-0.015em]">Minha fila</h1>
           <p className="mt-1.5 text-[13.5px] text-muted-foreground">

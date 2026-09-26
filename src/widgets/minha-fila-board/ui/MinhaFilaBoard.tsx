@@ -28,10 +28,10 @@ import { ListaCompletaPoolSheet } from './ListaCompletaPoolSheet'
 import { ProtocoloCard } from './ProtocoloCard'
 
 const LEGENDA = [
-  { label: 'no prazo', className: 'bg-ok-bg border-ok-border-2' },
-  { label: 'atenção', className: 'bg-warn-bg-2 border-warn-border-2' },
-  { label: 'crítico', className: 'bg-crit-bg-2 border-crit-border' },
-  { label: 'vencido', className: 'bg-bad-bg-2 border-bad-border-2' },
+  { label: 'no prazo', className: 'bg-ok-bg border-ok-bar' },
+  { label: 'atenção', className: 'bg-warn-bg-2 border-warn-bar' },
+  { label: 'crítico', className: 'bg-crit-bg-2 border-crit-bar' },
+  { label: 'vencido', className: 'bg-bad-bg-2 border-bad-bar' },
 ]
 
 // RF-24j — o anel do card levado pelo "Ver" pulsa por ~4s; o aviso de filtros limpos fica 7s.
@@ -272,6 +272,7 @@ export const MinhaFilaBoard = () => {
                   key={protocolo.id}
                   protocolo={protocolo}
                   now={now}
+                  info={resolverInfoProtocolo(protocolo)}
                   onAprovar={() => concluir.mutate({ protocoloId: protocolo.id, aprovado: true })}
                   onReprovar={() => concluir.mutate({ protocoloId: protocolo.id, aprovado: false })}
                   onPausar={() => pausar.mutate(protocolo.id)}

@@ -61,20 +61,25 @@ export const FilaColunas = ({
 
   return (
     <div className="mt-4">
-      <div className="inline-flex gap-0.5 rounded-lg bg-secondary p-0.75">
-        {abas.map((aba) => (
-          <button
-            key={aba.valor}
-            type="button"
-            onClick={() => setAbaAtiva(aba.valor)}
-            className={cn(
-              'rounded-md px-3 py-2 text-[13px] font-medium text-muted-foreground',
-              abaAtiva === aba.valor && 'bg-card text-foreground shadow-sm',
-            )}
-          >
-            {aba.label} {aba.total}
-          </button>
-        ))}
+      {/* Abas na largura toda, 44px de alvo, contador em mono à parte (protótipo v2, RF-24g). */}
+      <div className="flex gap-0.5 rounded-[10px] bg-secondary p-1">
+        {abas.map((aba) => {
+          const ativa = abaAtiva === aba.valor
+          return (
+            <button
+              key={aba.valor}
+              type="button"
+              onClick={() => setAbaAtiva(aba.valor)}
+              className={cn(
+                'flex h-11 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-lg px-2 text-[13px] font-medium text-muted-foreground',
+                ativa && 'bg-card text-foreground shadow-sm',
+              )}
+            >
+              {aba.label}
+              <span className={cn('font-mono text-[11px]', ativa ? 'text-text-2' : 'text-apoio')}>{aba.total}</span>
+            </button>
+          )
+        })}
       </div>
       <div className="mt-3">{abas.find((aba) => aba.valor === abaAtiva)?.conteudo}</div>
     </div>
