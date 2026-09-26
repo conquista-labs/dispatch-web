@@ -127,6 +127,19 @@ export const AbaRegrasEmVigor = ({
           ? 'iniciar outro exige concluir o atual'
           : 'iniciar outro exige concluir um dos atuais',
     },
+    // Regra do pool (2026-09-26) — só quando a API já manda os campos.
+    ...(configuracao.limiteDeAtosNaMao !== undefined
+      ? [
+          {
+            frase: configuracao.poolEmOrdemObrigatoria
+              ? `Do pool, cada conferente pega o próximo da fila, até ${plural(configuracao.limiteDeAtosNaMao, 'ato', 'atos')} na mão`
+              : `Do pool, cada conferente pega qualquer ato, até ${plural(configuracao.limiteDeAtosNaMao, 'ato', 'atos')} na mão`,
+            detalhe: configuracao.poolEmOrdemObrigatoria
+              ? 'prioridade alta primeiro, depois quem vence antes; a distribuidora pode atribuir acima do limite'
+              : 'a distribuidora pode atribuir acima do limite',
+          },
+        ]
+      : []),
     {
       frase: `Semáforo: amarelo abaixo de ${formatarMinutos(configuracao.faixaAtencaoMinutos)}, laranja abaixo de ${formatarMinutos(configuracao.faixaUrgenteMinutos)}`,
       detalhe: 'vermelho quando o vencimento passa',
