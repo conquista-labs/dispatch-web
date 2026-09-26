@@ -10,6 +10,7 @@ import { useIniciarConferencia } from '@/features/minha-fila/iniciar-conferencia
 import { usePausarConferencia } from '@/features/minha-fila/pausar-conferencia'
 import { usePegarProtocolo } from '@/features/minha-fila/pegar-protocolo'
 import { useRetomarConferencia } from '@/features/minha-fila/retomar-conferencia'
+import { motivoDaApi } from '@/shared/lib/motivo-da-api'
 import { useIsMobile } from '@/shared/lib/use-is-mobile'
 import { useNow } from '@/shared/lib/use-now'
 import { Carregando } from '@/shared/ui/carregando'
@@ -17,6 +18,7 @@ import { BarraDeFiltros, useFiltroProtocolos } from '@/widgets/filtro-protocolos
 
 import { MAX_POOL_VISIVEL, MAX_POOL_VISIVEL_MOBILE } from '../lib/constantes'
 import { listarAltasPendentes, localizar, type AbaDaFila } from '../lib/prioridade-alta'
+import { orientacaoDoPool, podePegarDoPool } from '../lib/regra-do-pool'
 import { useAvisoPrioridadeAlta } from '../model/use-aviso-prioridade-alta'
 import { AvisoPrioridadeAlta } from './AvisoPrioridadeAlta'
 import { ConcluidosHojeList } from './ConcluidosHojeList'
@@ -81,9 +83,19 @@ export const MinhaFilaBoard = () => {
     tiposAto,
   )
   const todosOsProtocolos = fila ? [...fila.poolDisponivel, ...fila.atribuidos, ...fila.emConferencia] : []
+  // Decisão do dono (2026-09-26): antes de o ato entrar em conferência, o conferente não vê de
+  // quem é (escrevente, equipe) — assim não escolhe por isso. O back já corta o escrevente no pool
+  // e nas atribuídas; aqui o resolvedor garante o mesmo pro filtro e pra busca, mesmo com cache velho.
+  const idsSemEscrevente = new Set(fila ? [...fila.poolDisponivel, ...fila.atribuidos].map((p) => p.id) : [])
+  const resolverInfoDaFila: typeof resolverInfoProtocolo = (protocolo) => {
+    const info = resolverInfoProtocolo(protocolo)
+    return idsSemEscrevente.has(protocolo.id)
+      ? { ...info, escreventeNome: null, equipeId: null, equipeNome: null }
+      : info
+  }
   const filtroProtocolos = useFiltroProtocolos({
     protocolos: todosOsProtocolos,
-    resolverInfo: resolverInfoProtocolo,
+    resolverInfo: resolverInfoDaFila,
     equipes: equipes ?? [],
     tiposAto: tiposAto ?? [],
     now,
@@ -129,6 +141,13 @@ export const MinhaFilaBoard = () => {
     atribuidos: fila.atribuidos.filter(passaNoFiltro),
     emConferencia: fila.emConferencia.filter(passaNoFiltro),
   }
+  // Regra do pool (ordem obrigatória + limite na mão): o botão só aparece onde o back aceitaria.
+  const { regraDoPool } = fila
+  const podePegar = (protocoloId: string) => podePegarDoPool(protocoloId, regraDoPool)
+  const orientacao = orientacaoDoPool(
+    regraDoPool,
+    !regraDoPool?.proximoId || filaFiltrada.poolDisponivel.some((p) => p.id === regraDoPool.proximoId),
+  )
 
   return (
     <div>
@@ -141,14 +160,19 @@ export const MinhaFilaBoard = () => {
         resolverInfo={resolverInfoProtocolo}
         onVer={irPara}
         onPegar={(protocoloId) => pegar.mutate(protocoloId)}
+        podePegar={podePegar}
         pegando={pegar.isPending}
       />
 
-      {erro && <p className="mb-3 text-[13px] text-bad-fg">Não foi possível concluir a ação. Tente de novo.</p>}
+      {erro && (
+        <p className="mb-3 text-[13px] text-bad-fg">
+          {motivoDaApi(erro) ?? 'Não foi possível concluir a ação. Tente de novo.'}
+        </p>
+      )}
 
       <LegendaPrazo faixas={fila?.faixas} />
       <div className="mt-3.5">
-        <BarraDeFiltros {...filtroProtocolos} subtitulo="aplicados às três colunas da sua fila" />
+        <BarraDeFiltros {...filtroProtocolos} subtitulo="aplicados às três colunas da sua fila" semEscrevente />
       </div>
       {filtroLimpoEm !== null && now - filtroLimpoEm < DURACAO_AVISO_FILTRO_MS && (
         <p role="status" className="mt-2 text-[12px] text-text-3">
@@ -167,15 +191,17 @@ export const MinhaFilaBoard = () => {
               <strong className="text-[13.5px] font-semibold">Pool disponível</strong>
               <span className="font-mono text-[11px] text-muted-foreground">{filaFiltrada.poolDisponivel.length}</span>
             </div>
+            {orientacao && <p className="px-0.5 pb-1 text-[11.5px] text-pretty text-muted-foreground">{orientacao}</p>}
             <div className="flex flex-col gap-2">
               {filaFiltrada.poolDisponivel.slice(0, maxPoolVisivel).map((protocolo) => (
                 <ProtocoloCard
                   key={protocolo.id}
                   protocolo={protocolo}
                   now={now}
-                  info={resolverInfoProtocolo(protocolo)}
+                  info={resolverInfoDaFila(protocolo)}
+                  ocultarEscrevente
                   acaoLabel="Pegar este"
-                  onAcao={() => pegar.mutate(protocolo.id)}
+                  onAcao={podePegar(protocolo.id) ? () => pegar.mutate(protocolo.id) : undefined}
                   acaoDesabilitada={pegar.isPending}
                   // RF-23: só o dono edita observação — um protocolo no pool ainda não tem
                   // dono (achado real: editar aqui abria o campo e o PUT sempre voltava 403
@@ -207,9 +233,11 @@ export const MinhaFilaBoard = () => {
               onFechar={() => setListaCompletaAberta(false)}
               protocolos={filaFiltrada.poolDisponivel}
               now={now}
-              resolverInfo={resolverInfoProtocolo}
+              resolverInfo={resolverInfoDaFila}
+              ocultarEscrevente
               acaoLabel="Pegar este"
               onAcao={(protocoloId) => pegar.mutate(protocoloId)}
+              podeAgir={podePegar}
               acaoDesabilitada={pegar.isPending}
               destaqueId={destaqueId}
             />
@@ -228,7 +256,8 @@ export const MinhaFilaBoard = () => {
                   key={protocolo.id}
                   protocolo={protocolo}
                   now={now}
-                  info={resolverInfoProtocolo(protocolo)}
+                  info={resolverInfoDaFila(protocolo)}
+                  ocultarEscrevente
                   acaoLabel="Iniciar conferência"
                   acaoVariante="default"
                   onAcao={() => iniciar.mutate(protocolo.id)}
