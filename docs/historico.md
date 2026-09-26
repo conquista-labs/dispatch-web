@@ -1125,3 +1125,21 @@ prévia marcando só a primeira linha de cada tipo novo). Gaps §28 fechado (res
 Verificado: `npm run check` (276 testes), build, `npm run e2e` 24/24; no navegador contra a API do PR #14:
 legenda com 4h/1h na Minha fila e na Distribuição, e duas linhas do mesmo tipo novo (caixa diferente) marcadas
 "tipo novo" com "· 2" no aviso.
+
+## 2026-09-26 — Pool em ordem, limite de atos na mão e fila do conferente sem escrevente
+
+Decisão do dono (dispatch-api ADR-0046): o conferente não escolhe o ato. Na Minha fila, o "Pegar este" aparece
+só no próximo da vez (`regraDoPool.proximoId`, o back ordena: prioridade alta, depois vencimento) e some quando ele
+chega no limite de atos na mão (atribuídos + em conferência, padrão 5); uma linha sob o título do pool explica por
+quê — inclusive quando o filtro esconde o próximo. Vale também na lista completa e na lista de prioridade alta.
+O "Pegar" recusado (409 `fora_da_vez`/`limite_na_mao`, ou outro conferente pegou antes) mostra o `motivo` do back
+e recarrega a fila (`usePegarProtocolo` passou a invalidar em `onSettled`). Antes de o ato entrar em conferência,
+o card não mostra escrevente nem equipe, e a Minha fila do conferente perde o eixo "Equipe do escrevente" e a
+busca por esses nomes; "Em conferência" e a visão da gestão continuam completas. `escreventeId` ficou anulável no
+tipo. Configuração ganha "Atos na mão por conferente" e a chave "Pool em ordem obrigatória" (só administrador);
+Regras em vigor, a frase correspondente. ADR-0010 com as duas divergências. A spec da Minha fila em
+`distribuicao-v2` deixou de testar o filtro por equipe e passou a testar a regra nova.
+
+Verificado: `npm run check` (286 testes; novos `regra-do-pool.test.ts` e dois casos em `AbaConfiguracao.test.tsx`),
+build, `npm run e2e` 24/24 contra a API do PR dispatch-api #15; no navegador, Minha fila do conferente com um só
+"Pegar este" (no primeiro da vez), sem escrevente/equipe, sem eixo Equipe, filtro por tipo reduzindo a contagem.
