@@ -73,6 +73,8 @@ export const ImportarLoteWizard = () => {
     linhas: ReturnType<typeof parseCsv>
   } | null>(null)
   const [resumo, setResumo] = useState<ResumoImportacao | null>(null)
+  // RF-10a: linhas como vieram do relatório, pra "Desfazer" as exclusões do passo 2.
+  const [linhasOriginais, setLinhasOriginais] = useState<ReturnType<typeof parseCsv>>([])
   const navigate = useNavigate()
 
   const preVisualizar = usePreVisualizarLote()
@@ -87,11 +89,35 @@ export const ImportarLoteWizard = () => {
       {
         onSuccess: (dados) => {
           setPedido({ etapa, linhaDeCorte, linhas: linhasCsv })
+          setLinhasOriginais(linhasCsv)
           setResumo(dados)
           setPasso('revisao')
         },
       },
     )
+  }
+
+  // RF-10a — excluir uma linha do lote no passo 2. O resumo e a prévia de destinos (passo 3) vêm do
+  // back, então a exclusão pede a pré-visualização de novo com as linhas que sobraram (nada é
+  // gravado — RF-11). A prévia devolve uma linha por linha enviada, na mesma ordem, então o índice
+  // da linha na tela é o índice em `pedido.linhas`. Vale só pra este lote: se o protocolo vier num
+  // relatório futuro, entra normalmente.
+  const reprocessar = (linhas: ReturnType<typeof parseCsv>) => {
+    if (!pedido) return
+    preVisualizar.mutate(
+      { etapa: pedido.etapa, linhaDeCorte: pedido.linhaDeCorte, linhas: paraRequestLinhas(linhas) },
+      {
+        onSuccess: (dados) => {
+          setPedido({ ...pedido, linhas })
+          setResumo(dados)
+        },
+      },
+    )
+  }
+
+  const handleExcluirLinha = (indice: number) => {
+    if (!pedido || pedido.linhas.length <= 1) return
+    reprocessar(pedido.linhas.filter((_, i) => i !== indice))
   }
 
   const handleConfirmar = () => {
@@ -123,6 +149,11 @@ export const ImportarLoteWizard = () => {
           linhaDeCorte={pedido.linhaDeCorte}
           onVoltar={() => setPasso('dados')}
           onContinuar={() => setPasso('distribuicao')}
+          onExcluirLinha={handleExcluirLinha}
+          excluidas={linhasOriginais.length - pedido.linhas.length}
+          onDesfazerExclusoes={() => reprocessar(linhasOriginais)}
+          recalculando={preVisualizar.isPending}
+          erroAoRecalcular={preVisualizar.isError}
         />
       )}
 

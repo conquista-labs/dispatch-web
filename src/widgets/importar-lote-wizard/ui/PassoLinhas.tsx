@@ -15,6 +15,13 @@ type PassoLinhasProps = {
   linhaDeCorte: string
   onVoltar: () => void
   onContinuar: () => void
+  /** RF-10a — índice da linha em `resumo.linhas` (a prévia mantém a ordem do relatório). */
+  onExcluirLinha: (indice: number) => void
+  excluidas: number
+  onDesfazerExclusoes: () => void
+  /** A prévia está sendo refeita depois de uma exclusão. */
+  recalculando: boolean
+  erroAoRecalcular: boolean
 }
 
 // RF-08: pra cada linha, a regra que gerou o prazo ("5º andar · pós-conferência") — o back
@@ -22,7 +29,18 @@ type PassoLinhasProps = {
 // dispatch-api/docs/patterns/endpoints.md, "Back manda o fato cru"). RF-07: linha antes da linha
 // de corte ("já existe") não teve
 // nada resolvido de verdade, então some o chip de prazo e a linha de regra, só mostra a leitura.
-export const PassoLinhas = ({ resumo, etapa, linhaDeCorte, onVoltar, onContinuar }: PassoLinhasProps) => {
+export const PassoLinhas = ({
+  resumo,
+  etapa,
+  linhaDeCorte,
+  onVoltar,
+  onContinuar,
+  onExcluirLinha,
+  excluidas,
+  onDesfazerExclusoes,
+  recalculando,
+  erroAoRecalcular,
+}: PassoLinhasProps) => {
   const now = useNow()
   const [busca, setBusca] = useState('')
   const linhas = resumo.linhas ?? []
@@ -34,11 +52,15 @@ export const PassoLinhas = ({ resumo, etapa, linhaDeCorte, onVoltar, onContinuar
   // importação. Busca + rolagem própria mostram todas as linhas (filtradas ou não), em vez de
   // truncar num beco sem saída.
   const q = busca.trim().toLowerCase()
+  // Guarda o índice original de cada linha — com busca ativa, a posição na lista filtrada não é a
+  // posição no lote, e é esta que a exclusão (RF-10a) precisa.
+  const comIndice = linhas.map((linha, indice) => ({ linha, indice }))
   const linhasFiltradas = q
-    ? linhas.filter((l) =>
+    ? comIndice.filter(({ linha: l }) =>
         [l.protocolo, l.tipoAto, l.escrevente, l.equipe].filter(Boolean).join(' ').toLowerCase().includes(q),
       )
-    : linhas
+    : comIndice
+  const podeExcluir = linhas.length > 1 && !recalculando
 
   const badgesTodas: { label: string; tom: React.ComponentProps<typeof Chip>['tom'] }[] = [
     { label: `${resumo.totalNoArquivo} linhas lidas`, tom: 'neutro' },
@@ -55,13 +77,32 @@ export const PassoLinhas = ({ resumo, etapa, linhaDeCorte, onVoltar, onContinuar
         {linhas.length} linhas · {ETAPA_LABEL[etapa]} · a partir de {formatDataHora(linhaDeCorte)}
       </p>
 
-      <div className="mt-2.5 mb-3 flex flex-wrap gap-1.5">
+      <div className="mt-2.5 mb-3 flex flex-wrap items-center gap-1.5">
         {badges.map((b) => (
           <Chip key={b.label} tom={b.tom}>
             {b.label}
           </Chip>
         ))}
+        {excluidas > 0 && (
+          <span className="flex items-center gap-1.5 text-[12px] text-text-2">
+            <Chip tom="neutro">
+              {excluidas === 1 ? '1 linha excluída deste lote' : `${excluidas} linhas excluídas deste lote`}
+            </Chip>
+            <button
+              type="button"
+              onClick={onDesfazerExclusoes}
+              disabled={recalculando}
+              className="font-medium underline decoration-dotted hover:text-foreground disabled:opacity-50"
+            >
+              Desfazer
+            </button>
+          </span>
+        )}
+        {recalculando && <span className="text-[12px] text-muted-foreground">recalculando…</span>}
       </div>
+      {erroAoRecalcular && (
+        <p className="mb-2.5 text-[12.5px] text-bad-fg">Não foi possível atualizar o lote. Tente de novo.</p>
+      )}
 
       {linhas.length > 9 && (
         <Input
@@ -79,10 +120,11 @@ export const PassoLinhas = ({ resumo, etapa, linhaDeCorte, onVoltar, onContinuar
           <span className="w-[126px] flex-none">Escrevente</span>
           <span className="w-[182px] flex-none">Prazo e regra aplicada</span>
           <span className="w-[98px] flex-none text-right">Leitura</span>
+          <span className="w-[34px] flex-none" />
         </div>
 
         <div className="max-h-[480px] overflow-y-auto">
-          {linhasFiltradas.map((linha, indice) => {
+          {linhasFiltradas.map(({ linha, indice }) => {
             const chip = linha.jaExiste ? null : prazoChip(linha.semaforo, linha.vencimentoEm, now)
             const regraPrazo = linha.jaExiste
               ? null
@@ -138,6 +180,20 @@ export const PassoLinhas = ({ resumo, etapa, linhaDeCorte, onVoltar, onContinuar
                   )}
                 >
                   {leitura}
+                </span>
+                {/* RF-10a — protocolo cancelado, lançado em duplicidade na origem ou que não deve
+                    entrar na conferência: sai do lote e do resumo, e não é gravado. */}
+                <span className="flex w-[34px] flex-none justify-end">
+                  <button
+                    type="button"
+                    onClick={() => onExcluirLinha(indice)}
+                    disabled={!podeExcluir}
+                    title={linhas.length > 1 ? 'Excluir esta linha do lote' : 'O lote precisa de ao menos uma linha'}
+                    aria-label={`Excluir o protocolo ${linha.protocolo} do lote`}
+                    className="flex size-6 items-center justify-center rounded-md border border-border bg-card text-[14px] leading-none text-text-2 hover:border-bad-border hover:text-bad-fg disabled:opacity-40 max-mobile:size-9"
+                  >
+                    ×
+                  </button>
                 </span>
               </div>
             )
