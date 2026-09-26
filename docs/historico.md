@@ -1058,3 +1058,19 @@ guarda o índice original). "N linhas excluídas deste lote · Desfazer" devolve
 ficar vazio. Gaps §42.
 
 Verificado: `ImportarLoteWizard.test.tsx`; passo 2 e 3 no navegador contra a API local (só pré-visualização).
+
+## 2026-09-25 — Importar: enviar o relatório .xls do cartório (RF-05/RF-06)
+
+O passo 1 ganha uma área de arquivo (botão ou arrastar) pro "Relatório de Andamentos dos Protocolos" que o
+sistema do cartório exporta em `.xls`. Quem lê o arquivo é o conector do back (`POST
+/protocolos/importar/converter`, dispatch-api ADR-0045) — o front não parseia planilha. A tela mostra o resumo
+("26 protocolos lidos, conferem com o total do relatório · andamentos de 08/09 a 25/09"), trava a etapa na que o
+relatório declara (RF-05a — trocar daria prazo errado pro lote inteiro), avisa quantas linhas ficam antes da
+linha de corte e mostra o motivo que o conector devolve quando o arquivo não serve. Daí em diante o fluxo é o de
+sempre (revisão, excluir linha, prévia, confirmar). Colar CSV continua como alternativa. Slice nova
+`features/protocolo/converter-relatorio`; o wizard guarda as linhas já no formato da API, venham do CSV ou do
+conector. Gaps §1.
+
+Verificado: `npm run check` (271 testes, 62 arquivos), build; no navegador contra a API local com o `.xls` real
+do dono (fora do repo): 26 de 26 lidos, etapa Pré-conferência travada, 15 antes da linha de corte, revisão e
+prévia com 11 no pool (sem confirmar); arquivo errado mostra `formato_nao_reconhecido`; temas claro e escuro.
