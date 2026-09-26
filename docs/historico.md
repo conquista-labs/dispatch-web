@@ -1110,3 +1110,18 @@ revisão com busca, prévia fiel ao motor, painel de detalhe, contraste AA, vinc
 
 Fica para o par API + front: legenda do semáforo com as faixas da configuração (o conferente não lê `/config`),
 contagem por tipo desconhecido na prévia, e a prévia marcando só a primeira linha de cada tipo novo.
+
+## 2026-09-26 — Legenda do semáforo com as faixas da configuração e contagem por tipo novo
+
+A legenda "Prazo do ato" passa a escrever os limites de verdade ("faltam menos de 4h / menos de 1h", texto do
+protótipo v2) a partir das faixas da Configuração: a Minha fila e a Fila do conferente leem o `faixas` que a
+API agora manda junto da fila (o conferente não lê `GET /config`); a Distribuição, tela de gestão, lê `/config`
+— antes ela tinha "4h/60min" fixo, com um comentário velho dizendo que o back não era configurável. As três
+cópias da legenda viraram `LegendaPrazo` (entities/protocolo), com `rotulosDaLegenda` testado: hora cheia vira
+"4h", o resto fica em minutos; sem as faixas, rótulos genéricos. No passo 3 do Importar, cada tipo desconhecido
+ganha a contagem ("Nome · N") de `tiposDesconhecidosContagem`. Depende de dispatch-api #14 (que também corrige a
+prévia marcando só a primeira linha de cada tipo novo). Gaps §28 fechado (resolvido pelo ADR-0025).
+
+Verificado: `npm run check` (276 testes), build, `npm run e2e` 24/24; no navegador contra a API do PR #14:
+legenda com 4h/1h na Minha fila e na Distribuição, e duas linhas do mesmo tipo novo (caixa diferente) marcadas
+"tipo novo" com "· 2" no aviso.

@@ -27,6 +27,8 @@ export { DETALHE_PROTOCOLO_QUERY_KEY, useDetalheProtocolo } from './model/use-de
 export { useSimularProtocoloManual } from './model/use-simular-protocolo-manual'
 export type { SimularProtocoloManualParams } from './api/simular-protocolo-manual'
 export { prazoChip } from './lib/prazo-chip'
+export { formatarFaixa, rotulosDaLegenda, type FaixasSemaforo } from './lib/legenda-prazo'
+export { LegendaPrazo } from './ui/LegendaPrazo'
 export { PrazoTooltip } from './ui/PrazoTooltip'
 export { NumeroConferenciaTag } from './ui/NumeroConferenciaTag'
 export { PrioridadeAltaTag } from './ui/PrioridadeAltaTag'

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 
 import { useEquipes } from '@/entities/equipe'
 import { useEscreventes } from '@/entities/escrevente'
-import { criarResolverInfoProtocolo, useConcluidosHoje, useMinhaFila } from '@/entities/protocolo'
+import { criarResolverInfoProtocolo, LegendaPrazo, useConcluidosHoje, useMinhaFila } from '@/entities/protocolo'
 import { useTiposAto } from '@/entities/tipoAto'
 import { useSessionStore } from '@/entities/usuario'
 import { useConcluirConferencia } from '@/features/minha-fila/concluir-conferencia'
@@ -26,13 +26,6 @@ import { IndicadorAtualizacao } from './IndicadorAtualizacao'
 import { ListaAltasSheet } from './ListaAltasSheet'
 import { ListaCompletaPoolSheet } from './ListaCompletaPoolSheet'
 import { ProtocoloCard } from './ProtocoloCard'
-
-const LEGENDA = [
-  { label: 'no prazo', className: 'bg-ok-bg border-ok-bar' },
-  { label: 'atenção', className: 'bg-warn-bg-2 border-warn-bar' },
-  { label: 'crítico', className: 'bg-crit-bg-2 border-crit-bar' },
-  { label: 'vencido', className: 'bg-bad-bg-2 border-bad-bar' },
-]
 
 // RF-24j — o anel do card levado pelo "Ver" pulsa por ~4s; o aviso de filtros limpos fica 7s.
 const DURACAO_DESTAQUE_MS = 4200
@@ -153,15 +146,7 @@ export const MinhaFilaBoard = () => {
 
       {erro && <p className="mb-3 text-[13px] text-bad-fg">Não foi possível concluir a ação. Tente de novo.</p>}
 
-      <div className="flex flex-wrap items-center gap-3.5">
-        <span className="text-[11.5px] font-medium text-apoio">Prazo do ato</span>
-        {LEGENDA.map((item) => (
-          <span key={item.label} className="flex items-center gap-1.5 text-[11.5px] text-text-3">
-            <span className={`block size-2.5 flex-none rounded-[3px] border ${item.className}`} />
-            {item.label}
-          </span>
-        ))}
-      </div>
+      <LegendaPrazo faixas={fila?.faixas} />
       <div className="mt-3.5">
         <BarraDeFiltros {...filtroProtocolos} subtitulo="aplicados às três colunas da sua fila" />
       </div>

@@ -44,6 +44,8 @@ export type ResumoImportacao = {
   enviadosParaPool: number
   excecoes: number
   tiposDesconhecidos: string[]
+  /** Linhas de cada tipo novo neste lote, na ordem de `tiposDesconhecidos`. Opcional: a API anterior não manda. */
+  tiposDesconhecidosContagem?: { nome: string; quantidade: number }[]
   escreventesSemEquipe: string[]
   linhas: LinhaPreviaImportacao[] | null
 }
